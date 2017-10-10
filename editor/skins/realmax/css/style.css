@@ -699,7 +699,7 @@ textarea.code {
 	display: none;
 }
 .litetabs.horizontal > ul.wtabcontainer > li.wtab.wtab-plus_tab {
-    min-width: 48px;
+    min-width: 48px !important;
     padding: 0 10px;
 }
 
