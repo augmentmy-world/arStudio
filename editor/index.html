@@ -1,34 +1,52 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<meta name="title" content="RealWeb Studio" />
+	<meta name="description" content="AR online Editor, edit AR on the web" />
+	<meta name="keywords" content="WebAR, WebVR, WebGL, RealWeb, Realmax, Editor" />
 
-<meta property="og:title" content="WebGLStudio" />
-<meta property="og:description" content="Edit 3D on the web" />
-<meta property="og:image" content="" />
+	<meta property="og:title" content="RealWeb Studio" />
+	<meta property="og:description" content="Edit AR on the web" />
+	<meta property="og:image" content="" />
 
-<link rel="icon" type="image/png" href="favicon.ico">
+	<link rel="icon" type="image/png" href="favicon.ico">
 
-<title>WebGLStudio</title>
+	<title>RealWeb Studio</title>
 	<style type='text/css'></style>
-	<link rel="stylesheet" type="text/css" href="css/style.css">
-
-
+	<link rel="stylesheet" type="text/css" href="css/reset.css">
+	<!--<link rel="stylesheet" type="text/css" href="css/style.css">
+	<link rel="stylesheet" type="text/css" href="css/litegui.css">-->
+	<script type="text/javascript" src="js/extra/gettext.js"></script>
 	<script type="text/javascript" src="js/extra/jscolor/jscolor.js"></script>
 	<script type="text/javascript" src="js/extra/jquery-2.1.1.min.js"></script>
 	<script type="text/javascript" src="js/extra/jquery-ui-1.10.4.min.js"></script>
+	<script type="text/javascript" src="js/extra/js.cookie.js"></script>
 	<script type="text/javascript" src="js/extra/canvas-to-blob.js"></script>
 	<script type="text/javascript" src="js/extra/litegui.js"></script>
-
-	<link rel="stylesheet" type="text/css" href="css/litegui.css">
+	<script type="text/javascript" src="js/extra/socket.io.js"></script>
+    <script type="text/javascript" src="js/extra/sillyclient.js"></script>
+	<script type="text/javascript" src="js/extra/prefixfree.min.js"></script>
+    <script type="text/javascript" src="js/extra/typescript.js"></script>
+    
+    <link rel="stylesheet" data-name="js/modules/monaco-editor/dev/vs/editor/editor.main" href="js/modules/monaco-editor/dev/vs/editor/editor.main.css">
+    
 
 </head>
 <body class="editor">
 
 	<script type="text/javascript" src="js/utils/utils.js"></script>
 	<script type="text/javascript" src="js/core.js"></script>
-	<script type="text/javascript">
-		CORE.init();
-	</script>
+
+    <script>var require = { paths: { 'vs': 'js/modules/monaco-editor/dev/vs' } };</script>
+    <script src="js/modules/monaco-editor/dev/vs/loader.js"></script>
+    <script src="js/modules/monaco-editor/dev/vs/editor/editor.main.nls.js"></script>
+    <script src="js/modules/monaco-editor/dev/vs/editor/editor.main.js"></script>
+    
+    <script type="text/javascript">	
+        CORE.init();
+    </script>
 </body>
 </html>

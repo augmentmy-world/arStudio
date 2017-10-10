@@ -5,6 +5,7 @@ function ResourcesPanelWidget( options )
 
 	var that = this;
 
+    this.options = options;
 	this.selected_item = null;
 
 	this.current_folder = null;
@@ -36,14 +37,20 @@ function ResourcesPanelWidget( options )
 
 	var browser_root = new LiteGUI.Area( { full: true });
 	files_section.add( browser_root );
-	browser_root.split("vertical",[30,null]);
+	browser_root.split("vertical",[32, null]);
 
-	//craete top bar
+	//create top bar
 	var top_inspector = new LiteGUI.Inspector( { one_line: true } );
-	top_inspector.root.style.marginTop = "4px";
+
+	if(!options.skip_actions)
+	{
+		top_inspector.addButton(null,"Add", {className: 'add', callback: function(v,e){ DriveModule.showCreateNewFileMenu( that.current_folder, e ); }});
+		top_inspector.addButton(null,"Copy", {className: 'copy', callback: function(v,e){ /* todo */ }});
+		top_inspector.addButton(null,"Delete", {className: 'delete', callback: function(v,e){ /* todo */ }});
+	}
 
 	//filter by name
-	top_inspector.addString("Filter","",{ name_width: 40, content_width: 120, width: 160, callback: function(v) { 
+	top_inspector.addString("","",{ placeHolder: i18n.gettext("Search"), callback: function(v) { 
 		that.filterByName(v);
 	}});
 
@@ -55,16 +62,7 @@ function ResourcesPanelWidget( options )
 	this.filter_by_category_widget = top_inspector.addString("Category","",{ name_width: 60, content_width: 140, width: 200, values: valid_categories, callback: function(v) { 
 		that.filterByCategory( v, true );
 	}});
-
-	if(!options.skip_actions)
-	{
-		top_inspector.addSeparator();
-		top_inspector.addButton(null,"New", { width: 50, function(v,e){ DriveModule.showCreateNewFileMenu( that.current_folder, e ); }});
-		//top_inspector.addButton(null,"Insert in scene", function(){ DriveModule.onInsertResourceInScene( that.selected_item ); });
-		top_inspector.addButton(null,"Import File", function(){ 
-			ImporterModule.showImportResourceDialog(null,{ folder: that.current_folder }, function(){ that.refreshContent(); });
-		});
-	}
+	this.filter_by_category_widget.style.display = "none";
 
 	browser_root.sections[0].add( top_inspector );
 
@@ -107,7 +105,7 @@ function ResourcesPanelWidget( options )
 	this.bindEvents();
 }
 
-ResourcesPanelWidget.widget_name = "Resources";
+ResourcesPanelWidget.widget_name = "Assets";
 
 CORE.registerWidget( ResourcesPanelWidget );
 
@@ -162,7 +160,7 @@ ResourcesPanelWidget.prototype.createTreeWidget = function()
 		if(!fullpath)
 			return;
 
-		var menu = new LiteGUI.ContextMenu(["Create Folder","Delete Folder","Rename","Import Project"], { event: e, callback: function(v) {
+		var menu = new LiteGUI.ContextMenu(["Create Folder","Delete Folder","Rename"/*,"Import Project"*/], { event: e, callback: function(v) {
 			if(v == "Create Folder")
 				DriveModule.onCreateFolderInServer( fullpath, function(){ that.refreshTree(); });
 			else if(v == "Delete Folder")
@@ -321,7 +319,11 @@ ResourcesPanelWidget.prototype.addItemToBrowser = function( resource )
 		element.dataset["id"] = resource.id;
 	element.dataset["filename"] = resource.filename;
 	if(resource.fullpath)
-		element.dataset["fullpath"] = resource.fullpath;
+        element.dataset["fullpath"] = resource.fullpath;
+    
+    //metadata.patten
+    if(resource.metadata && resource.metadata.pattern)
+		element.dataset["pattern"] = resource.metadata.pattern;
 
 	var category = DriveModule.getResourceCategory( resource );
 
@@ -448,8 +450,12 @@ ResourcesPanelWidget.prototype.addItemToBrowser = function( resource )
 		for(var i = 0; i < items.length; ++i)
 			items[i].classList.remove("selected");
 		element.classList.add("selected");
-		LiteGUI.trigger( that, "item_selected", element );
-		LiteGUI.trigger( that, "resource_selected", path );
+        LiteGUI.trigger( that, "item_selected", element );
+        //for 2d marker just pass all dataset
+        if(element.dataset && element.dataset.category =="2DMarker")
+            LiteGUI.trigger( that, "resource_selected", element.dataset );
+        else
+		    LiteGUI.trigger( that, "resource_selected", path );
 		that.selected_item = element;
 		window.RESOURCE = LS.RM.getResource( path );
 	}
@@ -485,7 +491,7 @@ ResourcesPanelWidget.prototype.addItemToBrowser = function( resource )
 ResourcesPanelWidget.prototype.showItemContextMenu = function( item, event )
 {
 	var that = this;
-	var actions = ["Insert","Load","Rename","Clone","Move","Set as Modifyed","Properties",null,"Delete"];
+	var actions = ["Insert","Load","Rename","Clone","Properties",null,"Delete"];
 
 	var menu = new LiteGUI.ContextMenu( actions, { ignore_item_callbacks: true, event: event, title: "Resource", callback: function(action, options, event) {
 		var fullpath = item.dataset["fullpath"] || item.dataset["filename"];
@@ -508,18 +514,9 @@ ResourcesPanelWidget.prototype.showItemContextMenu = function( item, event )
 		{
 			DriveModule.showCloneResourceDialog( item.resource );
 		}
-		else if(action == "Move")
-		{
-			LiteGUI.alert("Not implemented yet");
-		}
 		else if(action == "Properties")
 		{
 			DriveModule.showResourceInfoInDialog( item.resource );
-		}
-		else if(action == "Set as Modifyed")
-		{
-			LS.RM.resourceModified( item.resource );
-			that.refreshContent();
 		}
 		else if(action == "Delete")
 		{

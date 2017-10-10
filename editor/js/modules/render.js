@@ -113,7 +113,7 @@ var RenderModule = {
 
 		//init GUI *************************************
 
-		this.setViewportLayout(1);
+		this.setViewportLayout(1); //only 1 view
 
 		//LS.GlobalScene.init();
 		LEvent.bind( LS.GlobalScene, "change", function() { LS.GlobalScene.refresh(); }); //refresh image when something changes
@@ -122,27 +122,6 @@ var RenderModule = {
 			RenderModule.requestFrame();
 		});
 
-		//init GUI
-		LiteGUI.menubar.add("View/Autorender", { type: "checkbox", instance:RenderModule, property:"auto_render" });
-		LiteGUI.menubar.add("View/Fullscreen", { callback: function() { RenderModule.goFullscreen(); }});
-		LiteGUI.menubar.separator("View");
-		LiteGUI.menubar.add("View/Camera/Orthographic", { callback: function() { RenderModule.changeCameraType( LS.Camera.ORTHOGRAPHIC ); }});
-		LiteGUI.menubar.add("View/Camera/Perspective", { callback: function() { RenderModule.changeCameraType( LS.Camera.PERSPECTIVE ); }});
-		LiteGUI.menubar.add("View/Camera/Properties", { callback: function() { EditorModule.inspect( RenderModule.cameras ); }});
-		LiteGUI.menubar.add("View/Camera/Smooth", { type: "checkbox", instance: cameraTool, property:"smooth_camera" });
-		LiteGUI.menubar.add("View/Camera/Lock Angle", { type: "checkbox", instance: cameraTool.settings, property:"lock_angle" });
-
-
-		LiteGUI.menubar.add("View/Layout/One", { callback: function(){ RenderModule.setViewportLayout(1); } });
-		LiteGUI.menubar.add("View/Layout/Two Vertical", { callback: function(){ RenderModule.setViewportLayout(2); } });
-		LiteGUI.menubar.add("View/Layout/Two Horitzontal", { callback: function(){ RenderModule.setViewportLayout(3); } });
-		LiteGUI.menubar.add("View/Layout/Three", { callback: function(){ RenderModule.setViewportLayout(4); } });
-		LiteGUI.menubar.add("View/Layout/Four", { callback: function(){ RenderModule.setViewportLayout(5); } });
-		LiteGUI.menubar.add("View/Layout/Four 2", { callback: function(){ RenderModule.setViewportLayout(6); } });
-
-		LiteGUI.menubar.separator("View");
-		//LiteGUI.menubar.add("Actions/System/Relaunch", { callback: RenderModule.relaunch });
-
 		this.registerCommands();
 
 		RenderModule.canvas_manager.resize();
@@ -150,6 +129,71 @@ var RenderModule = {
 
 		LEvent.bind( LS.Renderer, "afterRenderInstances", this.onAfterRenderInstances, this);
 		LEvent.bind( LS.GlobalScene, "scene_loaded", this.onSceneLoaded, this );
+
+		this.initViewmode();
+
+	},
+
+	initViewmode: function() {
+		//view mode
+		var viewmode = document.createElement("div");
+		viewmode.id = "perspective";
+		viewmode.className = "big-buttons";
+		/*viewmode.innerHTML = "<div><select id='viewmode'>" +
+		"<option value='perspective' >Perspective</option>" + 
+		"<option value='orthographic'>Orthographic</option></select></div>";*/
+		viewmode.innerHTML = "<div class='select'><span class='placeholder'>Perspective</span> \
+			<ul><li>Perspective</li><li>Orthographic</li><li>HeadTracking</li><li>MarkerTracking</li></ul></div>";
+
+		document.getElementById("mainmenubar").appendChild( viewmode );
+				
+		$('.select').on('click', '.placeholder', function() {
+		    var parent = $(this).closest('.select');
+		    if (!parent.hasClass('is-open')) {
+		        parent.addClass('is-open');
+		        $('.select.is-open').not(parent).removeClass('is-open');
+		    } else {
+		        parent.removeClass('is-open');
+		    }
+		}).on('click', 'ul>li', function() {
+			var viewport = RenderModule.getActiveViewport();		
+		    var parent = $(this).closest('.select');
+		    parent.removeClass('is-open').find('.placeholder').text($(this).text());
+		    var v = $(this).text();
+			switch( v )
+			{
+				case "Perspective": 
+					viewport.editor_camera.type = LS.Camera.PERSPECTIVE; 
+					viewport.name = "perspective";
+					// Kyle: switch OFF headtracking, switch OFF marker tracking mode.
+					HeadtrackingModule.Stop();
+					break;
+				case "Orthographic": 
+					viewport.editor_camera.type = LS.Camera.ORTHOGRAPHIC; 
+					viewport.name = "orthographic";
+					// Kyle: switch OFF headtracking, switch OFF marker tracking mode.
+					HeadtrackingModule.Stop();
+					break;
+				case "HeadTracking":
+					viewport.name = "headtracking";
+					HeadtrackingModule.Start();
+					// Kyle: switch on headtracking, switch OFF marker tracking mode.
+					break;
+
+				case "MarkerTracking":
+					viewport.name = "markertracking";
+					// Kyle: switch OFF headtracking, switch ON marker tracking mode.
+					HeadtrackingModule.Stop();
+					break;
+
+
+
+				default:
+					break;
+			}
+
+			LS.GlobalScene.refresh();
+		});		
 	},
 
 	setViewportLayout: function(mode)
@@ -312,7 +356,7 @@ var RenderModule = {
 		gl.viewport(0,0,gl.canvas.width, gl.canvas.height);
 
 		LEvent.trigger(this,"pre_scene_render");
-		gl.clear( gl.DEPTH_BUFFER_BIT ); //¿?
+		gl.clear( gl.DEPTH_BUFFER_BIT ); //ï¿½?
 
 		//render frame
 		if( this.special_pass ) 

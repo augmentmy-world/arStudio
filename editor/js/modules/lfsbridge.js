@@ -9,7 +9,7 @@ var LFSBridge = {
 
 	init: function()
 	{
-		LiteGUI.requireCSS("css/drive.css");
+		LiteGUI.requireCSS("skins/"+CORE.config.skin+"/css/drive.css");
 
 		LFS.onNewSession = function(session)
 		{
@@ -31,7 +31,7 @@ var LFSBridge = {
 			DriveModule.showInBrowserContent();
 		});
 
-		//DriveModule.top_widget.addButton(null,"Open LiteFileServer", { callback: LFSBridge.onOpenLiteFileServer });
+		//DriveModule.top_widget.addButton(null,"Open RealServer", { callback: LFSBridge.onOpenRealServer });
 	},
 
 	updateContent: function( folder, callback, panel )
@@ -253,7 +253,7 @@ var LFSBridge = {
 		container.className = "drive-info";
 		root.appendChild( container );
 
-		container.innerHTML = "<h2>LiteFileServer</h2>";
+		container.innerHTML = "<h2>RealServer</h2>";
 
 		if(!this.session)
 		{
@@ -269,7 +269,7 @@ var LFSBridge = {
 			return;
 		}
 
-		var button = LiteGUI.createButton(null, "Go to LFS Panel", LFSBridge.onOpenLiteFileServer );
+		var button = LiteGUI.createButton(null, "Go to LFS Panel", LFSBridge.onOpenRealServer );
 		container.querySelector("h2").appendChild( button.root );
 		container.appendChild( LiteGUI.createElement("h3",null,"Units") );
 
@@ -335,7 +335,7 @@ var LFSBridge = {
 
 		var container = LiteGUI.createElement("div");
 		container.className = "drive-info";
-		container.innerHTML = "<h2>LiteFileServer</h2>";
+		container.innerHTML = "<h2>RealServer</h2>";
 		root.appendChild( container );
 
 		var unit = this.getUnitInfo( fullpath );
@@ -360,7 +360,7 @@ var LFSBridge = {
 		}});
 	},
 
-	onOpenLiteFileServer: function()
+	onOpenRealServer: function()
 	{
 		window.open( CORE.config.server, "_blank" );
 	},

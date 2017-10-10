@@ -24,6 +24,9 @@ var LiteGUI = {
 	//the top menu
 	mainmenu: null,
 
+	//the logo div
+	logo: null,
+
 	/**
 	* initializes the lib, must be called
 	* @method init
@@ -62,6 +65,10 @@ var LiteGUI = {
 		content.className = "litegui-maincontent";
 		this.content = content;
 		this.root.appendChild(content);
+
+		//create site logo
+		if(options.logo)
+			this.createLogo();
 
 		//create menubar
 		if(options.menubar)
@@ -222,6 +229,11 @@ var LiteGUI = {
 	getById: function(id)
 	{
 		return document.getElementById(id);
+	},
+
+	createLogo: function(){
+		this.logo = new LiteGUI.Logobar("logobar");
+		this.add( this.logo );
 	},
 
 	createMenubar: function()
@@ -793,8 +805,8 @@ var LiteGUI = {
 		
 		options.className = "alert";
 		options.title = options.title || "Alert";
-		options.width = options.width || 280;
-		options.height = options.height || 140;
+		options.width = options.width || 420;
+		//options.height = options.height || 140;
 		if (typeof(content) == "string")
 			content = "<p>" + content + "</p>";
 		LiteGUI.remove(".litepanel.alert"); //kill other panels
@@ -812,8 +824,8 @@ var LiteGUI = {
 	{
 		options = options || {};
 		options.className = "alert";
-		options.title = options.title || "Confirm";
-		options.width = options.width || 280;
+		options.title = options.title || i18n.gettext("Confirm");
+		options.width = options.width || 560;
 		//options.height = 100;
 		if (typeof(content) == "string")
 			content = "<p>" + content + "</p>";
@@ -2045,7 +2057,7 @@ function createLitebox(state, on_change)
 {
 	var element = document.createElement("span");
 	element.className = "listbox " + (state ? "listopen" : "listclosed");
-	element.innerHTML = state ? "&#9660;" : "&#9658;";
+	element.innerHTML = state ? "+" : "-";
 	element.dataset["value"] = state ? "open" : "closed";
 	element.addEventListener("click", onClick );
 	element.on_change_callback = on_change;
@@ -2076,14 +2088,14 @@ function createLitebox(state, on_change)
 		if(!v)
 		{
 			this.dataset["value"] = "closed";
-			this.innerHTML = "&#9658;";
+			this.innerHTML = "+";
 			this.classList.remove("listopen");
 			this.classList.add("listclosed");
 		}
 		else
 		{
 			this.dataset["value"] = "open";
-			this.innerHTML = "&#9660;";
+			this.innerHTML = "-";
 			this.classList.add("listopen");
 			this.classList.remove("listclosed");
 		}
@@ -2923,7 +2935,7 @@ LiteGUI.Console = Console;
 		var dynamic_section = null;
 		if(editable)
 		{
-			splitinfo = " - " + (Area.splitbar_size + 2) +"px"; //2 px margin ¿?
+			splitinfo = " - " + (Area.splitbar_size + 2) +"px"; //2 px margin ?
 			splitbar = document.createElement("div");
 			splitbar.className = "litesplitbar " + direction;
 			if(direction == "vertical")
@@ -3285,6 +3297,486 @@ LiteGUI.Console = Console;
 
 	LiteGUI.Area = Area;
 
+	/****************** AREA **************/
+	/** An Area3 is am streched container.
+	* Area3s can be split several times horizontally or vertically to fit different colums or rows
+	*
+	* @class Area3
+	* @constructor
+	* @param {Object} options
+	*/
+	function Area3( options, legacy )
+	{
+		Area.call(this);
+
+		//for legacy code
+		if( (options && options.constructor === String) || legacy )
+		{
+			var id = options;
+			options = legacy || {};
+			options.id = id;
+			console.warn("LiteGUI.Area3 legacy parameter, use options as first parameter instead of id.");
+		}
+
+		options = options || {};
+		/* the root element containing all sections */
+		var root = document.createElement("div");
+		root.className = "litearea";
+		if(options.id)
+			root.id = options.id;
+		if(options.className)
+			root.className +=  " " + options.className;
+
+		this.root = root;
+		this.root.litearea = this; //dbl link
+
+		var width = options.width || "100%";
+		var height = options.height || "100%";
+
+		if( width < 0 )
+			width = 'calc( 100% - '+Math.abs(width)+'px)';
+		if( height < 0 )
+			height = 'calc( 100% - '+ Math.abs(height)+'px)';
+
+		root.style.width = width;
+		root.style.height = height;
+
+		this.options = options;
+
+		var that = this;
+		//window.addEventListener("resize",function(e) { that.onResize(e); });
+		//$(this).bind("resize",function(e) { that.resize(e); });
+
+		//this._computed_size = [ $(this.root).width(), $(this.root).height() ];
+		this._computed_size = [ this.root.offsetWidth, this.root.offserHeight ];
+
+		var content = document.createElement("div");
+		if(options.content_id)
+			content.id = options.content_id;
+		content.className = "liteareacontent";
+		content.style.width = "100%";
+		content.style.height = "100%";
+		this.root.appendChild( content );
+		this.content = content;
+
+		this.split_direction = "none";
+		this.sections = [];
+
+		this.splitbar = null;
+
+		if(options.autoresize)
+			LiteGUI.bind( LiteGUI, "resized", function() { 
+				that.onResize(); 
+			});
+	}
+
+	Area3.prototype = new Area();
+
+	Area3.prototype.split = function( direction, sizes, editable )
+	{
+		if( !direction || direction.constructor !== String )
+			throw ("First parameter must be a string: 'vertical' or 'horizontal'");
+
+		if( !sizes )
+			sizes = ["20%", "60%", null];
+
+		if( direction != "vertical" && direction != "horizontal" )
+			throw ("First parameter must be a string: 'vertical' or 'horizontal'");
+
+		if(this.sections.length)
+			throw "cannot split twice";
+
+		//create areas
+		var area0 = new LiteGUI.Area3();
+		area0.root.style.display = "inline-block";
+		var area1 = new LiteGUI.Area3({ content_id: this.content.id });
+		area1.root.style.display = "inline-block";
+		var area2 = new LiteGUI.Area3();
+		area2.root.style.display = "inline-block";
+
+		var splitinfo = "";
+		var splitbar1 = splitbar2 = null;
+		var dynamic_section = null;
+		if(editable)
+		{
+			splitinfo = " - " + (Area3.splitbar_size + 2) +"px"; //2 px margin
+			splitbar1 = document.createElement("div");
+			splitbar1.id = "splitbar1";
+			splitbar1.className = "litesplitbar " + direction;
+			if(direction == "vertical")
+				splitbar1.style.height = Area3.splitbar_size + "px";
+			else
+				splitbar1.style.width = Area3.splitbar_size + "px";
+			this.splitbar1 = splitbar1;
+			splitbar1.addEventListener("mousedown", inner_mousedown);
+
+			splitbar2 = document.createElement("div");
+			splitbar2.id = "splitbar2";
+			splitbar2.className = "litesplitbar " + direction;
+			if(direction == "vertical")
+				splitbar2.style.height = Area3.splitbar_size + "px";
+			else
+				splitbar2.style.width = Area3.splitbar_size + "px";
+			this.splitbar2 = splitbar2;
+			splitbar2.addEventListener("mousedown", inner_mousedown);
+		}
+
+		sizes = sizes || ["20%", "60%", null];
+
+		if(direction == "vertical")
+		{
+			area0.root.style.width = "100%";
+			area1.root.style.width = "100%";
+			area2.root.style.width = "100%";
+
+			if(sizes[0] == null)
+			{
+				var h = sizes[1];
+				if(typeof(h) == "number")
+					h = sizes[1] + "px";
+
+				area1.root.style.height = "-moz-calc( 100% - " + h + splitinfo + " )";
+				area1.root.style.height = "-webkit-calc( 100% - " + h + splitinfo + " )";
+				area1.root.style.height = "calc( 100% - " + h + splitinfo + " )";
+				area2.root.style.height = h;
+				area2.size = h;
+				dynamic_section = area1;
+			}
+			else if(sizes[1] == null)
+			{
+				var h = sizes[0];
+				if(typeof(h) == "number")
+					h = sizes[0] + "px";
+
+				area1.root.style.height = h;
+				area1.size = h;
+				area2.root.style.height = "-moz-calc( 100% - " + h + splitinfo + " )";
+				area2.root.style.height = "-webkit-calc( 100% - " + h + splitinfo + " )";
+				area2.root.style.height = "calc( 100% - " + h + splitinfo + " )";
+				dynamic_section = area2;
+			}
+			else
+			{
+				var h1 = sizes[0];
+				if(typeof(h1) == "number")
+					h1 = sizes[0] + "px";
+				var h2 = sizes[1];
+				if(typeof(h2) == "number")
+					h2 = sizes[1] + "px";
+				area1.root.style.height = h1;
+				area1.size = h1;
+				area2.root.style.height = h2;
+				area2.size = h2;
+			}
+		}
+		else //horizontal
+		{
+			area0.root.style.height = "100%";
+			area1.root.style.height = "100%";
+			area2.root.style.height = "100%";
+
+			if(sizes[0] == null)
+			{
+				area0.root.style.width = 0;
+				area0.size = 0;
+				var w = sizes[1];
+				if(typeof(w) == "number")
+					w = sizes[1] + "px";
+				area1.root.style.width = "-moz-calc( 100% - " + w + splitinfo + " )";
+				area1.root.style.width = "-webkit-calc( 100% - " + w + splitinfo + " )";
+				area1.root.style.width = "calc( 100% - " + w + splitinfo + " )";
+				area2.root.style.width = w;
+				area2.size = sizes[1];
+				dynamic_section = area1;
+			}
+			else if(sizes[2] == null)
+			{
+				area2.root.style.width = 0;
+				area2.size = 0;
+
+				var w = sizes[0];
+				if(typeof(w) == "number")
+					w = sizes[0] + "px";
+
+				area0.size = w;
+				area1.root.style.width = "-moz-calc( 100% - " + w + splitinfo + " )";
+				area1.root.style.width = "-webkit-calc( 100% - " + w + splitinfo + " )";
+				area1.root.style.width = "calc( 100% - " + w + splitinfo + " )";
+				dynamic_section = area1;
+			}
+			else
+			{
+				var w0 = sizes[0];
+				if(typeof(w0) == "number")
+					w0 = sizes[0] + "px";
+				var w1 = sizes[1];
+				if(typeof(w1) == "number")
+					w1 = sizes[1] + "px";
+				var w2 = sizes[2];
+				if(typeof(w2) == "number")
+					w2 = sizes[2] + "px";
+
+				area0.root.style.width = w0;
+				area0.size = w0;
+				area1.root.style.width = w1;
+				area1.size = w1;
+				area2.root.style.width = w2;
+				area2.size = w2;
+			}
+		}
+
+		this.root.appendChild( area0.root );
+		if(splitbar1)
+			this.root.appendChild( splitbar1 );
+
+		area1.root.removeChild( area1.content );
+		area1.root.appendChild( this.content );
+		area1.content = this.content;
+
+		this.root.appendChild( area1.root );
+		if(splitbar2)
+			this.root.appendChild( splitbar2 );
+		this.root.appendChild( area2.root );
+
+		this.sections = [area0, area1, area2];
+		this.dynamic_section = dynamic_section;
+		this.direction = direction;
+
+		//SPLITTER DRAGGER INTERACTION
+		var that = this;
+		var last_pos = [0,0];
+		function inner_mousedown(e)
+		{
+			var t = null;
+            if (e.target) {
+                t = e.target;
+            } else if (e.srcElement) {
+                t = e.srcElement;
+            }
+            if(t.id == 'splitbar1' || t.id == 'splitbar2') {
+            	that.splitbar = t.id; //remember which splitbar is pressed
+            }		
+			var doc = that.root.ownerDocument;
+			doc.addEventListener("mousemove", inner_mousemove);
+			doc.addEventListener("mouseup", inner_mouseup);
+			last_pos[0] = e.pageX;
+			last_pos[1] = e.pageY;
+			e.stopPropagation();
+			e.preventDefault();
+		}
+
+		function inner_mousemove(e)
+		{
+			if(direction == "horizontal")
+			{
+				if (last_pos[0] != e.pageX)
+					that.moveSplit(last_pos[0] - e.pageX);
+			}
+			else if(direction == "vertical")
+			{
+				if (last_pos[1] != e.pageY)
+					that.moveSplit(e.pageY - last_pos[1]);
+			}
+
+			last_pos[0] = e.pageX;
+			last_pos[1] = e.pageY;
+			e.stopPropagation();
+			e.preventDefault();
+			if(that.options.immediateResize || that.options.inmediateResize) //inmediate is for legacy...
+				that.onResize();
+		}
+
+		function inner_mouseup(e)
+		{
+			var doc = that.root.ownerDocument;
+			doc.removeEventListener("mousemove",inner_mousemove);
+			doc.removeEventListener("mouseup",inner_mouseup);
+			that.onResize();
+		}
+	}
+
+	Area3.prototype.hide = function()
+	{
+		this.root.style.display = "none";
+	}
+
+	Area3.prototype.show = function()
+	{
+		this.root.style.display = "block";
+	}
+
+	Area3.prototype.showSection = function(num)
+	{
+		var section = this.sections[num];
+		var offset = 0;
+
+		if( section && section.root.style.display != "none" )
+			return; //already visible
+		
+		if(this.direction == "horizontal")
+			offset = section.root.style.width;
+		else
+			offset = section.root.style.height;
+
+		//if(size.indexOf("calc") != -1)
+		//	size = "50%";
+
+		for(var i in this.sections)
+		{
+			var section = this.sections[i];
+
+			if(i == num)
+				section.root.style.display = "inline-block";
+			else
+			{
+				if(this.direction == "horizontal") {
+					if(i == 1) {//expand the middle area only
+						section.root.style.width = "calc(" + section.root.offsetWidth + "px - " + offset + ")";
+					}
+				}
+				else {
+					if(i == 1) {
+						section.root.style.height = "calc(" + section.root.offsetHeight + "px - " + offset + ")";
+					}
+				}
+			}
+		}
+
+		if(this.splitbar1 && num < 1)
+			this.splitbar1.style.display = "inline-block";
+		if(this.splitbar2 && num > 1)
+			this.splitbar2.style.display = "inline-block";
+
+		this.sendResizeEvent();
+	}
+
+	Area3.prototype.hideSection = function(num)
+	{
+		//prevent hiding the main middle area and abnormal cases
+		if(num == 1 || num < 0 || num >= this.sections.length) return;
+
+		var offset = 0;
+		var section = this.sections[num];		
+
+		if(this.direction == "horizontal") {
+			offset = section.root.style.width;
+			this.sections[1].root.style.width = "calc(" + this.sections[1].root.offsetWidth + "px + " + offset + ")";
+		}
+		else {
+			offset = section.root.style.height;
+			this.sections[1].root.style.height = "calc(" + this.sections[1].root.offsetHeight + "px + " + offset + ")";				
+		}
+		section.root.style.display = "none";
+
+
+		if(this.splitbar1 && num < 1)
+			this.splitbar1.style.display = "none";
+		if(this.splitbar2 && num > 1)
+			this.splitbar2.style.display = "none";
+
+		this.sendResizeEvent();
+	}
+
+	Area3.prototype.moveSplit = function(delta)
+	{
+		if(!this.sections) return;
+
+		var area0 = this.sections[0];
+		var area1 = this.sections[1];
+		var area2 = this.sections[2];
+		var splitinfo = " - "+ Area3.splitbar_size +"px";
+
+		var min_size = this.options.minSplitSize || 10;
+
+		if(this.direction == "horizontal")
+		{
+			if (this.dynamic_section == area1)
+			{
+				//var size = ($(area2.root).width() + delta) + "px";
+				var size = (area2.root.offsetWidth + delta);
+				if(size < min_size)
+					size = min_size;
+				area1.root.style.width = "-moz-calc( 100% - " + size + "px " + splitinfo + " )";
+				area1.root.style.width = "-webkit-calc( 100% - " + size + "px " + splitinfo + " )";
+				area1.root.style.width = "calc( 100% - " + size + "px " + splitinfo + " )";
+				area2.root.style.width = size + "px"; //other split
+			}
+			else
+			{
+				if(this.splitbar == 'splitbar1') {//adjust area0/area1
+					var size = (area0.root.offsetWidth - delta);
+					if(size < min_size) {
+						size = min_size;
+						return;
+					}
+					area0.root.style.width = size + "px"; //other split					
+					area1.root.style.width = area1.root.offsetWidth + delta + "px";
+					var w01 = parseInt(area0.root.offsetWidth) + parseInt(area1.root.offsetWidth);
+					area2.root.style.width = "calc( 100% - " + w01 + "px " + splitinfo + splitinfo + " )";
+				} 
+				if(this.splitbar == 'splitbar2') {//adjust area1/area2
+					var size = (area2.root.offsetWidth + delta);
+					if(size < min_size) {
+						size = min_size;
+						return;
+					}
+					area2.root.style.width = size + "px"; //other split					
+					area1.root.style.width = area1.root.offsetWidth - delta + "px";
+					var w12 = parseInt(area1.root.offsetWidth) + parseInt(area2.root.offsetWidth);
+					area0.root.style.width = "calc( 100% - " + w01 + "px " + splitinfo + splitinfo + " )";
+				}
+			}
+		}
+		else if(this.direction == "vertical")
+		{
+			if (this.dynamic_section == area1)
+			{
+				//var size = ($(area2.root).height() - delta) + "px";
+				var size = (area2.root.offsetHeight - delta);
+				if(size < min_size)
+					size = min_size;
+				area1.root.style.height = "-moz-calc( 100% - " + size + "px " + splitinfo + " )";
+				area1.root.style.height = "-webkit-calc( 100% - " + size + "px " + splitinfo + " )";
+				area1.root.style.height = "calc( 100% - " + size + "px " + splitinfo + " )";
+				area2.root.style.height = size + "px"; //other split
+			}
+			else
+			{
+				//var size = ($(area1.root).height() + delta) + "px";
+				var size = (area1.root.offsetHeight + delta);
+				if(size < min_size)
+					size = min_size;
+				area2.root.style.height = "-moz-calc( 100% - " + size + "px " + splitinfo + " )";
+				area2.root.style.height = "-webkit-calc( 100% - " + size + "px " + splitinfo + " )";
+				area2.root.style.height = "calc( 100% - " + size + "px " + splitinfo + " )";
+				area1.root.style.height = size + "px"; //other split
+			}
+		}
+
+		LiteGUI.trigger( this.root, "split_moved");
+		//trigger split_moved event in all areas inside this area
+		var areas = this.root.querySelectorAll(".litearea");
+		for(var i = 0; i < areas.length; ++i)
+			LiteGUI.trigger( areas[i], "split_moved" );
+	}
+
+	Area3.prototype.addEventListener = function(a,b,c,d)
+	{
+		return this.root.addEventListener(a,b,c,d);
+	}
+
+	Area3.prototype.setAreaSize = function(area,size)
+	{
+		var element = this.sections[1];
+
+		var splitinfo = " - "+ 2*Area3.splitbar_size + "px";
+		element.root.style.width = "-moz-calc( 100% - " + size + splitinfo + " )";
+		element.root.style.width = "-webkit-calc( 100% - " + size + splitinfo + " )";
+		element.root.style.width = "calc( 100% - " + size + splitinfo + " )";
+	}
+
+	LiteGUI.Area3 = Area3;
+
 	/***************** SPLIT ******************/
 
 	/**
@@ -3358,6 +3850,33 @@ LiteGUI.Console = Console;
 })();
 (function(){
 
+	/************** LOGO ************************/
+	function Logobar(id, options) {
+		options = options || {};
+		this.root = document.createElement("div");
+		this.root.id = id;
+		this.root.className = "logo";
+
+		var link = document.createElement("a");
+		link.href = "http://realmax.com";
+		link.innerText = "";
+		this.root.appendChild(link);
+
+		//slogan
+		var slo = document.createElement("span");
+		slo.innerText = "Make WebAR Easy";
+		this.root.appendChild(slo);
+
+		if(options.slogan) {
+			var slogan = document.createElement("<span class='slogan'></span>");
+			slogan.innerText = options.slogan;
+			this.root.appendChild(slogan);
+		}
+
+	}
+
+	LiteGUI.Logobar = Logobar;
+
 	/************** MENUBAR ************************/
 	function Menubar(id, options)
 	{
@@ -3372,7 +3891,6 @@ LiteGUI.Console = Console;
 
 		this.content = document.createElement("ul");
 		this.root.appendChild( this.content );
-
 		this.is_open = false;
 		this.auto_open = options.auto_open || false;
 		this.sort_entries = options.sort_entries || false;
@@ -3422,7 +3940,7 @@ LiteGUI.Console = Console;
 				v.disable = function() { if( this.data ) this.data.disabled = true; }
 				v.enable = function() { if( this.data ) delete this.data.disabled; }
 
-				v.name = tokens[ current_token ];
+				v.name = i18n.gettext(tokens[ current_token ]);
 				menu.push( v );
 				current_token++;
 				if( current_token == tokens.length )
@@ -3434,7 +3952,7 @@ LiteGUI.Console = Console;
 			}
 
 			//token found in this menu, get inside for next token
-			if( menu[ current_pos ] && tokens[ current_token ] == menu[ current_pos ].name )
+			if( menu[ current_pos ] && i18n.gettext(tokens[ current_token ]) == menu[ current_pos ].name )
 			{
 				if(current_token < tokens.length - 1)
 				{
@@ -3835,7 +4353,7 @@ LiteGUI.Console = Console;
 	}
 
 	Tabs.tabs_width = 64;
-	Tabs.tabs_height = 26;
+	Tabs.tabs_height = 40;
 
 	Tabs.prototype.show = function()
 	{
@@ -3989,7 +4507,7 @@ LiteGUI.Console = Console;
 		element.className = "wtab wtab-" + safe_id + " ";
 		//if(options.selected) element.className += " selected";
 		element.dataset["id"] = id;
-		element.innerHTML = "<span class='tabtitle'>" + (options.title || id) + "</span>";
+		element.innerHTML = "<span class='tabtitle'>" + i18n.gettext((options.title || id)) + "</span>";
 
 		if(options.button)
 			element.className += "button ";
@@ -4293,9 +4811,9 @@ LiteGUI.Console = Console;
 			tab.onclose(tab);
 
 		if(tab.tab.parentNode)
-			tab.tab.parentNode.removeChild( tab.tab );
+		tab.tab.parentNode.removeChild( tab.tab );
 		if(tab.content.parentNode)
-			tab.content.parentNode.removeChild( tab.content );
+		tab.content.parentNode.removeChild( tab.content );
 		delete this.tabs[id];
 
 		this.recomputeTabsByIndex();
@@ -4313,9 +4831,9 @@ LiteGUI.Console = Console;
 			if(tab == this.plus_tab && keep_plus)
 				continue;
 			if(tab.tab.parentNode)
-				tab.tab.parentNode.removeChild( tab.tab );
+			tab.tab.parentNode.removeChild( tab.tab );
 			if(tab.content.parentNode)
-				tab.content.parentNode.removeChild( tab.content );
+			tab.content.parentNode.removeChild( tab.content );
 			delete this.tabs[ tab.id ];
 		}
 
@@ -5990,11 +6508,14 @@ LiteGUI.Console = Console;
 		options = options || {};
 
 		var that = this;
-		this.width = options.width;
-		this.height = options.height;
+		if(options.width)
+			this.width = options.width;
+		if(options.height)
+			this.height = options.height;
 		this.minWidth = options.minWidth || 150;
 		this.minHeight = options.minHeight || 100;
 		this.content = options.content || "";
+		this.header = options.header || "";
 
 		var panel = document.createElement("div");
 		if(options.id)
@@ -6027,6 +6548,7 @@ LiteGUI.Console = Console;
 		panel.innerHTML = code;
 
 		this.root = panel;
+		this.header = panel.querySelector(".panel-header");
 		this.content = panel.querySelector(".content");
 		this.footer = panel.querySelector(".panel-footer");
 
@@ -6554,7 +7076,7 @@ LiteGUI.Console = Console;
 			extra += footer.offsetHeight;
 
 		var width = this.content.offsetWidth;
-		var height = this.content.offsetHeight + 20 + margin + extra;
+		var height = this.content.offsetHeight + 64 + margin + extra;
 
 		this.setSize( width, height );
 	}
@@ -7392,9 +7914,9 @@ Inspector.prototype.createWidget = function( name, content, options )
 	if( name === null || name === undefined )
 		content_class += " full";
 	else if(name === "") //three equals because 0 == "" 
-		code += "<span class='wname' title='"+title+"' "+namewidth+">"+ pretitle +"</span>";
+		code += "<span class='wname' title='"+ title + "' " + namewidth+">"+ pretitle +"</span>";
 	else
-		code += "<span class='wname' title='"+title+"' "+namewidth+">"+ pretitle + name + filling + "</span>";
+		code += "<span class='wname' title='"+ title + "' " + namewidth+">"+ pretitle + i18n.gettext(name) + filling + "</span>";
 
 	if( content.constructor === String || content.constructor === Number || content.constructor === Boolean )
 		element.innerHTML = code + "<span class='info_content "+content_class+"' "+contentwidth+">"+content+"</span>";
@@ -7622,6 +8144,10 @@ Inspector.prototype.addDefault = function( name, value, options)
 **/
 Inspector.prototype.addString = function(name,value, options)
 {
+	var placeHolder = "";
+	if(options && options.placeHolder)
+		placeHolder = options.placeHolder;
+
 	options = this.processOptions(options);
 
 	value = value || "";
@@ -7637,7 +8163,7 @@ Inspector.prototype.addString = function(name,value, options)
 	var input = element.querySelector(".wcontent input");
 
 	if(options.placeHolder)
-		input.setAttribute("placeHolder",options.placeHolder);
+		input.setAttribute("placeHolder", placeHolder);
 
 	if(options.align == "right")
 	{
@@ -7791,7 +8317,7 @@ Inspector.prototype.addTextarea = function(name,value, options)
 	var that = this;
 	this.values[name] = value;
 
-	var element = this.createWidget(name,"<span class='inputfield textarea "+(options.disabled?"disabled":"")+"'><textarea tabIndex='"+this.tab_index+"' "+(options.disabled?"disabled":"")+"></textarea></span>", options);
+	var element = this.createWidget(name,"<span class='inputfield textarea "+(options.disabled?"disabled":"")+"'><textarea tabIndex='"+this.tab_index+"' "+(options.disabled?"disabled":"")+">"+value+"</textarea></span>", options);
 	this.tab_index++;
 	var textarea = element.querySelector(".wcontent textarea");
 	textarea.value = value;
@@ -9123,14 +9649,18 @@ Inspector.prototype.addList = function(name, values, options)
 
 Inspector.prototype.addButton = function(name, value, options)
 {
+	var that = this;
+	var button_classname = "";
+
+	if(options && options.className)
+		button_classname = options.className;
+	if(options)
+		value = options.button_text || value || "";
+
 	options = this.processOptions(options);
 
-	value = options.button_text || value || "";
-	var that = this;
-
-	var button_classname = "";
 	if(name === null)
-		button_classname = "single";
+		button_classname += " single";
 	if(options.micro)
 		button_classname += " micro";
 

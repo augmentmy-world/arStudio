@@ -24,22 +24,26 @@ var InterfaceModule = {
 
 	init: function()
 	{
+		//crea logobar
+		LiteGUI.createLogo("logo");		
 		//create menubar
 		LiteGUI.createMenubar(null,{sort_entries: false});
 
 		//fill menubar with sections
 		LiteGUI.menubar.add("Project");
 		LiteGUI.menubar.add("Edit");
-		LiteGUI.menubar.add("View");
-		LiteGUI.menubar.add("Node");
-		LiteGUI.menubar.add("Scene");
-		LiteGUI.menubar.add("Actions");
+		LiteGUI.menubar.add("Assets");
+		LiteGUI.menubar.add("Game Object");
+		LiteGUI.menubar.add("Components",{ callback: function() { EditorModule.showAddComponentToNode(null, function(){ EditorModule.refreshAttributes(); } ); }} );
+		LiteGUI.menubar.add("Window");		
+		LiteGUI.menubar.add("Help/Guide", {  callback: function(){ window.open("#","_blank"); }});
+		LiteGUI.menubar.add("Help/About", {  callback: function(){ window.open("#","_blank"); }});
 
 		var side_panel_width = this.preferences.side_panel_width || 300;
 
-		//create a main container and split it in two (workarea: leftwork, sidebar)
-		var mainarea = new LiteGUI.Area({ id: "mainarea", content_id:"workarea", height: "calc(100% - 30px)", autoresize: true, inmediateResize: true, minSplitSize: 200 });
-		mainarea.split("horizontal",[null, side_panel_width], true);
+		//create a main container and split it into three (workarea: leftbar, mainwork, sidebar)
+		var mainarea = new LiteGUI.Area3({ id: "mainarea", content_id:"workarea", height: "calc(100% - 30px)", autoresize: true, inmediateResize: true, minSplitSize: 200 });
+		mainarea.split("horizontal",["20%", "calc(60% - 10px)", "20%"], true);
 		this.mainarea = mainarea;
 		//globalarea.getSection(1).add( mainarea );
 		LiteGUI.add( mainarea );
@@ -55,6 +59,7 @@ var InterfaceModule = {
 		//var workarea_split = mainarea.getSection(0);
 		//workarea_split.content.innerHTML = "<div id='visor'></div>";
 
+		this.createHierarchyPanel();
 		this.createTabs();
 		this.createSidePanel();
 
@@ -65,8 +70,8 @@ var InterfaceModule = {
 
 	createTabs: function()
 	{
-		var main_tabs = new LiteGUI.Tabs( { id: "worktabs", width: "full", mode: "vertical", autoswitch: true });
-		this.mainarea.getSection(0).add( main_tabs );
+		var main_tabs = new LiteGUI.Tabs( { id: "worktabs", width: "full", mode: "horizontal", autoswitch: true });
+		this.mainarea.getSection(1).add( main_tabs );
 		//document.getElementById("leftwork").appendChild( main_tabs.root );
 		LiteGUI.main_tabs = main_tabs;
 	},
@@ -76,37 +81,17 @@ var InterfaceModule = {
 		return LiteGUI.main_tabs.selectTab(name);
 	},
 
-	/*
-	createLowerArea: function()
-	{
-		var visorarea = this.visorarea = new LiteGUI.Area("visorarea",{ autoresize: true, inmediateResize: true});
-		//document.getElementById("leftwork").appendChild( visorarea.root );
-		this.mainarea.getSection(0).add( visorarea );
-
-		visorarea.split("vertical",[null,200], true);
-		visorarea.getSection(0).content.innerHTML = "<div id='visor'><div id='maincanvas'></div><div id='statusbar'><span class='status-msg'></div></div></div>";
-		visorarea.getSection(1).content.innerHTML = "";
-
-		//toggle statusbar console panel
-		visorarea.root.querySelector( "#statusbar" ).addEventListener("click", InterfaceModule.toggleStatusBar.bind( InterfaceModule ) );
-
-		LiteGUI.bind( visorarea, "split_moved", function(e){
-			InterfaceModule.lower_tabs_widget.onResize();
-		});
-	},
-	*/
-
 	createSidePanel: function()
 	{
 		this.side_panel_visibility = true;
 
 		//test dock panel
 		var docked = new LiteGUI.Panel("side_panel", {title:'side panel'});
-		this.mainarea.getSection(1).add( docked );
+		this.mainarea.getSection(2).add( docked );
 		LiteGUI.sidepanel = docked;
 
 		//close button
-		var close_button = new LiteGUI.Button( LiteGUI.special_codes.close , function() { InterfaceModule.setSidePanelVisibility(); });
+		/*var close_button = new LiteGUI.Button( LiteGUI.special_codes.close , function() { InterfaceModule.setSidePanelVisibility(); });
 		close_button.root.style.float = "right";
 		close_button.content.style.width = "20px";
 		docked.header.appendChild( close_button.root );
@@ -115,60 +100,70 @@ var InterfaceModule = {
 		var split_button = new LiteGUI.Button("-", function() { InterfaceModule.splitSidePanel(); });
 		split_button.root.style.float = "right";
 		split_button.content.style.width = "20px";
-		docked.header.appendChild( split_button.root );
+		docked.header.appendChild( split_button.root );*/
 
 		//tabs 
 		var tabs_widget = new LiteGUI.Tabs( { id: "paneltabs", size: "full" });
-		tabs_widget.addTab("Scene Tree", {selected:true, id:"nodelist", size: "full", width: "100%"});
 		tabs_widget.addTab("Inspector", { size: "full" });
 		docked.add( tabs_widget );
 		this.sidepaneltabs = tabs_widget;
 
-		LiteGUI.menubar.add("Window/Side panel", { callback: function() { InterfaceModule.setSidePanelVisibility(); } });
-		LiteGUI.menubar.add("Window/Low panel", { callback: function() { InterfaceModule.setLowerPanelVisibility(); } });
-		LiteGUI.menubar.add("Window/Floating panel", { callback: function() { GenericTabsWidget.createDialog(); } });
-		LiteGUI.menubar.add("Window/Inspector panel", { callback: function() { InspectorWidget.createDialog(); } });
-
-		//LiteGUI.menubar.add("Window/show view app", { callback: function() { window.open("simple.html"); } });
-
-		/*
-		LiteGUI.menubar.add("Window/maximized", { checkbox: false, callback: function(v) { 
-			if(v.checkbox)
-				LiteGUI.setWindowSize();
-			else
-				LiteGUI.setWindowSize(1000,600);
-		}});
-		*/
+		LiteGUI.menubar.add("Window/Side Panel", { callback: function() { InterfaceModule.setSidePanelVisibility(); } });
+		LiteGUI.menubar.add("Window/Assets Panel", { callback: function() { InterfaceModule.setLowerPanelVisibility(); } });
 
 		//split in top-bottom for header and workarea
 		var sidepanelarea = new LiteGUI.Area({ id: "sidepanelarea", autoresize: true, inmediateResize: true });
-		sidepanelarea.split("vertical",["30%",null], true);
-		sidepanelarea.hide();
-		LiteGUI.sidepanel.splitarea = sidepanelarea;
+		//sidepanelarea.split("vertical",["30%",null], true);
+		//sidepanelarea.hide();
+		//LiteGUI.sidepanel.splitarea = sidepanelarea;
 		LiteGUI.sidepanel.add( sidepanelarea );
-
-		//create scene tree
-		this.scene_tree = new SceneTreeWidget({ id: "sidepanel-inspector" });
-		tabs_widget.getTab("Scene Tree").add( this.scene_tree );
 
 		//create inspector
 		EditorModule.inspector = this.inspector_widget = new InspectorWidget();
 		tabs_widget.getTab("Inspector").add( this.inspector_widget );
 
-		/*
-		this.inspector = new LiteGUI.Inspector("sidepanel-inspector", {name_width: "40%" });
-		this.inspector.onchange = function()
-		{
-			RenderModule.requestFrame();
-		}
-		tabs_widget.getTab("Inspector").add( this.inspector );
-		this.inspector.addInfo(null,"select something to see its attributes");
-		EditorModule.inspector = this.inspector; //LEGACY
-		*/
-
 		//default
 		tabs_widget.selectTab("Inspector");
-		this.splitSidePanel();
+		//this.splitSidePanel();
+	},
+
+	//scene panel is kind of side panel
+	createHierarchyPanel: function() {
+		this.hierarchy_panel_visibility = true;
+
+		//test dock panel
+		var docked = new LiteGUI.Panel("hierarchy_panel", {title:i18n.gettext('HIERARCHY')});
+		this.mainarea.getSection(0).add( docked );
+		LiteGUI.hierarchypanel = docked;
+
+		//close button
+		/*var close_button = new LiteGUI.Button( LiteGUI.special_codes.close , function() { InterfaceModule.setSidePanelVisibility(); });
+		close_button.root.style.float = "right";
+		close_button.content.style.width = "20px";
+		docked.header.appendChild( close_button.root );*/
+
+		//tabs 
+		var tabs_widget = new LiteGUI.Tabs( { id: "left_paneltabs", size: "full" });
+		tabs_widget.addTab("Hierarchy", { size: "full" });
+		docked.add( tabs_widget );
+		this.hierarchypaneltabs = tabs_widget;
+
+		//split in top-bottom for header and workarea
+		var hierarchypanelarea = new LiteGUI.Area({ id: "hierarchypanelarea", autoresize: true, inmediateResize: true });
+		hierarchypanelarea.split("vertical",["100%",null], true);
+		hierarchypanelarea.hide();
+		LiteGUI.hierarchypanel.splitarea = hierarchypanelarea;
+		LiteGUI.hierarchypanel.add( hierarchypanelarea );
+
+		//create scene tree
+		this.scene_tree = new SceneTreeWidget({ id: "left_sidepanel-scenetree" });
+		tabs_widget.getTab("Hierarchy").add( this.scene_tree );
+
+		LiteGUI.menubar.add("Window/Hierarchy Panel", { callback: function() { InterfaceModule.setHierarchyPanelVisibility(); } });
+
+		//default
+		tabs_widget.selectTab("Hierarchy");
+		this.splitHierarchyPanel();
 	},
 
 	setStatusBar: function(text, classname)
@@ -208,25 +203,19 @@ var InterfaceModule = {
 		var tabs = this.sidepaneltabs;
 		var sidepanelarea = LiteGUI.sidepanel.splitarea;
 
-		var tree = this.scene_tree.root;
 		var attr = this.inspector_widget.root;
 
 		if(!this.is_sidepanel_splitted)
 		{
-			tree.style.display = attr.style.display = "block";
-			tree.style.height = attr.style.height = "100%";
+			attr.style.display = "block";
+			attr.style.height = "100%";
 			tabs.hide();
 			sidepanelarea.show();
 
-			sidepanelarea.getSection(0).add( tree );
-			sidepanelarea.getSection(0).root.style.overflow = "auto";
-			sidepanelarea.getSection(1).add( attr );
-			sidepanelarea.getSection(1).root.style.overflow = "auto";
 			this.is_sidepanel_splitted = true;
 		}
 		else
 		{
-			tabs.getTab("Scene Tree").content.appendChild( tree );
 			tabs.getTab("Inspector").content.appendChild( attr );
 
 			tabs.show();
@@ -235,6 +224,36 @@ var InterfaceModule = {
 			this.is_sidepanel_splitted = false;
 		}
 	},
+
+	splitHierarchyPanel: function()
+	{
+		var tabs = this.hierarchypaneltabs;
+		var hierarchypanelarea = LiteGUI.hierarchypanel.splitarea;
+
+		var attr = this.scene_tree.root;
+
+		if(!this.is_hierarchypanel_splitted)
+		{
+			attr.style.display = "block";
+			attr.style.height = "100%";
+			tabs.hide();
+			hierarchypanelarea.show();
+
+			hierarchypanelarea.getSection(0).add( attr );
+			hierarchypanelarea.getSection(0).root.style.overflow = "auto";
+
+			this.is_hierarchypanel_splitted = true;
+		}
+		else
+		{
+			tabs.getTab("Inspector").content.appendChild( attr );
+
+			tabs.show();
+			hierarchypanelarea.hide();
+
+			this.is_hierarchypanel_splitted = false;
+		}
+	},	
 
 	//something dragged into the canvas
 	onItemDrop: function(e)
@@ -274,6 +293,10 @@ var InterfaceModule = {
 		return this.side_panel_visibility;
 	},
 
+	getHierarchyPanelVisibility: function(v) {
+		return this.hierarchy_panel_visibility;
+	},
+
 	createSidebarOpener: function()
 	{
 		if(this.opensidepanel_button)
@@ -302,15 +325,31 @@ var InterfaceModule = {
 		this.side_panel_visibility = v;
 		if(v)
 		{
-			this.mainarea.showSection(1);
+			this.mainarea.showSection(2);
 			if(this.opensidepanel_button)
 				this.opensidepanel_button.style.display = "none";
 		}
 		else
 		{
-			this.mainarea.hideSection(1);
+			this.mainarea.hideSection(2);
 			if(this.opensidepanel_button)
 				this.opensidepanel_button.style.display = "block";
+		}
+	},
+
+	setHierarchyPanelVisibility: function(v)
+	{
+		if (v === undefined)
+			v = !this.hierarchy_panel_visibility;
+
+		this.hierarchy_panel_visibility = v;
+		if(v)
+		{
+			this.mainarea.showSection(0);
+		}
+		else
+		{
+			this.mainarea.hideSection(0);
 		}
 	},
 
@@ -332,7 +371,7 @@ var InterfaceModule = {
 		//add close button
 		var button = LiteGUI.createButton("close_lowerpanel", LiteGUI.special_codes.close , function(){
 			InterfaceModule.setLowerPanelVisibility(false);
-		}, "position: absolute; top: 0; right: 2px; margin: 0; min-width: 20px; background: #333; box-shadow: 0 0 0 transparent;");
+		}, "");
 		this.lower_tabs_widget.tabs.tabs_root.appendChild(button);
 	},
 
@@ -647,7 +686,7 @@ function addGenericResource ( name, value, options, resource_classname )
 
 	this.values[name] = value;
 
-	var element = this.createWidget(name,"<span class='inputfield button'><input type='text' tabIndex='"+this.tab_index+"' class='text string' value='"+value+"' "+(options.disabled?"disabled":"")+"/></span><button title='show folders' class='micro'>"+(options.button || LiteGUI.special_codes.open_folder )+"</button>", options);
+	var element = this.createWidget(name,"<span class='inputfield button'><input type='text' tabIndex='"+this.tab_index+"' class='text string' value='"+value+"' "+(options.disabled?"disabled":"")+"/></span><button title='show folders' class='micro'>"+(options.button || "..." )+"</button>", options);
 
 	//INPUT
 	var input = element.querySelector(".wcontent input");
@@ -663,8 +702,8 @@ function addGenericResource ( name, value, options, resource_classname )
 	input.addEventListener( "change", function(e) { 
 		var v = e.target.value;
 		if(v && v[0] != ":" && !options.skip_load)
-			LS.ResourcesManager.load(v);
-		LiteGUI.Inspector.onWidgetChange.call(that,element,name,v, options);
+            LS.ResourcesManager.load(v); 
+		LiteGUI.Inspector.onWidgetChange.call(that,element,name,v, options,null,e);
 	});
 
 	//INPUT ICON
@@ -699,9 +738,11 @@ function addGenericResource ( name, value, options, resource_classname )
 			options.callback_button.call( element, input.value);
 	});
 
-	function inner_onselect(filename)
+	function inner_onselect(filename,dataset)
 	{
-		value = input.value = filename;
+        value = input.value = filename;
+        if(dataset != undefined && dataset !=null)
+            input.dataset['pattern']=dataset['pattern']; 
 		LiteGUI.trigger( input, "change" );
 	}
 
@@ -782,12 +823,19 @@ LiteGUI.Inspector.prototype.addMesh = function(name,value, options)
 
 LiteGUI.Inspector.widget_constructors["mesh"] = "addMesh";
 
+//to select a 2d marker
+LiteGUI.Inspector.prototype.addMarker2D = function( name, value, options )
+{
+	return addGenericResource.call(this, name, value, options, "2DMarker" );
+}
+LiteGUI.Inspector.widget_constructors["marker2d"] = "addMarker2D";
+
 //to select a material
 LiteGUI.Inspector.prototype.addMaterial = function( name,value, options)
 {
 	options = options || {};
 	options.width = "70%";
-	options.name_width = 70;
+	options.name_width = 40;
 
 	this.widgets_per_row += 2;
 	var r = addGenericResource.call(this, name, value, options, "Material" );
@@ -820,6 +868,11 @@ LiteGUI.Inspector.prototype.addScript = function( name, value, options )
 
 	this.widgets_per_row += 1;
 	var r = addGenericResource.call(this, name, value, options, "Script" );
+	if(value != "" && !LS.RM.getResource(value)) {
+		var res = new LS.Resource();
+		LS.RM.registerResource(value, res);		
+	}
+
 	this.addButton(null,"{}",{ width:"30px", callback: function(){
 
 		if(options.callback_edit)
@@ -1129,7 +1182,7 @@ LiteGUI.Inspector.prototype.addColor = function( name, value, options )
 	var widget = inspector.addColorOld( name, value, options );
 	var color_picker_icon = colorPickerTool.icon;
 
-	inspector.addButton( null, "<img src="+color_picker_icon+">", { skip_wchange: true, width: (total_width - w) + "%", callback: inner } );
+	inspector.addButton( null, "<img class='colorpicker' src="+color_picker_icon+">", { skip_wchange: true, width: (total_width - w) + "%", callback: inner } );
 
 	inspector.widgets_per_row -= 1;
 

@@ -2,7 +2,7 @@ var parentingNodeTool = {
 	name: "parenting",
 	description: "Drag to parent nodes",
 	section: "foo",
-	icon: "imgs/mini-icon-tree.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-tree.png",
 
 	state: null,
 

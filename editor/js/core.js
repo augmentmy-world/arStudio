@@ -1,4 +1,36 @@
 /* The Core is in charge of launching the app, loading any external JS file and register modules, it also handles user preferences */
+
+
+//################################################################
+/* cw: Test define of an object 'class'
+
+function UserInfo()	// UserInfo Constructor
+{
+	this.name="john";
+	this.age = 48;
+	this.group = "admin";
+}
+// Methods
+UserInfo.prototype.showName = function() { console.log("the name"); }
+
+// Create class
+var User1 = new UserInfo();
+// Here autocomplete works.
+
+// Override the method.
+//User1.showName = function() { console.log("overidden method"); }
+
+User1.showName();
+
+// detect TYPE of User1 var
+if (User1 instance of UserInfo)
+{
+	console.log("user1 is a Userinfo");
+}
+*/
+//################################################################
+
+
 var CORE = {
 
 	config: null, //internal configuration
@@ -14,6 +46,16 @@ var CORE = {
 	_modules_initialized: false,
 	send_log_to_console: false,
 
+	// cw: User login / node connection / collaboration stuff @todo I will move this to a new file!
+	usingNodeFS: false,		// cw: Are we using the NODE file system, or the old PHP-based file system. Comes from querystring "UseNodeFS=true"
+	usingLocalNode: false,	// cw: Are we running NODE on 127.0.0.1, or on the 'real' realmax server? Comes from querystring "LocalNode=true"
+	nodeIP: "http://realmaxdemos.com:8080",	// cw: where the NODE server is, can also be 127.0.0.1 using query string override
+	nodeSocket: null,				// cw: Socket handle to NODE server, used for all client->server comms.
+	isConnected: false,				// cw: true if we have a socket connection to the node server.
+	loggedInAs: null,				// cw: null=not logged in, username string if we are logged in (later we can assume were ALWAYS logged in, for now node asks us)
+	currentlyEditingScene:null,		// cw: null=no scene, scene name string if we have a scene open (later we can assume were ALWAYS editing a scene, for now we set it on open and create)
+
+
 	//called from index.html
 	init: function( )
 	{
@@ -26,18 +68,99 @@ var CORE = {
 			success: this.configLoaded.bind(this)
 		});
 
-		/*
-		this.ProxyScene.onLEventBinded = function( event_type, callback, target_instance )
+		//Init multi-language
+		this.initI18N();
+
+		//=============================================
+		// Fill in the variables from the query string (add any new querystring setting of vars here).
+		//=============================================
+		function getQueryStringVars(that)
 		{
-		
+			var searchParams = new URLSearchParams(window.location.search); //?anything=123
+
+			CORE.usingNodeFS = searchParams.get("usingNodeFS");
+			CORE.usingLocalNode = searchParams.get("usingLocalNode");
+			if (CORE.usingLocalNode==1) CORE.nodeIP = "127.0.0.1:8080";
+
 		}
 
-		this.ProxyScene.onLEventUnbinded = function( event_type, callback, target_instance )
+		//=============================================
+		// Try and connect to the node server, fill in the connection info.
+		// Show warning if cannot connect. This will keep retrying, the var isConnected will be set.
+		//=============================================
+		function connectToNodeServer(that)
 		{
-		
+			/* old
+			CORE.isConnected=false;
+			CORE.loggedInAs=null;
+			CORE.currentlyEditingScene = null;
+
+			CORE.nodeSocket = io.connect(CORE.nodeIP);
+
+			CORE.nodeSocket.on("connect_error", function(err)
+			{
+				console.log("*** ERROR: couldn't connect to node server!");
+				CORE.isConnected=false;
+			});
+
+			CORE.nodeSocket.on("connect", function(err)
+			{
+				console.log("*** Connected to node server!");
+				// cw: Resend info just in case connection took longer to establish than the login using PHP
+				CORE.nodeLogin( CORE.loggedInAs  );
+				//CORE.editingScene(CORE.currentlyEditingScene );
+				CORE.isConnected=true;
+			});
+
+
+			CORE.nodeSocket.on("disconnect", function(err)
+			{
+				console.log("*** Disconnected from node server!");
+				CORE.isConnected=false;
+			});
+
+
+
+*/
 		}
-		*/
+
+
+		//============================================================================
+		// cw: Tell Node we are logged in (or out) as a new user. null username=logged OUT
+		//============================================================================
+		CORE.nodeLogin = function(username)
+		{
+			//CORE.loggedInAs = username;
+			if (username==null)
+			{
+				console.log("logged OUT ");
+				CORE.currentlyEditingScene=null;	// logging out means you are also not editing scene.
+			}
+			else
+			{
+				console.log("logging in as " + username);
+
+			}
+			CORE.nodeSocket.emit('login', {user: username  });
+
+		};
+
+
+
+
+		//============================================================================
+		// Tell node to create a new scene, a loadscene message will come back
+		//============================================================================
+		CORE.createScene = function(v)
+		{
+			CORE.nodeSocket.emit('createscene',{ name: v });
+			CORE.currentlyEditingScene=null;	// awaiting a loadscene message to come back!
+		};
+
+		getQueryStringVars(this);	// cw: Get extra variables from query string.
+
 	},
+
 
 	configLoaded: function( config )
 	{
@@ -66,6 +189,9 @@ var CORE = {
 			nocache: true,
 			success: this.loadImports.bind(this)
 		});
+
+		//Init skin
+		this.initSkin();		
 	},
 
 	//Loads all the files ***********************
@@ -84,14 +210,14 @@ var CORE = {
 		this.showLoadingPopup( imports_list );
 
 		//intro loading text
-		this.log("Loading imports...");
+		/*this.log("Loading...");
 		var num = 0;
 		for(var i in imports_list)
 		{
 			var import_name = imports_list[i];
 			import_name = import_name.split("/").join("<span class='foldername-slash'>/</span>");
 			CORE.log( "<span id='msg-import-"+ (num++) + "' class='tinybox'></span> <span class='name'>" + import_name + "</span>" );
-		}
+		}*/
 
 		//forces to redownload files
 		if(this.config.nocache)
@@ -107,7 +233,7 @@ var CORE = {
 		//one module loaded
 		function onProgress( name, num )
 		{
-			that.onImportLoaded( name, num );
+			//that.onImportLoaded( name, num );
 		}
 
 		//one module loaded
@@ -123,7 +249,9 @@ var CORE = {
 
 		function onReady()
 		{
-			that.log("Loading done",true);
+			console.log("Loading done");
+			$('.circle-loader').toggleClass('load-complete');
+    		$('.checkmark').toggle();
 			setTimeout(function(){ CORE.launch(); },500 );
 		}
 	},
@@ -134,7 +262,7 @@ var CORE = {
 		//remove loading info
 		LiteGUI.remove(".startup-console-msg");
 		this.send_log_to_console = true;
-
+		
 		//launch LiteGUI
 		LiteGUI.init(); 
 
@@ -406,7 +534,9 @@ var CORE = {
 			num++;
 		var element = document.createElement("div");
 		element.id = "loader-dialog";
-		element.innerHTML = "<div class='title'><img src='imgs/webglstudio-icon.png' /></div><div class='loader'></div><div class='log'></div>";
+		element.innerHTML = "<div class='circle-loader'><div class='checkmark draw'></div></div> \
+		<p class='loading-text'>Loading...</p><div class='title'> \
+		<img src='skins/"+CORE.config.skin+"/imgs/logo_sq.png' /></div>";
 		this.log_container = element.querySelector(".log");
 		this.root.appendChild(element);
 		element.info = {
@@ -433,5 +563,40 @@ var CORE = {
 		var f2 = (info.progress * 100 + 5).toFixed(0);
 		info.loader.style.backgroundImage = "-webkit-linear-gradient( left, #AAA, cyan "+f+"%, black "+f2+"%)";
 		info.loader.style.backgroundImage = "-moz-linear-gradient( left, #AAA, cyan "+f+"%, black "+f2+"%)";
+	},
+
+	initI18N: function() 
+	{
+		i18n = window.i18n();
+		//using cookie for now, but might be changed to save in user preferences
+		RW_Cookies = Cookies.noConflict();
+		var lc = RW_Cookies.get('locale');
+		if(lc && lc != "en") {
+			i18n.setLocale(lc);
+
+			$.get("messages/"+lc, function(data) {
+				i18n.loadJSON(data, 'messages');
+		  		console.log(i18n.gettext('Welcome to ')+'RealWeb Studio!');
+			});
+		} else {
+			console.log('Welcome to RealWeb Studio!');
+		}
+	},
+
+	initSkin: function(){//todo: support multiple skins
+		var head = document.getElementsByTagName("head")[0];         
+		var cssNode = document.createElement('link');
+		cssNode.type = 'text/css';
+		cssNode.rel = 'stylesheet';
+		cssNode.media = 'screen';		
+		cssNode.href = 'skins/'+this.config.skin+'/css/style.css';
+		head.appendChild(cssNode);
+
+		cssNode = document.createElement('link');
+		cssNode.type = 'text/css';
+		cssNode.rel = 'stylesheet';
+		cssNode.media = 'screen';
+		cssNode.href = 'skins/'+this.config.skin+'/css/litegui.css';
+		head.appendChild(cssNode);
 	}
 }

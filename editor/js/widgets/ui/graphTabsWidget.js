@@ -1,6 +1,7 @@
 function GraphTabsWidget( options )
 {
 	this.root = null;
+
 	this.init( options );
 }
 

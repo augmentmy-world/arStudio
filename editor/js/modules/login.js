@@ -18,7 +18,7 @@ var LoginModule = {
 		loginarea.style.right = 0;
 
 		this.loginarea = loginarea;
-		document.querySelector("#mainmenubar").appendChild( loginarea );
+		document.querySelector("#mainmenubar").parentNode.appendChild( loginarea );
 
 		if(!CORE.server_url)
 			console.warn("No server url found in LoginModule");
@@ -94,9 +94,9 @@ var LoginModule = {
 	{
 		if (this.user)
 		{
-			this.loginarea.innerHTML = "logged as <a href=''>"+this.user.username+"</a> <button class='litebutton btn'>Logout</button>";
+			this.loginarea.innerHTML = "<a href='#'>"+this.user.username+"</a> <button class='exit litebutton btn'>"+i18n.gettext("Logout")+"</button>";
 			this.loginarea.querySelector("a").addEventListener( "click", function(e){ 
-				LoginModule.showAccountDialog();
+				//LoginModule.showAccountDialog();
 				e.preventDefault();	
 				return true;
 			});
@@ -106,7 +106,7 @@ var LoginModule = {
 		}
 		else
 		{
-			this.loginarea.innerHTML = "not logged in <button class='litebutton btn'>Login</button>";
+			this.loginarea.innerHTML = "<button class='login litebutton btn'>Login</button>";
 			this.loginarea.querySelector("button").addEventListener("click", function() {
 				LoginModule.showLoginDialog();
 			});
@@ -122,15 +122,14 @@ var LoginModule = {
 		else
 		{
 			var title = force_login ? null : "Login";
-			this.login_dialog = new LiteGUI.Dialog({ id: "dialog_login", title:title, close: !force_login, width: 400, scroll: false, draggable: !force_login });
-			this.login_dialog.root.style.fontSize = "1.4em";
+			this.login_dialog = new LiteGUI.Dialog({ id: "dialog_login", title:title, close: !force_login, scroll: false, draggable: !force_login });
 
 			this.login_dialog.on_close = function()
 			{
 				LoginModule.login_dialog = null;
 			}
 			this.login_dialog.show('fade');
-			this.login_dialog.widgets = new LiteGUI.Inspector({ name_width: "40%" });
+			this.login_dialog.widgets = new LiteGUI.Inspector({});
 			if(force_login)
 				this.login_dialog.makeModal();
 		}
@@ -153,16 +152,15 @@ var LoginModule = {
 		function inner_show_login()
 		{
 			widgets.clear();
-			if(force_login)
-				widgets.addInfo(null,"You must be logged in, use your account or create a new one",{ className:"dialog-info-warning"} );
-			username_widget = widgets.addString("Username", "", {});
-			password_widget = widgets.addString("Password", "", { password:true, callback_enter: inner_login });
-			widgets.addButton(null, "Login", { callback: function(v){ inner_login(); }});
+			username_widget = widgets.addString(i18n.gettext("Username"), "", {});
+			password_widget = widgets.addString(i18n.gettext("Password"), "", { password:true, callback_enter: inner_login });
+			info = widgets.addInfo( null, "", {className:"error"} );
+
+			widgets.addButton(null, i18n.gettext("Login"), { callback: function(v){ inner_login(); }});
 			widgets.addSeparator();
-			widgets.addButton("Forgot password","Reset my password", { callback: inner_forgot_password } );
-			widgets.addButton("Don't have account","Create Account", { callback: inner_create_account } );
-			widgets.addButton("Just visiting","Login as GUEST", { callback: function(v){ inner_login_guest(); }});
-			info = widgets.addInfo( null, "" );
+			//widgets.addButton("Forgot password","Reset my password", { callback: inner_forgot_password } );
+			widgets.addButton(null, i18n.gettext("Register"), { callback: inner_create_account } );
+			//widgets.addButton("Just visiting","Login as GUEST", { callback: function(v){ inner_login_guest(); }});
 		}
 
 		function inner_login()
@@ -171,48 +169,49 @@ var LoginModule = {
 			var password = widgets.values["Password"];
 			if(!username || !password)
 			{
-				info.setValue("You must specify username and password");
+				info.setValue(i18n.gettext("You must specify username and password"));
 			}
 			else
 			{
 				LoginModule.login(username,password, inner_result );
-				info.setValue("Waiting server...");
+				info.setValue(i18n.gettext("Waiting server..."));
 			}
 		}
 
 		function inner_login_guest()
 		{
 			LoginModule.login("guest","guest", inner_result );
-			info.setValue("Waiting server...");
+			info.setValue(i18n.gettext("Waiting server..."));
 		}
 
 		function inner_create_account()
 		{
 			widgets.clear();
-			widgets.addTitle( "New account" );
-			widgets.addInfo( null, "Fill the profile information" );
-			widgets.addTitle( "User profile" );
-			var username_widget = widgets.addString("Username", "");
-			var email_widget = widgets.addString("Email", "");
-			var password_widget = widgets.addString("Password", "", { password:true });
-			widgets.addButton(null,"Create Account", { callback: function()	{
+			var username_widget = widgets.addString(i18n.gettext("Username"), "", {});
+			var email_widget = widgets.addString(i18n.gettext("Email"), "", {});
+			var password_widget = widgets.addString(i18n.gettext("Password"), "", { password:true });
+			var create_info = widgets.addInfo( null, "" );
+
+			widgets.addButton(null,i18n.gettext("Register"), { callback: function()	{
 				LFS.createAccount( username_widget.getValue(), password_widget.getValue(), email_widget.getValue(), function(v, resp){
 					if(v)
 					{
-						create_info.setValue("Account created!");
+						create_info.setValue(i18n.gettext("Account created!"));
 						LoginModule.login( username_widget.getValue(), password_widget.getValue() );
 						if( LoginModule.login_dialog )
 							LoginModule.login_dialog.close();
 					}
-					else if(resp)
-						create_info.setValue("Problem: " + resp.msg);
+					else if(resp) {
+						create_info.className = 'error';
+						create_info.setValue("" + resp.msg);					
+					}
 				}, function(v){
-					create_info.setValue("Problem: " + v);
+					create_info.className = 'error';
+					create_info.setValue("" + v);				
 				});
 			}});
-			var create_info = widgets.addInfo( null, "" );
 			widgets.addSeparator();
-			widgets.addButton( null, "Back to login", function(){
+			widgets.addButton( null, i18n.gettext("Login"), function(){
 				inner_show_login();
 			});
 		}
@@ -246,7 +245,7 @@ var LoginModule = {
 
 	showLogoutDialog: function()
 	{
-		LiteGUI.confirm("Do you want to log out?", inner );
+		LiteGUI.confirm(i18n.gettext("Do you want to log out?"), inner );
 		function inner(v)
 		{
 			if(v)
@@ -361,6 +360,7 @@ var LoginModule = {
 		{
 			LoginModule.user = null;
 			LoginModule.setSession(null);
+			CORE.nodeLogin(null);	// Log out of node.
 			if(callback) 
 				callback();
 		}

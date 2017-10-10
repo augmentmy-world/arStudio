@@ -21,7 +21,7 @@ var DriveModule = {
 
 	preview_format: "image/jpg",
 	preview_size: 256,
-	generated_previews: {}, //cache generated previews 
+	generated_previews: {}, //cache generated previews
 
 	categories_by_type: { "image/jpeg":"Texture", "image/jpg":"Texture", "image/webp": "Texture", "image/png": "Texture" },
 	categories_by_extension: { "obj": "Mesh", "txt": "Text", "dds":"Texture" },
@@ -67,7 +67,7 @@ var DriveModule = {
 		var that = this;
 
 		//prepare tree
-		this.tree.children.unshift({ id:"Memory", skipdrag:true, className:"memory", children:[], callback: DriveModule.showMemoryResources.bind(DriveModule) });
+		//this.tree.children.unshift({ id:"Memory", skipdrag:true, className:"memory", children:[], callback: DriveModule.showMemoryResources.bind(DriveModule) });
 
 
 		// Events related to resources being loaded **********************************
@@ -152,7 +152,7 @@ var DriveModule = {
 
 		this.createPanel(); //creates tree too
 
-		LiteGUI.menubar.add("Window/Resources Panel", { callback: function(){ ResourcesPanelWidget.createDialog(); }});
+		//LiteGUI.menubar.add("Window/Resources Panel", { callback: function(){ ResourcesPanelWidget.createDialog(); }});
 
 		this.retrieveNoCacheFiles();
 	},
@@ -471,14 +471,14 @@ var DriveModule = {
 		if(!inspector)
 		{
 			inspector = InterfaceModule.inspector_widget.inspector;
-			InterfaceModule.inspector_widget.setTitle("Resource");
+			InterfaceModule.inspector_widget.setTitle(i8n.gettext("Resource"));
 			inspector.clear();
 		}
 
 		var old_name_width = inspector.name_width;
 		inspector.name_width = 100;
 
-		inspector.addTitle("Resource");
+		inspector.addTitle(i8n.gettext("Resource"));
 		inspector.widgets_per_row = 2;
 		inspector.addString("Fullpath", resource.fullpath, {width: "calc( 100% - 60px )", disabled:true} );
 		inspector.addButton(null, "Open", { width: 60, callback: function(){
@@ -1173,7 +1173,7 @@ var DriveModule = {
 
 		function inner_complete(v)
 		{
-			DriveModule.updateServerTreePanel();
+				DriveModule.updateServerTreePanel();
 			if(on_complete)
 				on_complete(v);
 		}
@@ -1191,7 +1191,7 @@ var DriveModule = {
 		{
 			if(!v)
 				return;
-			LoginModule.session.moveFolder( origin_fullpath, target_fullpath, inner_complete );
+			LoginModule.session.moveFolder( origin_fullpath, target_fullpath, inner_complete);
 		}
 
 		function inner_complete(v)
@@ -2222,13 +2222,13 @@ var DriveModule = {
 
 		var options = [
 			"Script",
-			"Text",
+			//"Text",
 			"Shader",
-			"Pack",
-			"Material"
+			//"Pack",
+			//"Material"
 		];
 
-		var menu = new LiteGUI.ContextMenu( options, { event: e, title: "Create", callback: inner, parentMenu: prev_menu });
+		var menu = new LiteGUI.ContextMenu( options, { event: e, title: "", callback: inner, parentMenu: prev_menu });
 		
 		function inner( action, options, event )
 		{
@@ -2372,7 +2372,7 @@ var DriveModule = {
 		var folder = options.folder || this.current_folder;
 		var template = options.template || "component";
 
-		var dialog = new LiteGUI.Dialog( { title: "New Script", fullcontent: true, closable: true, draggable: true, resizable: true, width: 300, height: 300 });
+		var dialog = new LiteGUI.Dialog( { title: "New Script", fullcontent: true, closable: true, draggable: true, resizable: true, width: 580, height: 380 });
 		var inspector = new LiteGUI.Inspector();
 
 		inspector.addString("Filename",filename, function(v){ filename = v; });
@@ -2435,7 +2435,7 @@ var DriveModule = {
 		var folder = options.folder || this.current_folder;
 		var type = options.type || "light_and_deformers";
 
-		var dialog = new LiteGUI.Dialog( { title: "New Shader", fullcontent: true, closable: true, draggable: true, resizable: true, width: 300, height: 300 });
+		var dialog = new LiteGUI.Dialog( { title: i18n.gettext("New Shader"), fullcontent: true, closable: true, draggable: true, resizable: true, width: 580 });
 		var inspector = new LiteGUI.Inspector();
 
 		inspector.addString("Filename",filename, function(v){ filename = v; });

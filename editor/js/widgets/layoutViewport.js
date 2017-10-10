@@ -47,6 +47,7 @@ function LayoutViewport( options )
 
 	//add gizmos
 	this.addGizmos();
+
 }
 
 LayoutViewport.temp_vec4 = vec4.create();
@@ -60,10 +61,10 @@ LayoutViewport.prototype.render = function()
 	//render outline 
 	gl.start2D();
 	gl.strokeColor = this == RenderModule.active_viewport ? [0.75,0.75,0.75] : [0.5,0.5,0.5];
-	gl.strokeRect( viewport[0], gl.canvas.height - viewport[3] - viewport[1],viewport[2] - 2,viewport[3] - 2);
+	//gl.strokeRect( viewport[0], gl.canvas.height - viewport[3] - viewport[1], viewport[2], viewport[3]);
 
 	//render corner button
-	gl.globalAlpha = !this._over_corner ? 0.5 : 1.0;
+	/*gl.globalAlpha = !this._over_corner ? 0.5 : 1.0;
 	gl.save();
 	gl.translate( viewport[0], gl.canvas.height - viewport[3] - viewport[1] );
 	gl.strokeRect( viewport[2] - 121, 2, 120, 14 );
@@ -75,7 +76,7 @@ LayoutViewport.prototype.render = function()
 	gl.fillText( this.index + ": " + this.name, viewport[2] - 100, 13 );
 	gl.globalAlpha = 1;
 	gl.restore();
-	gl.finish2D();
+	gl.finish2D();*/
 
 	//render gizmos
 	for(var i in this.gizmos)

@@ -3,7 +3,7 @@ var selectTool = {
 	name: "select",
 	description: "Select a node",
 	section: "select",
-	icon: "imgs/mini-icon-cursor.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-cursor.png",
 	keyShortcut: 81, //Q
 
 	enabled: false,

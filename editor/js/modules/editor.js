@@ -2,7 +2,7 @@
 
 var EditorModule = { 
 	name: "editor",
-	icons_path:  "imgs/",
+	icons_path:  'skins/'+CORE.config.skin+'/imgs/',
 
 	//to call when editing a node
 	node_editors: [],
@@ -122,75 +122,30 @@ var EditorModule = {
 		var mainmenu = LiteGUI.menubar;
 		//buttons
 
-		mainmenu.add("Scene/Settings", { callback: function() { 
+		/*mainmenu.add("Scene/Settings", { callback: function() { 
 			EditorModule.inspect( LS.GlobalScene ); 
-		}});
+		}});*/
 
-		mainmenu.separator("Edit");
+		//mainmenu.separator("Edit");
 
 		mainmenu.add("Edit/Copy Node", { callback: function() { EditorModule.copyNodeToClipboard( SelectionModule.getSelectedNode() ); }});
 		mainmenu.add("Edit/Paste Node", { callback: function() { EditorModule.pasteNodeFromClipboard(); }});
 		mainmenu.add("Edit/Clone Node", { callback: function() { EditorModule.cloneNode( SelectionModule.getSelectedNode() ); }});
 		mainmenu.add("Edit/Delete Node", { callback: function() { EditorModule.removeSelectedNodes(); }});
-		mainmenu.add("Edit/Focus on node", { callback: function() { cameraTool.setFocusPointOnNode( SelectionModule.getSelectedNode(), true ); }});
-		mainmenu.add("Edit/Paste component", { callback: function() { EditorModule.pasteComponentInNode( SelectionModule.getSelectedNode() ); }});
+		mainmenu.add("Edit/Undo", { callback: function() { }});
+		mainmenu.add("Edit/Redo", { callback: function() { }});
 
-		mainmenu.add("Node/Create node", { callback: function() { EditorModule.createNullNode(); }});
-		mainmenu.add("Node/Create camera", { callback: function() { EditorModule.createCameraNode(); }});
-		mainmenu.add("Node/Create light", { callback: function() { EditorModule.createLightNode(); }} );
-		//mainmenu.separator("Node");
-		mainmenu.add("Node/Primitive/Plane", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.PLANE, size: 10, subdivisions: 10 }); }});
-		mainmenu.add("Node/Primitive/Quad", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.QUAD, size: 10, subdivisions: 10 }); }});
-		mainmenu.add("Node/Primitive/Cube", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.CUBE, size: 10, subdivisions: 10 }); }});
-		mainmenu.add("Node/Primitive/Sphere", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.SPHERE, size: 10, subdivisions: 32 }); }});
-		mainmenu.add("Node/Primitive/Hemisphere", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.HEMISPHERE, size: 10, subdivisions: 32 }); }});
-		mainmenu.add("Node/Templates/Sprite", { callback: function() { EditorModule.createTemplate("Sprite",[{ component: "Sprite" }]); }});
-		mainmenu.add("Node/Templates/ParticleEmissor", { callback: function() { EditorModule.createTemplate("Particles",[{ component: "ParticleEmissor" }]); }});
-		mainmenu.add("Node/Templates/MeshRenderer", { callback: function() { EditorModule.createTemplate("Mesh",[{ component: "MeshRenderer" }]); }});
+        mainmenu.add("Game Object/Create", { callback: function() { EditorModule.createNullNode(); }} );
+        mainmenu.add("Game Object/Create Child", { callback: function() { EditorModule.createNullNode(SelectionModule.getSelectedNode()); }} );
+        mainmenu.add("Game Object/Light", { callback: function() { EditorModule.createLightNode(); }} );
+        mainmenu.add("Game Object/Camera", { callback: function() { EditorModule.createCameraNode(); }}); 
+		mainmenu.add("Game Object/3D Object/Plane", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.PLANE, size: 10, subdivisions: 10 }); }});
+		mainmenu.add("Game Object/3D Object/Cube", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.CUBE, size: 10, subdivisions: 10 }); }});
+		mainmenu.add("Game Object/3D Object/Sphere", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.SPHERE, size: 10, subdivisions: 32 }); }});
+        mainmenu.add("Game Object/2D Marker", { callback: function() { EditorModule.create2DMarker(); }}); 
+		//mainmenu.add("Edit/Focus on node", { callback: function() { cameraTool.setFocusPointOnNode( SelectionModule.getSelectedNode(), true ); }});
+		//mainmenu.add("Edit/Paste component", { callback: function() { EditorModule.pasteComponentInNode( SelectionModule.getSelectedNode() ); }});
 
-		mainmenu.add("Node/Add Component", { callback: function() { EditorModule.showAddComponentToNode(null, function(){ EditorModule.refreshAttributes(); } ); }} );
-		mainmenu.add("Node/Add Material", { callback: function() { EditorModule.showAddMaterialToNode( null, function(){ EditorModule.refreshAttributes(); }); }} );
-		mainmenu.add("Node/Add Script", { callback: function() { 
-			CodingModule.onNewScript(); 
-			EditorModule.refreshAttributes();
-		}});
-		mainmenu.add("Node/Create from JSON", { callback: function() { EditorModule.showCreateFromJSONDialog(); }} );
-		mainmenu.add("Node/Check JSON", { callback: function() { EditorModule.checkJSON( SelectionModule.getSelectedNode() ); }} );
-
-		//mainmenu.add("View/Default material properties", { callback: function() { EditorModule.inspectInDialog( LS.Renderer.default_material ); }});
-		mainmenu.add("View/Layers", { callback: function() { EditorModule.showLayersEditor(); }});
-
-		mainmenu.add("Actions/Reload Shaders", { callback: function() { 
-			LS.ShadersManager.reloadShaders(function() { RenderModule.requestFrame(); }); 
-		}});
-
-		//mainmenu.separator("Project", 100);
-		//mainmenu.add("Project/Reset", { order: 101, callback: this.showResetDialog.bind(this) });
-
-		function inner_change_renderMode(v) { RenderModule.setRenderMode(v.value); }
-		function inner_is_renderMode(v) { 
-			return (RenderModule.render_mode == v.value);
-		}
-		function inner_is_systemMode(v) { 
-			return (EditorModule.coordinates_system == v.value);
-		}
-
-		mainmenu.add("View/Show All Gizmos", {  instance: EditorModule.preferences, property: "render_all_gizmos", type:"checkbox" });
-
-		mainmenu.add("View/Render Settings", { callback: function() { EditorModule.showRenderSettingsDialog( RenderModule.render_settings) }} );
-
-		mainmenu.add("View/Render Mode/Wireframe", {  value: "wireframe", isChecked: inner_is_renderMode, callback: inner_change_renderMode });
-		mainmenu.add("View/Render Mode/Flat", {  value: "flat", isChecked: inner_is_renderMode, callback: inner_change_renderMode });
-		mainmenu.add("View/Render Mode/Solid", { value: "solid", isChecked: inner_is_renderMode, callback: inner_change_renderMode });
-		mainmenu.add("View/Render Mode/Texture", { value: "texture", isChecked: inner_is_renderMode, callback: inner_change_renderMode });
-		mainmenu.add("View/Render Mode/Full", { value: "full", isChecked: inner_is_renderMode, callback: inner_change_renderMode });
-		//mainmenu.add("View/Render Mode/Stencil", { value: "stencil", isChecked: inner_is_renderMode, callback: inner_change_renderMode });
-
-		/*
-		mainmenu.add("Edit/Coordinates/Object", { value: "object", isChecked: inner_is_systemMode, callback: function() { EditorModule.coordinates_system = 'object'; RenderModule.requestFrame(); }});
-		mainmenu.add("Edit/Coordinates/World", { value: "world", isChecked: inner_is_systemMode, callback: function() { EditorModule.coordinates_system = 'world'; RenderModule.requestFrame(); }});
-		mainmenu.add("Edit/Coordinates/View", { value: "view", isChecked: inner_is_systemMode, callback: function() { EditorModule.coordinates_system = 'view'; RenderModule.requestFrame(); }});
-		*/
 	},
 
 	registerNodeEditor: function(callback)
@@ -1313,6 +1268,26 @@ var EditorModule = {
 		return node;
 	},
 
+
+	create2DMarker: function( parent )
+	{
+        
+		var node = EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.PLANE, size: 10, subdivisions: 10 });
+		node.material = null;
+        parent = parent || EditorModule.getAddRootNode();
+        
+        parent.addChild( node );
+        var component =   LS.Components[ "Marker2D" ];
+        node.addComponent( component );
+
+		EditorModule.updateCreatedNodePosition( node );
+		CORE.userAction( "node_created", node );
+		SelectionModule.setSelection(node);
+		return node;
+	},
+
+
+
 	addMaterialToNode: function()
 	{
 		var selected_node = SelectionModule.getSelectedNode();
@@ -1781,7 +1756,7 @@ var EditorModule = {
 	showSelectResource: function( options )
 	{
 		var dialog = new LiteGUI.Dialog({ id: "select-resource-dialog", title: "Select resource", close: true, width: 800, height: 500, scroll: false, resizable: true, draggable: true});
-		var resources_widget = new ResourcesPanelWidget(null,{skip_actions:true});
+		var resources_widget = new ResourcesPanelWidget({skip_actions:false,type:options.type});
 		if(options.type)
 			resources_widget.filterByCategory( options.type );
 		resources_widget.showMemoryResources();
@@ -1793,14 +1768,28 @@ var EditorModule = {
 
 		function inner_selected( event )
 		{
-			var fullpath = event.detail;
-			var multiple = options.allow_multiple && event && event.shiftKey; //not used now
-			if(!multiple)
-				dialog.close();
-			if(options.on_complete)
-				options.on_complete(fullpath);
-			if(fullpath && !options.skip_load)
-				LS.ResourcesManager.load( fullpath, null, options.on_load );
+            //if all dataset
+            if( typeof( event.detail ) == "string" )
+            {
+                var fullpath = event.detail;
+                if(options.on_complete)
+                    options.on_complete(fullpath);
+                if(fullpath && !options.skip_load)
+                LS.ResourcesManager.load( fullpath, null, options.on_load );
+            }
+            else
+            {
+                var path = event.detail["fullpath"] || event.detail["filename"];
+                if(options.on_complete)
+                    options.on_complete(path,event.detail);
+                if(path && !options.skip_load)
+                LS.ResourcesManager.load( path, null, options.on_load );
+            }
+
+            var multiple = options.allow_multiple && event && event.shiftKey; //not used now
+            if(!multiple)
+                dialog.close();
+              
 			return true;
 		}
 	},
@@ -1925,7 +1914,7 @@ var EditorModule = {
 
 		dialog.adjustSize();
 
-		function inner_selected_node( value )
+		function inner_selected_node(value)
 		{
 			if(!value)
 				return;

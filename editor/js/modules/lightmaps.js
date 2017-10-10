@@ -9,10 +9,10 @@ var LightmapTools = {
 		this.render_settings.render_fx = false;
 		this._generating = false;
 
-		if(typeof(LiteGUI) != "undefined")
+		/*if(typeof(LiteGUI) != "undefined")
 			LiteGUI.menubar.add("Actions/Lightmap Tools", { callback: function() { 
 				LightmapTools.showToolsDialog();
-			}});
+			}});*/
 	},
 
 	showToolsDialog: function()

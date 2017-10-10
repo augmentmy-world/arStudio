@@ -495,7 +495,7 @@ InspectorWidget.prototype.inspectNode = function( node, component_to_focus )
 		inspector.clear();
 		if(node == LS.GlobalScene.root) //main node use an special editor
 		{
-			this.showSceneRootInfo(node, inspector);
+			//this.showSceneRootInfo(node, inspector);
 		}
 		else
 		{
@@ -619,46 +619,6 @@ InspectorWidget.prototype.inspectNode = function( node, component_to_focus )
 
 		//components
 		this.showComponentsInterface( node,inspector );
-
-		//flags
-		inspector.addSection("Extras", { collapsed: true });
-		if(node.flags)
-		{
-			inspector.addTitle("Flags");
-			inspector.widgets_per_row = 2;
-			inspector.addFlags( node.flags, { depth_test: true, depth_write: true, ignore_lights: false, ignore_fog: false, selectable: true }, { name_width: "75%" } );
-			inspector.widgets_per_row = 1;
-		}
-
-		inspector.addSection();
-
-		//final buttons
-		inspector.addButton(null,"Add component", { callback: function(v) { 
-			EditorModule.showAddComponentToNode( node, function(){
-				inspector.refresh();
-			});
-		}});
-
-		inspector.addButtons(null,["Add Script","Add Graph"], { callback: function(v,evt) { 
-			if(v == "Add Script")
-			{
-				var menu = new LiteGUI.ContextMenu( ["Inner Script","Script From File","Global Script"], { event: evt, callback: function(action) {
-					if(action == "Inner Script")
-						CodingModule.onNewScript( node );
-					else if(action == "Script From File")
-						CodingModule.onNewScript( node, "ScriptFromFile" );
-					else if(action == "Global Script")
-						CodingModule.onNewScript( node, "Global" );
-					inspector.refresh();
-				}});
-			}
-			else if(v == "Add Graph")
-			{
-				GraphModule.onNewGraph( node );
-				inspector.refresh();
-			}
-			//inspector.refresh();
-		}});
 
 		if(component_to_focus)
 			inspector.scrollTo( component_to_focus.uid.substr(1) );

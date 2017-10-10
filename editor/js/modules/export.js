@@ -16,11 +16,11 @@ var ExportModule = {
 
 	init: function()
 	{
-		LiteGUI.menubar.add("Project/Export", { callback: function() {
+		/*LiteGUI.menubar.add("Project/Export", { callback: function() {
 			ExportModule.showDialog();
 		}});
 
-		LiteGUI.requireScript("js/extra/jszip.min.js");
+		LiteGUI.requireScript("js/extra/jszip.min.js");*/
 	},
 
 	registerExporter: function( exporter )

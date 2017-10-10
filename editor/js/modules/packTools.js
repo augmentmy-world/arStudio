@@ -2,8 +2,8 @@ var PackTools = {
 
 	init: function()
 	{
-		LiteGUI.menubar.add("Node/Create Prefab", { callback: function() { PackTools.showCreatePrefabDialog(); }} );
-		LiteGUI.menubar.add("Actions/Create Pack", { callback: function() { PackTools.showCreatePackDialog(); }} );
+		//LiteGUI.menubar.add("Node/Create Prefab", { callback: function() { PackTools.showCreatePrefabDialog(); }} );
+		//LiteGUI.menubar.add("Actions/Create Pack", { callback: function() { PackTools.showCreatePackDialog(); }} );
 	},
 
 	showCreatePrefabDialog: function( node )

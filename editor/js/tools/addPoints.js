@@ -2,7 +2,7 @@ var AddPointsTool = {
 	name: "addPoints",
 	description: "Add points to component",
 	section: "modify",
-	icon: "imgs/mini-icon-points_tool.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-points_tool.png",
 
 	enabled: false,
 	continuous: true,

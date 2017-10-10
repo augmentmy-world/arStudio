@@ -13,28 +13,21 @@ var SceneStorageModule = {
 	{
 		var menubar = LiteGUI.menubar;
 		
-		menubar.add("Project/New", {callback: this.onNewScene.bind(this) });
+		menubar.add("Project/New Project", {callback: this.onNewProject.bind(this) });
 
-		menubar.add("Project/Load/From Server", { callback: this.showLoadSceneFromServerDialog.bind(this) });
-		menubar.add("Project/Load/Local", { callback: this.showLoadLocalSceneDialog.bind(this) });
-		menubar.add("Project/Load/From URL", { callback: this.showLoadFromURLDialog.bind(this) });
-		menubar.add("Project/Load/From File", { callback: this.showLoadFromFileDialog.bind(this) });
-		menubar.add("Project/Load/From autobackup", { callback: this.recoverBackup.bind(this) });
-		menubar.add("Project/Save/In Server", { callback: this.showSaveSceneInServerDialog.bind(this,null) });
-		menubar.add("Project/Save/Local", { callback: this.showSaveSceneInLocalDialog.bind(this) });
-		menubar.add("Project/Download", { callback: this.showDownloadSceneDialog.bind(this) });
-		menubar.add("Project/Test", { callback: this.testScene.bind(this) });
+		menubar.add("Project/Load Project/From Server", { callback: this.showLoadSceneFromServerDialog.bind(this) });
+		menubar.add("Project/Load Project/Local", { callback: this.showLoadLocalSceneDialog.bind(this) });
+		menubar.add("Project/Save Project/In Server", { callback: this.showSaveSceneInServerDialog.bind(this,null) });
+
+
+		menubar.add("Project/Collaborate", { callback: this.showLoadCollabScene.bind(this) });
+		this.menu_CollaborateLoad = menubar.findMenu("Project/Collaborate");	// So we can sw on/off later
+
+
+		menubar.add("Project/Save Project/Local", { callback: this.showSaveSceneInLocalDialog.bind(this) });
 		menubar.add("Project/Publish", { callback: this.showPublishDialog.bind(this) });
+		menubar.add("Project/Test AR Scene (with ARJS)", { callback: this.testSceneARJS.bind(this) });
 
-		menubar.separator("Project");
-		menubar.add("Project/Reset All", { callback: EditorModule.showResetDialog.bind(EditorModule) });
-
-		menubar.add("Scene/Check JSON", { callback: function() { EditorModule.checkJSON( LS.GlobalScene ); } });
-
-		//feature in development...
-		menubar.add("Scene/Create", { callback: function() { SceneStorageModule.showCreateSceneDialog(); } });
-		menubar.add("Scene/Select active", { callback: function() { SceneStorageModule.showSelectSceneDialog(); } });
-		
 		//LiteGUI.mainmenu.separator();
 
 		this.retrieveLocalScenes();
@@ -61,9 +54,200 @@ var SceneStorageModule = {
 			LS.ResourcesManager.reset();
 			LS.GlobalScene.clear();
 			LS.Renderer.reset();
-		});
+		});	
 	},
 
+	onNewProject: function() {
+		var scene = LS.GlobalScene;
+		var dialog = new LiteGUI.Dialog("dialog_nav",{ title: i18n.gettext("Project"), width: 567, draggable: true, closable: true });
+		//dialog.header.innerHTML = "<p class='header left'>"+i18n.gettext("Project")+"</p><a class='btn_close' href='#'></a>";
+		dialog.content.innerHTML = 
+			"<div id='frm-nav' method='get' action='/'><fieldset class='list templ'>" +
+			"<div class='item prj'><input name='opts' value='opt1' type='radio' checked='checked'/><label><div class='prj_def'></div><main><h2 class='headline'>"+i18n.gettext("Empty Project")+"</h2><span>"+i18n.gettext('A new blank project')+"</span></main></label></div>" +
+			"<div class='item prj'><input name='opts' value='opt2' type='radio'/><label><div class='prj_ar'></div><main><h2 class='headline'>"+i18n.gettext("Standard RealWeb AR Project")+"</h2><span>"+i18n.gettext('Create a standard RealWeb AR Project')+"</span></main></label></div>" +
+			"<div class='cont attr'><input required type='text' name='prj_name' placeholder='"+i18n.gettext("Enter project name(max 256 letters)")+"' class='name prj required'/></div></fieldset>" + 
+			"<p class='notif'></p>"+
+			"<div class='actions'><button class='submit'>"+i18n.gettext("Create")+"</button></div></div>";
+
+		var btn_create = dialog.content.querySelector("button.submit");
+		btn_create.addEventListener("click", function(e) {
+			inner_save(this);
+		});
+
+		dialog.show();
+		dialog.center();
+		dialog.fadeIn();
+
+		function inner_save()
+		{
+			var notif = dialog.content.querySelector("p.notif");
+			var inp_name = dialog.content.querySelector("input[type=text]");
+			var prj_name = inp_name.value;
+			if(!prj_name) {
+				notif.style.display="block";
+				notif.innerText = i18n.gettext("Project name can not be blank!");
+				return;
+			}
+			var opt = $("#frm-nav input[type='radio']:checked");
+			if(!opt.length) {
+				notif.style.display="block";
+				notif.innerText = i18n.gettext("Please choose project template!");
+				return;
+			}
+			if(opt[0].value === 'opt1') {
+				LS.ResourcesManager.reset();
+				LS.GlobalScene.clear();
+				LS.Renderer.reset();
+			} else {
+				//load ar project template
+			}
+			notif.style.display="none";
+
+			//save it to local
+			scene.extra.name = prj_name;
+			SceneStorageModule.saveLocalScene(prj_name, {}, scene);
+			console.log(i18n.gettext("Project created locally"));
+			//LiteGUI.alert("Scene saved locally");
+			dialog.close();
+		}
+
+		function close_this(){
+			dialog.close();
+		}
+	},
+
+
+	//==============================================
+	// Show list of scenes we can open from the users folders, allow user to choose
+	// then kick the connect to collab server with that file (server will return the JSON on connect)
+	//==============================================
+	showLoadCollabScene: function()
+	{
+		if (CollaborateModule.collaborating){
+			this.stopCollaborating();
+			return; }
+
+		if(!LoginModule.session)
+		{
+			var dialog = LiteGUI.alert("You must be logged in to load scenes, click the <button>Login</button> button.");
+			var button = dialog.content.querySelector("button");
+			button.addEventListener("click", function(){
+				dialog.close();
+				LoginModule.showLoginDialog();
+			});
+			return;
+		}
+
+		var selected = "";
+		var dialog = LiteGUI.Dialog.getDialog("dialog_load_scene");
+		if(dialog)
+			return;
+
+		dialog = new LiteGUI.Dialog( { id: "dialog_load_scene", title:"Load Scene For Collaboration", close: true, minimize: true, width: 520, scroll: false, draggable: true});
+		dialog.show('fade');
+
+		var split = new LiteGUI.Split("load_scene_split",[50,50]);
+		dialog.add( split );
+
+		var right_pane_style = split.getSection(1).style;
+		right_pane_style.backgroundColor = "black";
+		right_pane_style.paddingLeft = "2px";
+		right_pane_style.paddingTop = "2px";
+
+		var widgets = new LiteGUI.Inspector();
+		var scenes = ["Loading..."];
+		var list = widgets.addList(null,scenes, { height: 220, callback: inner_selected});
+		widgets.addButtons(null,["Load"], { className:"big", callback: inner_button });
+
+		split.getSection(0).add( widgets );
+
+		//load scenes
+		DriveModule.serverSearchFiles({ category: "SceneTree" }, inner_files, inner_error );
+
+		function inner_files(items)
+		{
+			var r = {};
+			for(var i in items)
+			{
+				var item = items[i];
+				if(!item.category == "SceneTree")
+					continue;
+				var name = item.filename.substr(0, item.filename.indexOf("."));
+				r[name] = item;
+			}
+			list.updateItems(r);
+		}
+
+		function inner_error(err)
+		{
+			list.updateItems(["Error loading"]);
+		}
+
+		function inner_selected( item )
+		{
+			selected = item.fullpath;
+			split.getSection(1).innerHTML = "";
+			var img = new Image();
+			img.src = LFS.getPreviewPath( selected );
+			split.getSection(1).add(img);
+		}
+
+		function inner_button( button )
+		{
+			if(button == "Load")
+			{
+				dialog.close();
+				CollaborateModule.startCollaborating(selected);
+
+			}
+		}
+
+	},
+
+	//==============================================
+	// Asks for confirmation then stops collaborating (called from menu "stop collaborating" menu)
+	//==============================================
+	stopCollaborating: function()
+	{
+		LiteGUI.confirm("Are you sure you want to stop collaborating?", function(v)
+		{
+			if (!v)
+				return;
+			CollaborateModule.stopCollaborating();
+			// Clear to a blank scene.
+			LS.ResourcesManager.reset();
+			LS.GlobalScene.clear();
+			LS.Renderer.reset();
+
+		});
+
+	},
+
+	//==============================================
+	// Tell the menus we are collaborating or not collaborating.
+	// Enables/disables menu entries, shows/kills chat window.
+	// Called after collaboration is established or killed.
+	//==============================================
+	setCollaborating: function( onoff )
+	{
+		if (onoff==true)
+		{
+		//	this.menu_StopCollaborating.enable();	// Enable "stop collaborating" menu
+			this.menu_CollaborateLoad.name="Stop Collaborating"; //disable();	// Disable "start collaborating" menu
+		}
+		else
+		{
+
+			this.menu_CollaborateLoad.name="Collaborate";
+
+		}
+
+	},
+
+	//==============================================
+	// cw: Project->Load from server->Load ... showing files list.
+	// cw: callbacks for clicking on a list entry and for clicking the buttons on that dialog are handled here.
+	//==============================================
 	showLoadSceneFromServerDialog: function()
 	{
 		if(!LoginModule.session)
@@ -82,7 +266,7 @@ var SceneStorageModule = {
 		if(dialog)
 			return;
 
-		dialog = new LiteGUI.Dialog( { id: "dialog_load_scene", title:"Load Scene", close: true, minimize: true, width: 520, height: 290, scroll: false, draggable: true});
+		dialog = new LiteGUI.Dialog( { id: "dialog_load_scene", title:"Load Scene", close: true, minimize: true, width: 520, scroll: false, draggable: true});
 		dialog.show('fade');
 
 		var split = new LiteGUI.Split("load_scene_split",[50,50]);
@@ -190,7 +374,7 @@ var SceneStorageModule = {
 			//SceneStorage also includes the url
 			msg = NotifyModule.show("FILE: " + fullpath, { id: msg_id, closable: true, time: 0, left: 60, top: 30, parent: "#visor" } );
 			LS.GlobalScene.load( real_path, inner_complete, inner_error, inner_progress ); 
-			InterfaceModule.setStatusBar("Loading scene...");
+			InterfaceModule.setStatusBar(i18n.gettext("Loading scene..."));
 		};
 
 		function inner_complete( scene, url )
@@ -200,7 +384,7 @@ var SceneStorageModule = {
 			scene.extra.folder = LS.ResourcesManager.getFolder( fullpath );
 			scene.extra.fullpath = fullpath;
 			that.onSceneReady( scene );
-			InterfaceModule.setStatusBar("Scene loaded");
+			InterfaceModule.setStatusBar(i18n.gettext("Scene loaded"));
 			if(on_complete)
 				on_complete();
 		}
@@ -218,7 +402,7 @@ var SceneStorageModule = {
 		{
 			if(msg)
 				msg.kill();
-			LiteGUI.alert("Error loading scene file: " + err );
+			LiteGUI.alert(i18n.gettext("Error loading scene file: ") + err );
 		}
 	},
 
@@ -268,14 +452,14 @@ var SceneStorageModule = {
 
 	showLoadFromFileDialog: function()
 	{
-		var dialog = new LiteGUI.Dialog({ title:"Load File", width: 200 });
+		var dialog = new LiteGUI.Dialog({ title:i18n.gettext("Load File"), width: 200 });
 		var inspector = new LiteGUI.Inspector();
 		var file = null;
-		inspector.addFile("Select File","",{ read_file: true, callback: function(v){
+		inspector.addFile(i18n.gettext("Select File"),"",{ read_file: true, callback: function(v){
 			console.log(v);		
 			file = v;
 		}});
-		inspector.addButton(null,"Load File", function(){
+		inspector.addButton(null,i18n.gettext("Load File"), function(){
 			if(!file || !file.data)
 				return;
 			LS.Renderer.reset();
@@ -296,7 +480,7 @@ var SceneStorageModule = {
 
 		if(!LoginModule.session)
 		{
-			var dialog = LiteGUI.alert("You must be logged in to save scenes, click the <button>Login</button> button.");
+			var dialog = LiteGUI.alert(i18n.gettext("You must be logged in to save scenes."));
 			var button = dialog.content.querySelector("button");
 			button.addEventListener("click", function(){
 				dialog.close();
@@ -311,7 +495,7 @@ var SceneStorageModule = {
 			return;
 		}
 
-		var dialog = new LiteGUI.Dialog({ id: "dialog_save_scene", title:"Save Scene", close: true, minimize: true, width: 520, height: 300, scroll: false, draggable: true});
+		var dialog = new LiteGUI.Dialog({ id: "dialog_save_scene", title:i18n.gettext("Save Scene"), close: true, minimize: true, scroll: false, draggable: true});
 		dialog.show('fade');
 
 		var split = new LiteGUI.Split("save_scene_split",[50,50]);
@@ -424,7 +608,7 @@ var SceneStorageModule = {
 
 	showLoadLocalSceneDialog: function()
 	{
-		var dialog = new LiteGUI.Dialog({ id: "dialog_load_scene", title:"Load Scene", close: true, minimize: true, width: 520, height: 300, scroll: false, draggable: true });
+		var dialog = new LiteGUI.Dialog({ id: "dialog_load_scene", title:"Load Scene", close: true, minimize: true, width: 520, scroll: false, draggable: true });
 		dialog.show('fade');
 
 		var split = new LiteGUI.Split("load_scene_split",[50,50]);
@@ -599,6 +783,31 @@ var SceneStorageModule = {
 		SceneStorageModule.saveLocalScene("_test", {}, LS.GlobalScene, SceneStorageModule.takeScreenshot(256,256) );
 		var name = SceneStorageModule.localscene_prefix + "_test";
 		var fullurl = "player.html?session=" + name;
+		if(!this._test_window)
+			this._test_window = window.open(fullurl,'_blank');
+		else
+		{
+			this._test_window.location.replace(fullurl);
+			this._test_window.focus();
+		}
+		var that = this;
+		this._test_window.onclose = function()
+		{
+			if(that._test_window)
+				this._test_window = null;
+		}
+	},
+
+	//======================================================================
+	// cw: Comes here from "project->test ar scene (ARJS)"
+	// Opens a new tab with arplayer.html so user can check the scene
+	// @todo find out how resources are handled
+	//======================================================================
+	testSceneARJS: function()
+	{
+		SceneStorageModule.saveLocalScene("_test", {}, LS.GlobalScene, SceneStorageModule.takeScreenshot(256,256) );
+		var name = SceneStorageModule.localscene_prefix + "_test";
+		var fullurl = "arplayer.html?session=" + name;
 		if(!this._test_window)
 			this._test_window = window.open(fullurl,'_blank');
 		else

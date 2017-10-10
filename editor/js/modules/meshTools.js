@@ -1,9 +1,9 @@
 var MeshTools = {
 	init: function()
 	{
-		LiteGUI.menubar.add("Actions/Mesh Tools", { callback: function() { 
+		/*LiteGUI.menubar.add("Actions/Mesh Tools", { callback: function() { 
 			MeshTools.showToolsDialog();
-		}});
+		}});*/
 	},
 
 	showToolsDialog: function( mesh_name )

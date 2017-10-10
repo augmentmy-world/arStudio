@@ -1,5 +1,5 @@
 function ConsoleWidget( options )
-{
+{		
 	options = options || {};
 	this.options = options;
 

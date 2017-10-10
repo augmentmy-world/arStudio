@@ -1,9 +1,9 @@
 var TextureTools = {
 	init: function()
 	{
-		LiteGUI.menubar.add("Actions/Texture Tools", { callback: function() { 
+		/*LiteGUI.menubar.add("Actions/Texture Tools", { callback: function() { 
 			TextureTools.showToolsDialog();
-		}});
+		}});*/
 	},
 
 	showToolsDialog: function( texture_name )

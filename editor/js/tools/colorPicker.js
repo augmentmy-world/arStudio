@@ -2,7 +2,7 @@ var colorPickerTool = {
 	name: "colorPicker",
 	description: "Select color",
 	section: "foo",
-	icon: "imgs/mini-icon-colorpicker.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-colorpicker.png",
 
 	callback: null,
 

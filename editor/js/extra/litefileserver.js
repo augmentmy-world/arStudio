@@ -97,6 +97,7 @@ var LiteFileServer = {
 				on_complete(session);
 				if(LFS.onNewSession)
 					LFS.onNewSession(session);
+
 			}
 			else
 				on_complete(null);

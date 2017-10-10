@@ -1,7 +1,7 @@
 function GenericTabsWidget( options )
 {
 	this.root = null;
-	this.supported_widgets = null;
+	this.supported_widgets = [{title:"Assets",class:ResourcesPanelWidget}, {title:"Coding", class:CodingTabsWidget}, {title:"Graph", class:GraphWidget}];
 	this.init(options);
 
 	//helful
@@ -83,9 +83,11 @@ GenericTabsWidget.prototype.onPlusTab = function( tab_id, e )
 	{
 		widgets = [];
 		for(var i in CORE.Widgets)
-		{
+		{	
 			var type = CORE.Widgets[i];
-			widgets.push( type );
+			console.log(type);
+			if (type.showInContextMenu)
+				widgets.push( type );
 		}
 	}
 

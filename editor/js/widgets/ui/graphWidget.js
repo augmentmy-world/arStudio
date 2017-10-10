@@ -1,6 +1,7 @@
 function GraphWidget( options )
 {
 	this.root = null;
+
 	this.init( options );
 }
 

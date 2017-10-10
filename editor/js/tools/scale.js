@@ -2,7 +2,7 @@ var scaleNodeTool = {
 	name: "scale",
 	description: "Scale the node",
 	section: "manipulate",
-	icon: "imgs/mini-icon-scale.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mid-icon-scale.png",
 	_debug_pos: vec3.create(),
 	_center: vec3.create(),
 	_x_axis_end: vec3.create(),
@@ -114,6 +114,8 @@ var scaleNodeTool = {
 
 		if (e.dragging && e.which == GL.LEFT_MOUSE_BUTTON) {
 
+			// cw: If dragging, change scale of selected object
+
 			if(!scaleNodeTool._on_top_of)
 			{
 				LS.GlobalScene.refresh();
@@ -147,6 +149,8 @@ var scaleNodeTool = {
 		}
 		else
 		{
+
+			// cw: Not dragging, check for mouse over one of the scale tools and set which one we are on top of.
 			var ray = camera.getRayInPixel( e.mousex, gl.canvas.height - e.mousey );
 			var result = vec3.create();
 			ray.end = vec3.add( vec3.create(), ray.origin, vec3.scale(vec3.create(), ray.direction, 10000 ) );

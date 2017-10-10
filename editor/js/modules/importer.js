@@ -20,7 +20,7 @@ var ImporterModule  = {
 	{
 		//if(window.gl && window.gl.canvas )
 		//	LiteGUI.createDropArea( gl.canvas, ImporterModule.onItemDrop.bind(this) );
-		LiteGUI.menubar.add("Actions/Import Files", { callback: function() { ImporterModule.showImportResourceDialog(); }});
+		//LiteGUI.menubar.add("Actions/Import Files", { callback: function() { ImporterModule.showImportResourceDialog(); }});
 
 		window.addEventListener("paste", this.onPaste.bind(this) );
 	},
@@ -73,7 +73,8 @@ var ImporterModule  = {
 		var node = null;
 		if(evt.canvasx !== undefined ) //canvas drop
 			node = RenderModule.getNodeAtCanvasPosition( evt.canvasx, evt.canvasy );
-			options.node = node;
+	
+		options.node = node;
 		options.event = evt;
 
 		//files
@@ -514,6 +515,10 @@ var ImporterModule  = {
 
 			if(resource.filename)
 				filename = resource.filename;
+
+            //leo add 20170922 add options to resource so that it can keep marker type info
+            resource.options = options;
+            resource.category = options.type;
 
 			if(folder)
 				inner_saveToFolder( resource, folder );

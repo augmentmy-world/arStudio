@@ -1,6 +1,6 @@
 /*
 	shiny-blue: #5AF
-
+cw
 */
 
 .inspector {
@@ -70,7 +70,7 @@
 	display: inline-block;
 	position: relative;
 	z-index: auto;
-	background-color: #555;
+	background-color: #632d57;
 
 	/*
     background-image: linear-gradient(right , #555, #444);
@@ -1350,10 +1350,10 @@ a:hover {
 	top: 5px;
 	left: 5px;
 	min-width: 200px;
-	background-color: #444;
+	background-color: #421540;
 	box-shadow: 0 0 3px black;
-	padding: 4px;
-	border-bottom: 2px solid #AAF;
+	padding: 6px 4px 8px 9px;
+	border-bottom: 2px solid #886281;
 	z-index: 10;
 }
 
@@ -1361,7 +1361,7 @@ a:hover {
 	font-size: 12px;
 	color: #AAA;
 	padding: 0 0 0 4px;
-	margin: 2px;
+	margin: 12px 4px 9px 9px;
 	padding-left: 2px;
 	-moz-user-select: none;  
 	-webkit-user-select: none;  
@@ -1576,7 +1576,7 @@ button.litebutton.close-button {
 
 .litetabs li.wtab.selected {
 	color: #EEE !important;
-	background-color: #777;
+	background-color: #733084;
 	/*border: 1px solid #888;*/
 	border-bottom: 0;
 	/*box-shadow: 0 -2px 2px rgba(0,0,0,0.5);*/

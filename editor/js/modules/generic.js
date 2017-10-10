@@ -6,8 +6,8 @@ var GenericTools = {
 
 	init: function()
 	{
-		LiteGUI.menubar.add("Actions/Tools/scripter", { callback: function() { GenericTools.showScripter(); }});
-		LiteGUI.menubar.add("Actions/Screen Capture", { callback: function() { GenericTools.showScreenCapture(); }});
+		//LiteGUI.menubar.add("Actions/Tools/scripter", { callback: function() { GenericTools.showScripter(); }});
+		//LiteGUI.menubar.add("Actions/Screen Capture", { callback: function() { GenericTools.showScreenCapture(); }});
 	},
 
 	showScripter: function()

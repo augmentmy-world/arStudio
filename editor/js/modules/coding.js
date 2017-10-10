@@ -4,7 +4,8 @@ var CodingModule = //do not change
 	bigicon: "imgs/tabicon-code.png",
 
 	show_sceneview: true, //3d view
-	show_panel: false, //side panel
+	show_side: false, //side panel
+	show_hierarchy: false, //hierarchy panel
 
 	is_sceneview_visible: true, 
 
@@ -19,7 +20,8 @@ var CodingModule = //do not change
 			size: "full", 
 			callback: function(tab) {
 				CodingModule.show3DWindow( CodingModule.show_sceneview );
-				CodingModule.showSidePanel( CodingModule.show_panel );
+				CodingModule.showSidePanel( CodingModule.show_side );
+				CodingModule.showHierarchyPanel( CodingModule.show_hierarchy );
 				CodingModule.coding_tabs_widget.refresh();
 			},
 			callback_canopen: function(){
@@ -44,7 +46,7 @@ var CodingModule = //do not change
 		this.registerAPI("glsl", ["IN.color","IN.vertex","IN.normal","IN.uv","IN.uv1","IN.camPos","IN.viewDir","IN.worldPos","IN.worldNormal","IN.screenPos"] );
 		this.registerAPI("glsl", ["o.Albedo","o.Normal","o.Emission","o.Specular","o.Gloss","o.Alpha","o.Reflectivity"] );
 
-		LiteGUI.menubar.add("Window/Coding Panel", { callback: function(){ CodingTabsWidget.createDialog(); }});
+		/*LiteGUI.menubar.add("Window/Coding Panel", { callback: function(){ CodingTabsWidget.createDialog(); }});
 		LiteGUI.menubar.add("Actions/Catch Exceptions", { type: "checkbox", instance: LS, property: "catch_exceptions" });
 		LiteGUI.menubar.add("Actions/Reload scripts", { callback: function(){
 			LS.GlobalScene.loadScripts( null, function(){
@@ -60,7 +62,7 @@ var CodingModule = //do not change
 		LiteGUI.menubar.add("Help/Coding/LS/API", {  callback: function(){ window.open("http://webglstudio.org/doc/litescene/","_blank"); }});
 		LiteGUI.menubar.add("Help/Coding/LiteGL/Guides", {  callback: function(){ window.open("https://github.com/jagenjo/litegl.js/tree/master/guides","_blank"); }});
 		LiteGUI.menubar.add("Help/Coding/LiteGL/API", {  callback: function(){ window.open("http://webglstudio.org/doc/litegl/","_blank"); }});
-
+		*/
 		var coding_area = this.coding_area = new LiteGUI.Area({ id: "codearea", height: "100%"});
 		this.root.appendChild( coding_area.root );
 		coding_area.split("horizontal",[null,"50%"],true);
@@ -333,8 +335,12 @@ var CodingModule = //do not change
 	showSidePanel: function(v)
 	{
 		InterfaceModule.setSidePanelVisibility(v);
-		this.show_panel = InterfaceModule.side_panel_visibility;
+		this.show_side = InterfaceModule.side_panel_visibility;
+	},
 
+	showHierarchyPanel: function(v){
+		InterfaceModule.setHierarchyPanelVisibility(v);
+		this.show_hierarchy = InterfaceModule.hierarchy_panel_visibility;
 	},
 
 	onKeyDown: function(e)
@@ -415,7 +421,7 @@ LS.Components.Script["@inspector"] = function( component, inspector )
 	});
 
 	inspector.widgets_per_row = 2;
-	inspector.addButton(null,"Edit Code", { width: "100% - 30px", callback: function() {
+	inspector.addButton(null,i18n.gettext("Edit Code"), { width: "100% - 30px", callback: function() {
 		CodingModule.openTab();
 		var path = component.uid;
 		CodingModule.editInstanceCode( component );
@@ -457,12 +463,11 @@ LS.Components.ScriptFromFile["@inspector"] = function( component, inspector )
 		component.filename = v;
 	}});
 
-	inspector.addButton(null,"Edit Code", { width: 100, callback: function() {
+	inspector.addButton(null,i18n.gettext("Edit Code"), { width: 100, callback: function() {
 		var path = component.uid;
 		if(!component.filename)
 		{
-			/*
-			LiteGUI.prompt("Choose a filename", function(filename){
+			LiteGUI.prompt(i18n.gettext("Choose a filename"), function(filename){
 				if(!filename)
 					return;
 				CodingModule.openTab();
@@ -474,7 +479,7 @@ LS.Components.ScriptFromFile["@inspector"] = function( component, inspector )
 				LS.RM.registerResource(filename,res);
 				CodingModule.editInstanceCode( res );
 			});
-			*/
+			
 			DriveModule.showCreateScriptDialog({filename: "script.js"}, function(resource){
 				if(!resource)
 					return;

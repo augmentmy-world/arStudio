@@ -7,7 +7,7 @@ var CubemapGenerator = {
 
 	init: function()
 	{
-		LiteGUI.menubar.add("Actions/Cubemap generator", { callback: function() { CubemapGenerator.showDialog(); }});
+		//LiteGUI.menubar.add("Actions/Cubemap generator", { callback: function() { CubemapGenerator.showDialog(); }});
 
 		this.loadShaders();
 	},

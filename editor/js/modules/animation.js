@@ -10,8 +10,8 @@ var AnimationModule = {
 	init: function()
 	{
 		//create the timeline
-		this.tab = InterfaceModule.lower_tabs_widget.addWidgetTab( Timeline );
-		this.timeline = this.tab.widget;
+		//this.tab = InterfaceModule.lower_tabs_widget.addWidgetTab( Timeline );
+		//this.timeline = this.tab.widget;
 
 		LEvent.bind( LS.GlobalScene, "afterRenderScene", this.renderView.bind(this));
 		LEvent.bind( LS.GlobalScene, "renderPicking", this.renderPicking.bind(this));
@@ -190,7 +190,7 @@ var AnimationModule = {
 		if( !EditorView.render_helpers || !this.render_helpers || RenderModule.render_settings.in_player || !RenderModule.frame_updated )
 			return;
 
-		if(this.timeline.show_paths)
+		if(this.timeline && this.timeline.show_paths)
 			this.renderTrajectories(camera);
 	},
 

@@ -2,7 +2,7 @@ var manipulateTool = {
 	name: "manipulate",
 	description: "Manipulate the node",
 	section: "foo",
-	icon: "imgs/mini-icon-ball.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-ball.png",
 	keyShortcut: 87, //W
 
 	circle_size: 50,

@@ -1168,6 +1168,12 @@ LGraph.prototype.change = function()
 	if(LiteGraph.debug)
 		console.log("Graph changed");
 
+
+
+	//cw: scene graph must have also changd, need to send that to other
+	// clients
+	CollaborateModule.onUserAction( [] );
+
 	this.sendActionToCanvas("setDirty",[true,true]);
 
 	if(this.on_change)
