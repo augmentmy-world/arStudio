@@ -1,8 +1,3 @@
-/*
-	shiny-blue: #5AF
-cw
-*/
-
 .inspector {
 	/* margin-top: 10px; */
 	/*margin-bottom: 20px;*/
@@ -296,45 +291,6 @@ cw
 	direction: ltr !important;
 }
 
-.litedialog .content .inspector .widget {
-	padding: 10px;
-}
-.litedialog .content .inspector.one_line .widget{padding: 0;}
-.litedialog .inspector .widget .wname {
-	min-width: 150px;
-	margin-bottom: 10px;
-}
-.litedialog .inspector .wcontent {
-	width: calc(100% - 160px);
-}
-.litedialog.alert button{
-	border:none;
-	padding:5px 10px;
-	background: #702cad;
-}
-.litedialog.alert input {
-	width: 100%;
-    background: #2c2531;
-    outline: none;
-    border: none;
-    color: #fff;
-    padding: 3px 10px;
-}
-.litedialog .inspector .wcontent input {
-    padding: 7px 10px;
-    color: white;
-    background: #2c2531;
-    width: 100%;
-    border: none;
-    border-radius: 0;
-}
-.litedialog .content button.litebutton.single {
-    width: 100%;
-    text-align: center;
-    font-size: 24px;
-    background: #999;
-}
-
 .inspector.one_line {
 	height: 32px;
 	border-top: 1px solid #222;
@@ -565,17 +521,6 @@ cw
 	color: #88C;
 }
 
-button.wcombobutton {
-	width: auto !important;
-	padding: 0 4px 0 4px !important;
-	margin: 0 !important;
-	border-radius: 0 !important;
-}
-
-button.wcombobutton.selected {
-	background: #AAA;
-}
-
 .inspector .wtag {
 	display: inline-block;
 	border-radius: 2px;
@@ -625,11 +570,7 @@ button.wcombobutton.selected {
 .inspector ul.lite-list li:hover {
 	color: black;
 	background-color: #258;
-}
-
-/* Here goes all the CSS related to layout the web (panels, windows, bars, etc) */
-
-html, body {
+}html, body {
 	height: 100%;
 	background-color: #111;
 }
@@ -888,6 +829,44 @@ div {
     margin-bottom: 25px;
 }
 
+.litedialog .content .inspector .widget {
+	padding: 10px;
+}
+.litedialog .content .inspector.one_line .widget{padding: 0;}
+.litedialog .inspector .widget .wname {
+	min-width: 150px;
+	margin-bottom: 10px;
+}
+.litedialog .inspector .wcontent {
+	width: calc(100% - 160px);
+}
+.litedialog.alert button{
+	border:none;
+	padding:5px 10px;
+	background: #702cad;
+}
+.litedialog.alert input {
+	width: 100%;
+    background: #2c2531;
+    outline: none;
+    border: none;
+    color: #fff;
+    padding: 3px 10px;
+}
+.litedialog .inspector .wcontent input {
+    padding: 7px 10px;
+    color: white;
+    background: #2c2531;
+    width: 100%;
+    border: none;
+    border-radius: 0;
+}
+.litedialog .content button.litebutton.single {
+    width: 100%;
+    text-align: center;
+    font-size: 24px;
+    background: #999;
+}
 
 .litemodalbg {
 	position: absolute;
@@ -897,19 +876,7 @@ div {
 	width: 100%;
 	height: 100%;
 	z-index: 100;
-}
-
-/*! normalize.css v2.0.1 | MIT License | git.io/normalize */
-
-/* ==========================================================================
-   HTML5 display definitions
-   ========================================================================== */
-
-/*
- * Corrects `block` display not defined in IE 8/9.
- */
-
-article,
+}article,
 aside,
 details,
 figcaption,
@@ -1275,6 +1242,12 @@ table {
     border-spacing: 0;
 }
 /****** litegui css/style.css */
+
+*, *:before, *:after {
+-moz-box-sizing: border-box;
+-webkit-box-sizing: border-box;
+box-sizing: border-box;
+}/****** litegui css/style.css */
 
 *, *:before, *:after {
 -moz-box-sizing: border-box;
@@ -2225,4 +2198,240 @@ input[type="range"]::-moz-slider-thumb {
 	-webkit-user-select: none;
 	cursor: pointer;
 	border-radius:50%;
+}/********************/
+.ui-slider {
+    position: relative;
+    text-align: left;
+    background-color: #222;
+    border-color: black #333333 #333333 black;
+    border-style: solid;
+    border-width: 1px;
+    margin: 1px;
+	padding: 1px;
+    vertical-align: top;
+	margin-top: 2px;
+	height: 1em;
+}
+
+input[type="range"]
+{
+	-webkit-appearance:none; 
+	-moz-apperance:none; 
+	apperance:none; 
+	width:100%; 
+	height:1em;
+	opacity: 1.0;
+}
+
+input[type="range"]:focus {
+	outline:none;
+}
+
+.ui-slider .slider-thumb {
+	position: absolute;
+	top:0;
+	left:0;
+	pointer-events: none;
+	display: inline-block;
+	display: none;
+
+    width: 10%;
+    height: 1.0em;
+	border-radius: 1px;
+	margin-top: 1px;
+
+    background: -moz-linear-gradient(#4B4947, #32302D) repeat scroll 0 0 transparent !important;
+    background: -webkit-linear-gradient(#4B4947, #32302D) repeat scroll 0 0 transparent !important;
+    background: linear-gradient(#4B4947, #32302D) repeat scroll 0 0 transparent !important;
+    border: 0 none !important;
+    box-shadow: 0 1px 0 #5B5957 inset, 0 -1px 0 black, 0 1px 0 black, -1px 0 0 black, 1px 0 0 black, 0 1px 1px #111111 !important;
+
+	box-sizing:border-box;
+	-moz-box-sizing:border-box; 
+	-webkit-box-sizing:border-box; 
+	/* cursor: e-resize !important; */
+}
+
+/* firefox do not allow to style it, so deprecated */
+input[type="range"]::slider-thumb {
+    width: 1.0em;
+    height: 1.0em;
+	border-radius: 1px;
+    background: linear-gradient(#4B4947, #32302D) repeat scroll 0 0 transparent !important;
+    border: 0 none !important;
+    box-shadow: 0 1px 0 #5B5957 inset, 0 -1px 0 black, 0 1px 0 black, -1px 0 0 black, 1px 0 0 black, 0 1px 1px #111111 !important;
+	box-sizing:border-box;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+     -webkit-appearance: none;
+    width: 1.0em;
+    height: 1.0em;
+	border-radius: 1px;
+	/*margin-top: 0.5em;*/
+
+    background: -moz-linear-gradient(#4B4947, #32302D) repeat scroll 0 0 transparent !important;
+    background: -webkit-linear-gradient(#4B4947, #32302D) repeat scroll 0 0 transparent !important;
+    background: linear-gradient(#4B4947, #32302D) repeat scroll 0 0 transparent !important;
+    border: 0 none !important;
+    box-shadow: 0 1px 0 #5B5957 inset, 0 -1px 0 black, 0 1px 0 black, -1px 0 0 black, 1px 0 0 black, 0 1px 1px #111111 !important;
+
+	box-sizing:border-box;
+	-moz-box-sizing:border-box; 
+	-webkit-box-sizing:border-box; 
+}
+
+input[type="range"]::-moz-slider-thumb {
+    width: 1.0em;
+    height: 1.0em;
+	border-radius: 1px;
+    background: -moz-linear-gradient(#4B4947, #32302D) repeat scroll 0 0 transparent !important;
+    background: linear-gradient(#4B4947, #32302D) repeat scroll 0 0 transparent !important;
+    border: 0 none !important;
+    box-shadow: 0 1px 0 #5B5957 inset, 0 -1px 0 black, 0 1px 0 black, -1px 0 0 black, 1px 0 0 black, 0 1px 1px #111111 !important;
+	box-sizing:border-box;
+	-moz-box-sizing:border-box; 
+}
+/**/
+
+
+.slider {
+    /*calc( width: 100% - 30px );*/
+}
+
+.slider-container {
+    margin-left: 5px;
+    /*margin-right: 5px;*/
+}
+
+.colorpicker-window {
+	position: absolute;
+	top: 50px;
+	left: 10px;
+	background-color: #333;
+	padding: 2px;
+	font-size: 0.8em;
+	color: #aaa;
+}
+
+.colorpicker-window input {
+	border: 0;
+}
+
+.searchbox {
+    padding: 2px;
+    opacity: 0.5;
+    transition: all 0.5s;
+    width: 100%;
+}
+
+.searchbox input {
+    padding: 2px 4px;
+    outline: 0;
+    width: 100%;
+}
+
+.searchbox input:focus
+{
+    outline: 0;
+}
+
+.searchbox:hover {
+    opacity: 1;
+}
+
+
+.litecheckbox {
+
+	width: 1em;
+	height: 1em;
+	display: inline-block;
+	vertical-align: top;
+	background-color: #1f1f1f;
+	border: 0;
+	border-radius: 2px;
+	margin: 0 4px;
+	margin-top: 2px;
+	text-align: center;
+
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+
+	cursor: pointer;
+}
+
+.litecheckbox .on {
+	background-color: #5AF;
+	color: black;
+}
+
+.litecheckbox .flag {
+	display: block;
+	width: 100%;
+	height: 100%;
+	border: 2px solid black;
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	cursor: pointer;
+}
+
+.liteconsole {
+	width: 100%;
+	height: 100%;
+	background-color: black;
+	border: 1px solid #222;
+}
+
+.liteconsole .log {
+	width: 100%;
+	height: calc( 100% - 26px );
+	overflow: auto;
+	color: #AAA;
+	padding: 4px;
+}
+
+.liteconsole .log .msg {
+    white-space: pre-wrap;
+	margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.liteconsole .log .msg.me {
+	color: white;
+}
+
+.liteconsole .foot {
+	width: 100%;
+	height: 24px;
+	color: #111;
+}
+
+.liteconsole .foot input {
+	width: 100%;
+	height: 24px;
+	color: white;
+	background-color: black;
+	border: 0;
+	border-top: 1px solid #444;
+	margin: 0;
+	padding-left: 10px;
+	resize: none;
+}
+
+.liteconsole .foot input:focus{
+    outline: none;
+}
+
+button.wcombobutton {
+	width: auto !important;
+	padding: 0 4px 0 4px !important;
+	margin: 0 !important;
+	border-radius: 0 !important;
+}
+
+button.wcombobutton.selected {
+	background: #AAA;
 }

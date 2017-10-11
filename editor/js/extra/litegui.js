@@ -1,5 +1,4 @@
 //packer version
-
 /**
 * Core namespace of LiteGUI library, it holds some useful functions
 *
@@ -1644,7 +1643,6 @@ function dataURItoBlob( dataURI ) {
 	mime = mime.substr(0, mime.length - 7); //strip ";base64"
     return new Blob([ab], { type: mime });
 }
-//enclose in a scope
 (function(){
 
 
@@ -2617,7 +2615,7 @@ function Console( options )
 
 	this.root.innerHTML = "<div class='log'></div><div class='foot'><input type='text'/></div>";
 
-	this.log_element = this.root.querySelector('.log');
+	this.log = this.root.querySelector('.log');
 	this.input = this.root.querySelector('input');
 
 	this.input.addEventListener("keydown", this.onKeyDown.bind(this) );
@@ -2676,8 +2674,8 @@ Console.prototype.onKeyDown = function(e)
 
 Console.prototype.addMessage = function(text,className,as_text)
 {
-	var content = this.log_element;
-	var element = null; //contains the last message sent
+	var content = this.log;
+	var element = null;
 
 	if(text && text.constructor === Array)
 	{
@@ -2706,39 +2704,13 @@ Console.prototype.addMessage = function(text,className,as_text)
 			content.removeChild( content.children[0] );
 	}
 
-	this.log_element.scrollTop = 1000000;
-	element.update = function(v)
-	{
-		this.innerHTML = v;
-	}
-
+	this.log.scrollTop = 1000000;
 	return element;
-}
-
-Console.prototype.log = function()
-{
-	var args = Array.prototype.slice.call(arguments);
-	var d = args.join(",");
-	return this.addMessage( d, "msglog" );
-}
-
-Console.prototype.warn = function()
-{
-	var args = Array.prototype.slice.call(arguments);
-	var d = args.join(",");
-	return this.addMessage( d, "msgwarn" );
-}
-
-Console.prototype.error = function()
-{
-	var args = Array.prototype.slice.call(arguments);
-	var d = args.join(",");
-	return this.addMessage( d, "msgerror" );
 }
 
 Console.prototype.clear = function()
 {
-	this.log_element.innerHTML = "";
+	this.log.innerHTML = "";
 }
 
 LiteGUI.Console = Console;
@@ -2748,7 +2720,6 @@ LiteGUI.Console = Console;
 
 
 })();
-//enclose in a scope
 (function(){
 
 	
@@ -4257,7 +4228,6 @@ LiteGUI.Console = Console;
 
 	LiteGUI.Menubar = Menubar;
 })();
-/**************  ***************************/
 (function(){
 	
 
@@ -4811,9 +4781,9 @@ LiteGUI.Console = Console;
 			tab.onclose(tab);
 
 		if(tab.tab.parentNode)
-		tab.tab.parentNode.removeChild( tab.tab );
+			tab.tab.parentNode.removeChild( tab.tab );
 		if(tab.content.parentNode)
-		tab.content.parentNode.removeChild( tab.content );
+			tab.content.parentNode.removeChild( tab.content );
 		delete this.tabs[id];
 
 		this.recomputeTabsByIndex();
@@ -4831,9 +4801,9 @@ LiteGUI.Console = Console;
 			if(tab == this.plus_tab && keep_plus)
 				continue;
 			if(tab.tab.parentNode)
-			tab.tab.parentNode.removeChild( tab.tab );
+				tab.tab.parentNode.removeChild( tab.tab );
 			if(tab.content.parentNode)
-			tab.content.parentNode.removeChild( tab.content );
+				tab.content.parentNode.removeChild( tab.content );
 			delete this.tabs[ tab.id ];
 		}
 
@@ -5109,10 +5079,7 @@ LiteGUI.Console = Console;
 	LiteGUI.Dragger = Dragger;
 
 })();
-//enclose in a scope
 (function(){
-
-
 /**
 * To create interactive trees (useful for folders or hierarchies).<br>
 * Options are:<br>
