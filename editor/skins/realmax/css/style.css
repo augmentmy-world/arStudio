@@ -1078,6 +1078,7 @@ button.exit.litebutton {
 	color: white;
 }
 
+/*coding area*/
 #coding-workarea .inspector.one_line .wname {
     font-size: 12px !important;
     vertical-align: bottom;
@@ -1091,3 +1092,42 @@ button.exit.litebutton {
 	display: inline-block;
 }
 
+/*import file dialog*/
+#dialog_import_resource {
+    max-height: 600px;
+    overflow-y: scroll;
+    width: 580px;
+}
+#dialog_import_resource .wtitle .text{
+	padding: 5px 10px;
+}
+#dialog_import_resource .inspector .wcontent {
+	display: inline-block;
+}
+#dialog_import_resource .inspector .widget .wname {
+    font-size: 14px;
+}
+#dialog_import_resource .inspector .whidden {
+	color: #ccc;
+}
+#dialog_import_resource .inspector .inputfield {
+	width: calc(100% - 56px);
+}
+#dialog_import_resource .content button.litebutton,
+#dialog_import_resource .inspector .wcontent button.micro {
+	height: 32px;
+    width: 32px;
+    min-width: 32px;
+    background-color: #702cad;
+    position: absolute;
+    line-height: 32px;
+    margin: 0 5px;
+}
+#dialog_import_resource .inspector .wcontent input {
+	outline: 0;
+}
+#dialog_import_resource button.litebutton.big {
+	background-color: #702cad;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
