@@ -1,0 +1,43 @@
+<h1>realmax dev</h1>
+
+<h2>git repo url via ssh</h2>
+<p>git@realmaxdemos.com:realweb/realstudio.git</p>
+
+<h2>editor url</h2>
+<div><a href="http://realmaxeditor.com/">http://realmaxeditor.com/</a>
+or<br>
+<a href="https://www.realmaxdemos.com/pub/realweb/realstudio/editor/">https://www.realmaxdemos.com/pub/realweb/realstudio/editor/</a>
+
+<h2>common operations (process)</h2>
+
+<p>step1, we need to get a local codebase copy by following command:</p>
+<pre>git clone git@realmaxdemos.com:/home/gitrepositories/realweb.git</pre>
+<p style="color:red; background: #eee; padding:5px">clone is for the first time, any time later we would suggest running <pre>git pull</pre> commands before any changes for avoiding conflictions.</p>
+
+<p>step2, we can make changes to the codebase by:</p>
+<pre>git add /path/to/filename</pre>
+
+<p>step3, after changes are done, we can commit codes(or docs) to local repo by:</p>
+<pre>git commit -m "some comments"</pre>
+<p style="color:orange">a task id(link) would be also helpful.</p>
+
+<p>step4, we push changes to remote repo(currently master branch) by:</p>
+<pre>git push origin master</pre>
+
+<h2>q&a</h2>
+<p>if you want to reset your local changes, do the following:</p>
+<pre>git reset --hard
+git pull</pre>
+
+<p>if you want compare and merge manually:</p>
+<pre>git fetch
+git diff -w filename
+git merge</pre>
+
+<h2>client tools</h2>
+<p>choose whatever tools u feel comfortable most, here are some of the suggestions free to use:</p>
+<ul id="git_tools">
+<li><a href="www.tortoisegit.org">totorisegit</a></li>
+<li><a href="https://git-for-windows.github.io/">git for windows</a></li>
+<li><a href="https://www.sourcetreeapp.com/">sourcetree(free git tool for windows and mac)</a></li>
+</ul>
