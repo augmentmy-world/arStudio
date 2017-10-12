@@ -1085,8 +1085,9 @@ button.exit.litebutton {
     line-height: 32px;
     height: 32px;
     margin-right: 5px;
+    top: 0;
 }
-#coding-workarea .inspector.one_line wcontent {
+#coding-workarea .inspector.one_line .info_content.wcontent {
 	display: inline-block;
 }
 
