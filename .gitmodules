@@ -1,0 +1,15 @@
+[submodule "litegl"]
+	path = litegl
+	url = git@realmaxdemos.com:realweb/litegl.js.git
+[submodule "collabserver"]
+	path = collabserver
+	url = git@realmaxdemos.com:realweb/collabserver.git
+[submodule "liteserver"]
+	path = liteserver
+	url = git@realmaxdemos.com:realweb/litefilesystem.js.git
+[submodule "litescene"]
+	path = litescene
+	url = git@realmaxdemos.com:realweb/litescene.js.git
+[submodule "litegui"]
+	path = litegui
+	url = git@realmaxdemos.com:realweb/litegui.js.git
