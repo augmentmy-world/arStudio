@@ -1078,3 +1078,16 @@ button.exit.litebutton {
 	background: #702cad;
 	color: white;
 }
+
+#coding-workarea .inspector.one_line .wname {
+    font-size: 12px !important;
+    vertical-align: bottom;
+    position: relative;
+    line-height: 32px;
+    height: 32px;
+    margin-right: 5px;
+}
+#coding-workarea .inspector.one_line wcontent {
+	display: inline-block;
+}
+
