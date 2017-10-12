@@ -3627,7 +3627,10 @@ LiteGUI.Console = Console;
 		if(num == 1 || num < 0 || num >= this.sections.length) return;
 
 		var offset = 0;
-		var section = this.sections[num];		
+		var section = this.sections[num];
+
+		if( section && section.root.style.display == "none" )
+			return; //already hide			
 
 		if(this.direction == "horizontal") {
 			offset = section.root.style.width;
