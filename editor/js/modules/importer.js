@@ -306,7 +306,7 @@ var ImporterModule  = {
 	{
 		options = options || {};
 
-		var dialog = new LiteGUI.Dialog({ id: "dialog_import_resource", title: "Import File", close: true, minimize: true, width: 480, height: 360, scroll: false, draggable: true});
+		var dialog = new LiteGUI.Dialog({ id: "dialog_import_resource", title: "Import File", close: true, minimize: true, scroll: false, draggable: true});
 		dialog.show();
 
 		var target = LS.Material.COLOR_TEXTURE;

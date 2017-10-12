@@ -1092,7 +1092,7 @@ button.exit.litebutton {
 	display: inline-block;
 }
 
-/*import file dialog*/
+/* import file dialog */
 #dialog_import_resource {
     max-height: 600px;
     overflow-y: scroll;
