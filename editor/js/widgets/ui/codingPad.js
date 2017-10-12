@@ -1070,7 +1070,7 @@ CodingPadWidget.prototype.createCodingArea = function( container )
 
 	//check for parsing errors
 	this.compile_button = top_widgets.addButton(null,"Compile",{ callback: function(v) { 
-		console.log("compile pressed");
+		console.log("compile pressed"); 
 		that.evalueCode();
 	}});
 
