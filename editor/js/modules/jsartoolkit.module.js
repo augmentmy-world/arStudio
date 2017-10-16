@@ -7,6 +7,7 @@ const farPlane = 1000;
 const nearPlane= 0.01;
 const trackableId1 = 1;
 const trackableId2 = 2;
+const defaultMarkerWidth = 40;
 
 // Create a marker root object to keep track of the marker.
 //
@@ -46,13 +47,13 @@ const JsARToolKitModule = {
 
             //Add 3D cube to trackable1
             let cube = new LS.Components.GeometricPrimitive();
-            cube.size = 4;
+            cube.size = 40;
             arTrackable1.addComponent(cube);
 
             //Add 3D sphere to trackable2
             let sphere = new LS.Components.GeometricPrimitive();
             sphere.geometry = LS.Components.GeometricPrimitive.SPHERE;
-            sphere.size = 4;
+            sphere.size = 40;
             arTrackable2.addComponent(sphere);
 
         }
@@ -72,7 +73,7 @@ const JsARToolKitModule = {
                 var cameraPara = new ARCameraParam('data/camera_para.dat');
                 cameraPara.onload = function() {
                     var arController = new ARController(video.videoWidth, video.videoHeight, cameraPara);
-                    arController.setDefaultMarkerWidth(40);
+                    arController.setDefaultMarkerWidth(defaultMarkerWidth);
                     console.log('ARController ready for use', arController);
                     window.arController = arController;
                     
@@ -145,8 +146,12 @@ const JsARToolKitModule = {
                         let cameraGlobalMatrix = scene_arCameraNode.transform.getGlobalMatrix();
                         let markerRootMatrix = mat4.create();
                         mat4.multiply(markerRootMatrix,cameraGlobalMatrix,transform);
+                        let outQuat = quat.create();
+                        quat.fromMat4(outQuat,markerRootMatrix);
+
 
                         markerRoot.transform.setPosition(vec3.fromValues(markerRootMatrix[12],markerRootMatrix[13]*-1,markerRootMatrix[14]*-1));
+                        markerRoot.transform.setRotation(outQuat);
                     } // end if(value === barcodeId)
                 } // end for(var [key,value] of trackableMarkerMap)
             } // end if (barcodeId !== -1)
