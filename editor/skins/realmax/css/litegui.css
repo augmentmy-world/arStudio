@@ -108,6 +108,7 @@
 .inspector .wsection {
 	/*padding: 4px 2px;*/
 	margin-bottom: 4px;
+	position: relative;
 }
 
 .inspector .wsection.selected .wsectiontitle {
