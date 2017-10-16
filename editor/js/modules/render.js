@@ -159,20 +159,21 @@ var RenderModule = {
 			var viewport = RenderModule.getActiveViewport();		
 		    var parent = $(this).closest('.select');
 		    parent.removeClass('is-open').find('.placeholder').text($(this).text());
-		    var v = $(this).text();
+            var v = $(this).text();
+            HeadtrackingModule.Stop();
+            JsARToolKitModule.stopAR();
+            
 			switch( v )
 			{
 				case "Perspective": 
 					viewport.editor_camera.type = LS.Camera.PERSPECTIVE; 
 					viewport.name = "perspective";
 					// Kyle: switch OFF headtracking, switch OFF marker tracking mode.
-					HeadtrackingModule.Stop();
 					break;
 				case "Orthographic": 
 					viewport.editor_camera.type = LS.Camera.ORTHOGRAPHIC; 
 					viewport.name = "orthographic";
 					// Kyle: switch OFF headtracking, switch OFF marker tracking mode.
-					HeadtrackingModule.Stop();
 					break;
 				case "HeadTracking":
 					viewport.name = "headtracking";
@@ -183,11 +184,8 @@ var RenderModule = {
 				case "MarkerTracking":
 					viewport.name = "markertracking";
 					// Kyle: switch OFF headtracking, switch ON marker tracking mode.
-					HeadtrackingModule.Stop();
+                    JsARToolKitModule.createAR();
 					break;
-
-
-
 				default:
 					break;
 			}

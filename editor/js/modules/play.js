@@ -98,9 +98,14 @@ var PlayModule = {
 			this._selected_node_uid = selected_node ? selected_node.uid : null;
 
 			//this.play_button.innerHTML = this.icons.stop;
-			this.play_button.className = "litebutton playing";
-			this.pause_button.removeAttribute('disabled');
-			this.pause_button.classList.remove("enabled");
+            this.play_button.className = "litebutton playing";
+            
+            if(RenderModule.getActiveViewport().name !== "markertracking"){
+                this.pause_button.removeAttribute('disabled');
+                this.pause_button.classList.remove("enabled");
+            }
+
+
 			//this.stopkeep_button.removeAttribute('disabled');
 			this.changeState("play");
 		}
@@ -255,7 +260,11 @@ var PlayModule = {
 				LiteGUI.root.classList.add("playing");
 			LEvent.bind( scene,"finish", this.onSceneStop, this );
 			LS.Input.reset(); //this force some events to be sent
-			LS.GUI.reset();
+            LS.GUI.reset();
+            
+            if(RenderModule.getActiveViewport().name === "markertracking"){
+                JsARToolKitModule.startAR();
+            }
 
 			scene.start();
 			EditorModule.render_debug_info = false;
@@ -277,7 +286,11 @@ var PlayModule = {
 		else if(state == "stop")
 		{
 			this.state = "stop";
-			console.log("%c > FINISH ", 'background: #702cad; color: #fff; font-size: 1.2em; padding: 3px 5px');
+            console.log("%c > FINISH ", 'background: #702cad; color: #fff; font-size: 1.2em; padding: 3px 5px');
+            if(RenderModule.getActiveViewport().name === "markertracking"){
+                JsARToolKitModule.stopAR();
+            }
+
 			LiteGUI.root.classList.remove("playing");
 			scene.finish();
 			LS.Tween.reset();
