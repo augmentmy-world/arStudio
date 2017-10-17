@@ -845,6 +845,7 @@ div {
 	border:none;
 	padding:5px 10px;
 	background: #702cad;
+	line-height:1;
 }
 .litedialog.alert input {
 	width: 100%;
