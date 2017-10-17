@@ -68,6 +68,7 @@ var getDeviceCapabilities = function() {
 
 		////////////////////////// pi (NFC, ping?) //////////////////////////
 		that.piNFC = false;
+		if (that.piNFC) that.hasRearCamera = true;
 
 		////////////////////////// glasses (NFC, check gravity) //////////////////////////
 		that.glassesNFC = false;
@@ -90,17 +91,32 @@ var getDeviceCapabilities = function() {
 	});	
 }
 
+var getPlatform = function(dev) {
+	// unused: 	dev.glassesNFC	dev.hasRearCamera	dev.gravityVector
+	if (dev.userAgent.includes('mobile') || dev.hasDeviceMotion || dev.hasDeviceOrientation) {
+		if (dev.hasGlassesOrient) {
+			if (dev.piNFC) return 'glasses+pi';
+			return 'glasses';
+		}
+		return 'mobile';
+	} else if (dev.userAgent.includes('x64') || dev.userAgent.includes('x86') || dev.userAgent.includes('Windows') || dev.userAgent.includes('Macintosh')) {
+		if (dev.hasFrontCamera && dev.screenOrientation == 'landscape') return 'laptop';
+		else return 'desktop';
+	}
+}
+
 var devCapInst = getDeviceCapabilities().then(function(result) {
 	console.log(result);
+	console.log(getPlatform(result));
 }, function(err) {
 	console.log('should not happen');	
 });
- 
-/*/ Usage:
+
+/*/	Usage:
  *
- *	console.log('device capabilities');
- *	getDeviceCapabilities().then(function(result) {
+ *	var devCapInst = getDeviceCapabilities().then(function(result) {
  *		console.log(result);
+ *		console.log(getPlatform(result));
  *	}, function(err) {
  *		console.log('should not happen');	
  *	});
