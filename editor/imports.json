@@ -62,6 +62,7 @@
 	  	"js/modules/headtrackingmodule.js",
 		"js/modules/PMMmodule.js",
 		"js/modules/devCapabilities.js",
+		"js/modules/actions.js",
 	  	"js/tools/camera.js",
 		"js/modules/graph.js",
 		"js/tools/move.js",

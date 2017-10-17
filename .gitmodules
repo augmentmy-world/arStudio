@@ -1,16 +1,12 @@
 [submodule "litegl"]
 	path = litegl
-
-	url = git@realmaxdemos.com:/var/opt/gitlab/git-data/repositories/realweb/litegl.js.git
-[submodule "collabserver"]
-	path = collabserver
-	url = git@realmaxdemos.com:/var/opt/gitlab/git-data/repositories/realweb/collabserver.git
+	url = http://realmaxdemos.com:3000/realweb/litegl.js.git
 [submodule "liteserver"]
 	path = liteserver
-	url = git@realmaxdemos.com:/var/opt/gitlab/git-data/repositories/realweb/litefilesystem.js.git
+	url = http://realmaxdemos.com:3000/realweb/litefilesystem.js.git
 [submodule "litescene"]
 	path = litescene
-	url = git@realmaxdemos.com:/var/opt/gitlab/git-data/repositories/realweb/litescene.js.git
+	url = http://realmaxdemos.com:3000/realweb/litescene.js.git
 [submodule "litegui"]
 	path = litegui
-	url = git@realmaxdemos.com:/var/opt/gitlab/git-data/repositories/realweb/litegui.js.git
+	url = http://realmaxdemos.com:3000/realweb/litegui.js.git
