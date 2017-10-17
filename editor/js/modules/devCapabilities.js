@@ -1,7 +1,7 @@
 var getDeviceCapabilities = function() {
 	var that = this;
 	
-	// motion listener
+	// motion listener	TODO: take many samples
 	that.listenMotion = function(event) {
 		var x = event.acceleration.x;
 		var y = event.acceleration.y;
@@ -12,10 +12,9 @@ var getDeviceCapabilities = function() {
 		var zG = event.accelerationIncludingGravity.z;
 		var hasGrav = !(xG == null || yG == null || zG == null);
 		if (that.hasDeviceMotion) {
-			alert('devicemotion: ' + x.toString() + ' ' + y.toString() + ' ' + z.toString());
+			//console.log('devicemotion: ' + x.toString() + ' ' + y.toString() + ' ' + z.toString());
 			if (hasGrav) {
-				alert('gravity: ' + xG.toString() + ' ' + yG.toString() + ' ' + zG.toString());
-				// TODO: take many samples
+				//console.log('gravity: ' + xG.toString() + ' ' + yG.toString() + ' ' + zG.toString());
 				that.gravityVector = vec3.fromValues(xG - x, yG - y, zG - z);
 			}
 		}
@@ -32,7 +31,7 @@ var getDeviceCapabilities = function() {
 			that.orientVector = vec3.fromValues(a, b, g);
 			var ang = vec3.distance(that.orientInGlasses, that.orientVector);
 			if (ang < 30.) that.hasGlassesOrient = true;
-			alert('deviceorientation: ' + a.toString() + ' ' + b.toString() + ' ' + g.toString() + ' ang: ' + ang.toString());
+			//console.log('deviceorientation: ' + a.toString() + ' ' + b.toString() + ' ' + g.toString() + ' ang: ' + ang.toString());
 		}
 		window.removeEventListener('deviceorientation', that.listenOrient);
 	}
@@ -108,15 +107,14 @@ var getPlatform = function(dev) {
 		return 'mobile';
 	} else if (dev.userAgent.includes('x64') || dev.userAgent.includes('x86') || dev.userAgent.includes('Windows') || dev.userAgent.includes('Macintosh')) {
 		if (dev.hasFrontCamera && dev.screenOrientation == 'landscape') return 'laptop';
-		else return 'desktop';
+		return 'desktop';
 	}
 }
 
 var devCapInst = getDeviceCapabilities().then(function(result) {
-	alert('o:' + result.hasDeviceOrientation + ' m:' + result.hasDeviceMotion + ' f:' + result.hasFrontCamera + ' r:' + result.hasRearCamera + ' G:' + result.gravityVector[0].toString() + ',' + result.gravityVector[1].toString() + ',' + result.gravityVector[2].toString());
 	alert(getPlatform(result));
 }, function(err) {
-	console.log('should not happen');	
+	console.log('should never happen');	
 });
 
 /*/	Usage:
@@ -125,7 +123,7 @@ var devCapInst = getDeviceCapabilities().then(function(result) {
  *		console.log(result);
  *		console.log(getPlatform(result));
  *	}, function(err) {
- *		console.log('should not happen');	
+ *		console.log('should never happen');	
  *	});
  *
 /*/
