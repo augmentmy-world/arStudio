@@ -2133,12 +2133,18 @@ var HeadtrackingModule = {
 		if (this.enabled) { // already started
 			this.enableZ = !this.enableZ;
 			if (this.enableZ) {
-				//this.headtrackr.Tracker.headtrackerStatus("zenabled");
+				var statusEvent = document.createEvent("Event");
+				statusEvent.initEvent("headtrackrStatus", true, true);
+				statusEvent.status = 'zenabled';
+				document.dispatchEvent(statusEvent);
 				// choose the function that has Z support
 				document.removeEventListener('headtrackingEvent', this.handleHeadTracking);
 				document.addEventListener('headtrackingEvent', this.handleHeadTrackingWithZ);
 			} else {
-				//this.headtrackr.Tracker.headtrackerStatus("zdisabled");
+				var statusEvent = document.createEvent("Event");
+				statusEvent.initEvent("headtrackrStatus", true, true);
+				statusEvent.status = 'zdisabled';
+				document.dispatchEvent(statusEvent);
 				// choose the function without Z support
 				document.removeEventListener('headtrackingEvent', this.handleHeadTrackingWithZ);
 				document.addEventListener('headtrackingEvent', this.handleHeadTracking);
