@@ -504,6 +504,7 @@ textarea.code {
 	height: 32px;
 	line-height: 32px;
 	background:#2c2531;
+	vertical-align: middle;
 }
 .inspector_widget .widget .slider-container .slider {
     position: relative;
