@@ -8,6 +8,7 @@ const nearPlane= 0.01;
 const trackableId1 = 1;
 const trackableId2 = 2;
 const defaultMarkerWidth = 40;
+const cameraCalibrationFile = 'data/camera_para.dat';
 
 // Create a marker root object to keep track of the marker.
 //
@@ -70,7 +71,7 @@ const JsARToolKitModule = {
             facing: "environment",
             onSuccess: function(stream) {
                 console.log('got video', stream);
-                var cameraPara = new ARCameraParam('data/camera_para.dat');
+                var cameraPara = new ARCameraParam(cameraCalibrationFile);
                 cameraPara.onload = function() {
                     var arController = new ARController(video.videoWidth, video.videoHeight, cameraPara);
                     arController.setDefaultMarkerWidth(defaultMarkerWidth);
