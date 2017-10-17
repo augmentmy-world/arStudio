@@ -1443,6 +1443,7 @@ button.litebutton:disabled {
 
 .litedialog .content button.litebutton {
     vertical-align: initial;
+    line-height:1;
 }
 
 .litedialog button.litebutton.mini-button {
