@@ -6,18 +6,15 @@ var getDeviceCapabilities = function() {
 		var x = event.acceleration.x;
 		var y = event.acceleration.y;
 		var z = event.acceleration.z;
-		that.hasDeviceMotion = !(x == null || y == null || z == null);
+		that.hasDeviceMotion = !(x == undefined || (x == 0 && y == 0 && z == 0));
 		var xG = event.accelerationIncludingGravity.x;
 		var yG = event.accelerationIncludingGravity.y;
 		var zG = event.accelerationIncludingGravity.z;
-		var hasGrav = !(xG == null || yG == null || zG == null);
+		var hasGrav = !(xG == 0 && yG == 0 && zG == 0);
 		if (that.hasDeviceMotion) {
-			//console.log('devicemotion: ' + x.toString() + ' ' + y.toString() + ' ' + z.toString());
-			if (hasGrav) {
-				//console.log('gravity: ' + xG.toString() + ' ' + yG.toString() + ' ' + zG.toString());
-				that.gravityVector = vec3.fromValues(xG - x, yG - y, zG - z);
-			}
-		}
+			if (hasGrav) that.gravityVector = vec3.fromValues(xG - x, yG - y, zG - z);
+		} else if (++that._motionTries <= 10) return;
+		that._motion = true;
 		window.removeEventListener('devicemotion', that.listenMotion);
 	}
 	
@@ -26,19 +23,22 @@ var getDeviceCapabilities = function() {
 		var a = event.alpha;
 		var b = event.beta;
 		var g = event.gamma;
-		that.hasDeviceOrientation = !(a == null || b == null || g == null);
+		that.hasDeviceOrientation = !(a == undefined || (a == 0 && b == 0 && g == 0));
 		if (that.hasDeviceOrientation) {
-			that.orientVector = vec3.fromValues(a, b, g);
+			// use this line if we dont care which landscape the phone is in
+			that.orientVector = vec3.fromValues(a, Math.abs(b), Math.abs(g));
+			// use this line if we want to use the landscape orientation that puts the phone charger towards the hole in the headset
+			//that.orientVector = vec3.fromValues(a, -b, g);
 			var ang = vec3.distance(that.orientInGlasses, that.orientVector);
 			if (ang < 30.) that.hasGlassesOrient = true;
-			//console.log('deviceorientation: ' + a.toString() + ' ' + b.toString() + ' ' + g.toString() + ' ang: ' + ang.toString());
-		}
+		} else if (++that._orientTries <= 10) return;
+		that._orient = true;
 		window.removeEventListener('deviceorientation', that.listenOrient);
 	}
 	
 	// wait for results from async events
 	return new Promise(function(resolve, reject) {
-		// F and R	
+		// F and R
 		that.hasFrontCamera = false;
 		that.hasRearCamera = false;
 		if (navigator.mediaDevices  && navigator.mediaDevices.enumerateDevices) {
@@ -54,14 +54,19 @@ var getDeviceCapabilities = function() {
 		}
 
 		// G (gravity vec)
+		that._motion = false;
+		that._motionTries = 0;
 		that.hasDeviceMotion = false;
-		that.gravityVector = [0.0, 0.0, 0.0];
+		that.gravityVector = vec3.fromValues(0.0, 0.0, 0.0);
 		window.addEventListener('devicemotion', that.listenMotion);
 
 		// 0 (device orient)
-		that.hasDeviceOrientation = false;
+		that._orient = false;
+		that._orientTries = 0;
 		that.hasGlassesOrient = false;
-		that.orientInGlasses = [180.0, -180.0, 45.0]; //measured on LG G6 with Chrome
+		that.hasDeviceOrientation = false;
+		that.orientVector = vec3.fromValues(0.0, 0.0, 0.0);
+		that.orientInGlasses = vec3.fromValues(180.0, 180.0, 70.0); //measured on LG G6 with Chrome
 		window.addEventListener('deviceorientation', that.listenOrient);
 
 		// O (screen orient)
@@ -77,10 +82,18 @@ var getDeviceCapabilities = function() {
 
 		// glasses (NFC, check gravity)
 		that.glassesNFC = false;
-		
+
 		// done
-		window.setTimeout(function() {
-			resolve({
+		that._try = 0;
+		that._resolve = resolve;
+		that._waitFunc = function() {
+			// if not done call function again
+			if (!(that._motion && that._orient) && (that._try < 10)) {
+				that._try += 1;
+				window.setTimeout(that._waitFunc, 100);
+				return;
+			}
+			that._resolve({
 				piNFC: that.piNFC,
 				glassesNFC: that.glassesNFC,
 				hasDeviceOrientation: that.hasDeviceOrientation,
@@ -93,8 +106,10 @@ var getDeviceCapabilities = function() {
 				orientVector: that.orientVector,
 				screenOrientation: that.screenOrientation
 			});
-		}, 500);
-	});	
+		}
+		window.setTimeout(that._waitFunc, 100);
+
+	});
 }
 
 var getPlatform = function(dev) {
@@ -105,13 +120,13 @@ var getPlatform = function(dev) {
 			return 'glasses';
 		}
 		return 'mobile';
-	} else if (dev.userAgent.includes('x64') || dev.userAgent.includes('x86') || dev.userAgent.includes('Windows') || dev.userAgent.includes('Macintosh')) {
-		if (dev.hasFrontCamera && dev.screenOrientation == 'landscape') return 'laptop';
-		return 'desktop';
 	}
+	if (dev.hasFrontCamera && dev.screenOrientation == 'landscape') return 'laptop';
+	return 'desktop';
 }
 
 var devCapInst = getDeviceCapabilities().then(function(result) {
+	console.log(result);
 	alert(getPlatform(result));
 }, function(err) {
 	console.log('should never happen');	
