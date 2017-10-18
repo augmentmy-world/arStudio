@@ -2219,7 +2219,7 @@ function Slider(value, options)
 	canvas.width = 100;
 	canvas.height = 1;
 	canvas.style.position = "relative";
-	canvas.style.width = "calc( 100% - 4em )";
+	canvas.style.width = "calc( 100% - 2em )";
 	canvas.style.height = "1.2em";
 	this.root = canvas;
 	var that = this;
