@@ -53,8 +53,7 @@ SillyClient.prototype.connect = function( url, room_name, on_connect, on_message
 		params = "?feedback=1";
 
 	//connect
-	//cwx non-ssl this.socket = new WebSocket("ws://"+url+"/" + room_name + params );
-	this.socket = new WebSocket("wss://"+url+"/" + room_name + params );
+	this.socket = new WebSocket("ws://"+url+"/" + room_name + params );
 	this.socket.binaryType = "arraybuffer";
 	this.socket.onopen = function(){  
 		that.is_connected = true;

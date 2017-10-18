@@ -713,7 +713,7 @@ div {
 }
 .litedialog .content .item.prj main h2{
 	font-size: 24px;
-	line-height: 33px;
+	line-height: 33px;	
 	margin-bottom: 2px;
 }
 .litedialog .content .item.prj main span{
@@ -769,20 +769,20 @@ div {
     opacity: 0.7;
     background: #0b4032;
 }
-.litedialog .content input::-webkit-input-placeholder { /* WebKit browsers*/
+.litedialog .content input::-webkit-input-placeholder { /* WebKit browsers*/ 
 　　color:#c0c0c0;
 }
-.litedialog .content input:-moz-placeholder {  /* Mozilla Firefox 4 to 18*/
+.litedialog .content input:-moz-placeholder {  /* Mozilla Firefox 4 to 18*/ 
 　　color:#c0c0c0;
 }
-.litedialog .content input::-moz-placeholder {  /* Mozilla Firefox 19+*/
+.litedialog .content input::-moz-placeholder {  /* Mozilla Firefox 19+*/ 
 　　color:#c0c0c0;
 }
-.litedialog .content input:-ms-input-placeholder { /* Internet Explorer 10+*/
+.litedialog .content input:-ms-input-placeholder { /* Internet Explorer 10+*/ 
 　　color:#c0c0c0;
 }
 .litedialog.alert {
-	font-size: 1.6em;
+	font-size: 1.6em; 
 }
 
 .litedialog.ui-draggable .panel-header{
@@ -796,7 +796,7 @@ div {
 
 
 .litepanel .panel-footer, .litedialog .panel-footer {
-	user-select: none;
+	user-select: none; 
 	text-align: center;
 }
 
@@ -1305,7 +1305,7 @@ a:hover {
 	padding-left: 10px;
 	padding-right: 10px;
 	user-select: none;
-	-moz-user-select: none;
+	-moz-user-select: none;  
 	-webkit-user-select: none;
 	cursor: pointer;
 }
@@ -1329,9 +1329,9 @@ a:hover {
 	font-size: 20px;
 	color: #AAA;
 	padding:11px 0 9px 16px;
-	-moz-user-select: none;
-	-webkit-user-select: none;
-	user-select: none;
+	-moz-user-select: none;  
+	-webkit-user-select: none;  
+	user-select: none;  
 	cursor: pointer;
 }
 
@@ -1376,7 +1376,7 @@ a:hover {
 
 .litemenu-title {
 	color: white;
-	background-color: #111;
+	background-color: #111;	
 	margin: 0;
 	padding: 2px;
 	cursor: default;

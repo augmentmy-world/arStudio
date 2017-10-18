@@ -662,7 +662,7 @@ var SceneStorageModule = {
 
 	showSaveSceneInLocalDialog: function()
 	{
-		var dialog = new LiteGUI.Dialog({ id: "dialog_save_scene", title:"Save Scene", close: true, minimize: true, width: 360, height: 400, scroll: false, draggable: true});
+		var dialog = new LiteGUI.Dialog({ id: "dialog_save_scene", title:"Save Scene", close: true, minimize: true, scroll: false, draggable: true});
 		dialog.show('fade');
 
 		var name = "";
