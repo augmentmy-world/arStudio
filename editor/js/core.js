@@ -567,12 +567,5 @@ var CORE = {
 		cssNode.media = 'screen';		
 		cssNode.href = 'skins/'+this.config.skin+'/css/style.css';
 		head.appendChild(cssNode);
-
-		cssNode = document.createElement('link');
-		cssNode.type = 'text/css';
-		cssNode.rel = 'stylesheet';
-		cssNode.media = 'screen';
-		cssNode.href = 'skins/'+this.config.skin+'/css/litegui.css';
-		head.appendChild(cssNode);
 	}
 }
