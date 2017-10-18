@@ -108,6 +108,7 @@
 .inspector .wsection {
 	/*padding: 4px 2px;*/
 	margin-bottom: 4px;
+	position: relative;
 }
 
 .inspector .wsection.selected .wsectiontitle {
@@ -842,8 +843,9 @@ div {
 }
 .litedialog.alert button{
 	border:none;
-	padding:5px 10px;
+	padding:5px 20px;
 	background: #702cad;
+	line-height:1;
 }
 .litedialog.alert input {
 	width: 100%;
@@ -1441,6 +1443,7 @@ button.litebutton:disabled {
 
 .litedialog .content button.litebutton {
     vertical-align: initial;
+    line-height:1;
 }
 
 .litedialog button.litebutton.mini-button {

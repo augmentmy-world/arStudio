@@ -955,6 +955,14 @@ button.exit.litebutton {
     margin: 0 auto;
     margin-top:10px;
 }
+#dialog_save_scene .litetree .ltreeitem {
+    padding: 0;
+}
+#dialog_save_scene .collapsebox .listbox {
+    background: #423d47;
+    line-height: 15px;
+}
+
 .litedialog .content button.litebutton[data-value="no"] {
 	background: #702cad;
 }
