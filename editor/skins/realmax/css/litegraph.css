@@ -76,9 +76,9 @@
 	padding: 4px;
 	margin: 2px;
 	padding-left: 2px;
-	-moz-user-select: none;  
-	-webkit-user-select: none;  
-	user-select: none;  
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
 	cursor: pointer;
 	text-indent:7px;
 }
