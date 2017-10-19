@@ -1320,7 +1320,7 @@ a:hover {
 	position: absolute;
 	top: 0px;
 	left: 5px;
-	min-width: 200px;
+	width: 265px;
 	background-color: #423d47;
 	box-shadow: 0 0 3px black;
 	z-index: 10;
