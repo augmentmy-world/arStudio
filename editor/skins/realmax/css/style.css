@@ -833,7 +833,7 @@ div {
 .litedialog .content .inspector .widget {
 	padding: 10px;
 }
-.litedialog .content .inspector.one_line .widget{padding: 0;}
+.litedialog .content .inspector.one_line .widget{padding: 0;vertical-align:middle;}
 
 .litedialog .inspector .widget .wname {
 	min-width: 130px;
