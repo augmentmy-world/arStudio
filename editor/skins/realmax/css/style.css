@@ -834,10 +834,10 @@ div {
 	padding: 10px;
 }
 .litedialog .content .inspector.one_line .widget{padding: 0;}
-.litedialog .inspector .widget .wname {
+/* .litedialog .inspector .widget .wname {
 	min-width: 150px;
 	margin-bottom: 10px;
-}
+} */
 .litedialog .inspector .wcontent {
 	width: calc(100% - 160px);
 }
@@ -867,7 +867,6 @@ div {
     width: 100%;
     text-align: center;
     font-size: 24px;
-    background: #999;
 }
 
 .litemodalbg {
@@ -3392,7 +3391,10 @@ button.exit.litebutton {
     font-size: 18px;
     padding: 0 15px;    
 }
-
+#dialog_save_scene{
+	width: 360px;
+	height: 615px;
+}
 #dialog_save_scene #snapshot {
 	width: 256px;
     height: 256px;
