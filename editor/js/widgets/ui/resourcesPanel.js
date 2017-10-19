@@ -49,7 +49,7 @@ function ResourcesPanelWidget( options )
 		top_inspector.addButton(null,"Delete", {className: 'delete', callback: function(v,e){ /* todo */ }});
 
 		top_inspector.addButton(null,"Import File", {className: 'import', callback: function(){ 
-			ImporterModule.showImportResourceDialog(null,{ folder: that.current_folder }, function(){ that.refreshContent(); });
+			ImporterModule.showImportResourceDialog(null,{type:that.options.type, folder: that.current_folder }, function(){ that.refreshContent(); });
 		}});
 
 	}
