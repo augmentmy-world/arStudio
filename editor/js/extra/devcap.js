@@ -1,3 +1,32 @@
+function ping(source, callback) {
+	if (!this.inUse) {
+		this.status = 'unchecked';
+		this.inUse = true;
+		this.callback = callback;
+		this.source = source;
+		var _that = this;
+		this.img = new Image();
+		this.img.onload = function () {
+			_that.inUse = false;
+			_that.callback('responded');
+		};
+		this.img.onerror = function (e) {
+			if (_that.inUse) {
+				_that.inUse = false;
+				_that.callback('responded', e);
+			}
+		};
+		this.start = new Date().getTime();
+		this.img.src = this.source + '?' + (+ new Date());
+		this.timer = setTimeout(function () {
+			if (_that.inUse) {
+				_that.inUse = false;
+				_that.callback('timeout');
+			}
+		}, 1500);
+	}
+}
+
 var getDeviceCapabilities = function() {
 	var that = this;
 	
@@ -35,17 +64,25 @@ var getDeviceCapabilities = function() {
 		that._orient = true;
 		window.removeEventListener('deviceorientation', that.listenOrient);
 	}
+
+	// ping listener
+	that.piCallback = function(status, event) {
+		if (status == 'responded' && e == null) {
+			that.hasRearCamera = true;
+		}
+	}
 	
 	// wait for results from async events
 	return new Promise(function(resolve, reject) {
 		// F and R
 		that.hasFrontCamera = false;
 		that.hasRearCamera = false;
-		if (navigator.mediaDevices  && navigator.mediaDevices.enumerateDevices) {
-			// list cameras and microphones.
+		if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+			// list cameras
 			navigator.mediaDevices.enumerateDevices().then(function(devices) {
 				devices.forEach(function(device) {
 					if (device.kind == 'videoinput') {
+						console.log(device.kind + ": " + device.label + " id = " + device.deviceId);
 						if (!that.hasFrontCamera) that.hasFrontCamera = true;
 						else that.hasRearCamera = true;
 					}
@@ -66,8 +103,15 @@ var getDeviceCapabilities = function() {
 		that.hasGlassesOrient = false;
 		that.hasDeviceOrientation = false;
 		that.orientVector = vec3.fromValues(0.0, 0.0, 0.0);
-		that.orientInGlasses = vec3.fromValues(180.0, 180.0, 70.0); //measured on LG G6 with Chrome
+		that.orientInGlasses = vec3.fromValues(180.0, 180.0, 70.0); //measured on LG G6 with Chrome in DK1 looking level
 		window.addEventListener('deviceorientation', that.listenOrient);
+
+		// pi (NFC, ping?)
+		that.piNFC = false;
+		that._ping = false;
+		that._pingTries = 0;
+		that.piIP = "10.0.0.192";
+		//ping(that.piIP, that.piCallback);
 
 		// O (screen orient)
 		that.screenOrientation = 'landscape';
@@ -76,13 +120,9 @@ var getDeviceCapabilities = function() {
 		// A (user agent)
 		that.userAgent = navigator.userAgent;
 
-		// pi (NFC, ping?)
-		that.piNFC = false;
-		if (that.piNFC) that.hasRearCamera = true;
-
 		// glasses (NFC, check gravity)
 		that.glassesNFC = false;
-
+		
 		// done
 		that._try = 0;
 		that._resolve = resolve;
@@ -124,13 +164,6 @@ var getPlatform = function(dev) {
 	if (dev.hasFrontCamera && dev.screenOrientation == 'landscape') return 'laptop';
 	return 'desktop';
 }
-
-var devCapInst = getDeviceCapabilities().then(function(result) {
-	console.log(result);
-	alert(getPlatform(result));
-}, function(err) {
-	console.log('should never happen');	
-});
 
 /*/	Usage:
  *

@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+
+<title>WebGLStudio Player</title>
+	<style type='text/css'>
+		html, body {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			padding: 0;
+		}
+	</style>
+
+</head>
+<body>
+
+<!-- core libraries -->
+<script type="text/javascript" src="js/extra/devcap.js"></script>
+<script type="text/javascript" src="js/extra/gl-matrix-min.js"></script>
+<script type="text/javascript" src="js/extra/litegl.js"></script>
+<script type="text/javascript" src="js/extra/litegraph.js"></script>
+<script type="text/javascript" src="js/extra/litescene.js"></script>
+<script type="text/javascript" src="js/extra/Canvas2DtoWebGL.js"></script>
+<script type="text/javascript" src="js/extra/socket.io.js"></script>
+
+<script type="text/javascript">
+
+	// LiteSCENE CODE *************************
+	var player = new LS.Player( {
+		alpha: false, //enables to have alpha in the canvas to blend with background
+		stencil: true,
+		redraw: true, //force to redraw
+		resources: "../liteserver/src/files/",
+		autoresize: true, //resize the 3D window if the browser window is resized
+		loadingbar: true, //shows loading bar progress
+		proxy: "@/proxy.php?url=" //allows to proxy request to avoid cross domain problems, in this case the @ means same domain, so it will be http://hostname/proxy
+	});
+
+	var allow_remote_scenes = false; //allow scenes with full urls? this could be not safe...
+
+	// support for external server
+	var data = localStorage.getItem("wgl_user_preferences" );
+	if(data)
+	{
+		var config = JSON.parse(data);
+		if(config.modules.Drive && config.modules.Drive.fileserver_files_url)
+		{
+			allow_remote_scenes = true;
+			LS.ResourcesManager.setPath( config.modules.Drive.fileserver_files_url );
+		}
+	}
+
+	// allow to use Canvas2D call in the WebGLCanvas (this is not mandatory, just useful)
+	if( window.enableWebGLCanvas )
+		enableWebGLCanvas( gl.canvas );
+	if( LS.queryString["debug"] )
+		player.enableDebug();
+
+	// this code defines which scene to load, in case you are loading a specific scene replce it with player.loadScene( scene_url )
+	if( LS.queryString["session"] ) {
+		player.setScene( JSON.parse( localStorage.getItem( LS.queryString["session"] ) ) );
+	} else if( allow_remote_scenes || (LS.queryString["url"] && LS.queryString["url"].indexOf("://") == -1) ) { //for safety measures
+		player.loadScene( LS.queryString["url"] ); //the url must be something like: fileserver/files/guest/projects/Lee_FX.json
+	} else if( LS.queryString["preview"] === undefined ) {
+		player.loadConfig("config.json");
+	}
+
+	// get the device capabilities to determine how to present scene
+	getDeviceCapabilities().then(function(result) {
+		// piNFC, glassesNFC, hasDeviceOrientation, hasDeviceMotion, hasFrontCamera, hasRearCamera, hasGlassesOrient, userAgent, gravityVector, orientVector, screenOrientation
+		console.log(result);
+		var platform = getPlatform(result);
+		// desktop, laptop, mobile, glasses, glasses+pi
+		console.log(platform);
+
+		if (platform == 'desktop') {
+			
+		} else if (platform == 'laptop') {
+			
+		} else if (platform == 'mobile') {
+			// load up orientation camera controller, attach to scene camera
+		} else if (platform == 'glasses' || platform == 'glasses+pi') {
+			// look at VRCameraController code (liteScene) for stereo rendering
+		} else {
+			console.log("unsupported device");
+		}
+
+	}, function(err) {
+		console.log("should never happen");	
+	});
+
+</script>
+
+</body>
+</html>
