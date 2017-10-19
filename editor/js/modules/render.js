@@ -161,8 +161,7 @@ var RenderModule = {
 		    parent.removeClass('is-open').find('.placeholder').text($(this).text());
             var v = $(this).text();
             HeadtrackingModule.Stop();
-            JsARToolKitModule.stopAR();
-            
+                        
 			switch( v )
 			{
 				case "Perspective": 

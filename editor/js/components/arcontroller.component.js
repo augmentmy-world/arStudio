@@ -5,27 +5,43 @@ function ArControllerComponent( o )
     this.defaultMarkerWidth = 40;
     this.cameraCalibrationFile = 'data/camera_para.dat';
     this._video = undefined;
-    this.arTrackableComponentList = [];
+    this._arTrackableComponentList = [];
+    this._defaultMarkerWidthUnit = 'mm';
     //Square tracking options
-    this.trackableDetectionMode = {
+    this.trackableDetectionModeList = {
         'Trackable square pattern (color)' : artoolkit.AR_TEMPLATE_MATCHING_COLOR,
         'Trackable square pattern (mono)' : artoolkit.AR_TEMPLATE_MATCHING_MONO,
         'Trackable square barcode' : artoolkit.AR_MATRIX_CODE_DETECTION,
         'Trackable square pattern and barcode (color)' : artoolkit.AR_TEMPLATE_MATCHING_COLOR_AND_MATRIX,
         'Trackable square pattern and barcode (mono)' : artoolkit.AR_TEMPLATE_MATCHING_MONO_AND_MATRIX
-    };
+    };    
     
+    this.trackableDetectionMode = artoolkit.AR_TEMPLATE_MATCHING_COLOR_AND_MATRIX;
+    
+
     if(o)
     	this.configure(o);
+}
+
+ArControllerComponent["@inspector"] = function( arController, inspector )
+{   
+    inspector.addTitle("AR Controller");
+    inspector.addCombo("Trackable detection mode", arController.trackableDetectionMode, { values: arController.trackableDetectionModeList, callback: function (value) { arController.trackableDetectionMode = value }});
+    
+    inspector.addNumber("Far plane", arController.farPlane, {callback: v => arController.farPlane = v, precision:2, step:1});
+    inspector.addNumber("Near plane", arController.nearPlane, {callback: v => arController.nearPlane = v, precision:2, step:0.01});
+    
+    inspector.addNumber("Marker width", arController.defaultMarkerWidth, {callback: v => arController.defaultMarkerWidth = v, precision:0, step:1, units: arController._defaultMarkerWidthUnit, min: 10});
 }
 
 LS.registerComponent(ArControllerComponent);
 
 ArControllerComponent.prototype.onAddedToScene = function( scene ){
     LEvent.bind(scene,"start",this.startAR,this);
+    LEvent.bind(scene,'finish',this.stopAR, this );
 }
 ArControllerComponent.prototype.onRemovedFromScene = function( scene ) {
-    LEvent.bind(scene,"stop",this.stopAR,this);    
+    //LEvent.bind(scene,"stop",this.stopAR,this);    
 }
 
 ArControllerComponent.prototype.startAR = function() {
@@ -40,20 +56,19 @@ ArControllerComponent.prototype.startAR = function() {
         facing: "environment",
         onSuccess: function(stream) {
             console.log('got video', stream);
-            var cameraPara = new ARCameraParam(cameraCalibrationFile);
+            var cameraPara = new ARCameraParam(this.cameraCalibrationFile);
             cameraPara.onload = function() {
                 var arController = new ARController(this._video.videoWidth, this._video.videoHeight, cameraPara);
-                arController.setDefaultMarkerWidth(defaultMarkerWidth);
+                arController.setDefaultMarkerWidth(this.defaultMarkerWidth);
                 console.log('ARController ready for use', arController);
-                window.arController = arController;
                 
                 //TODO: Add select box and use selected detection mode here
-                // arController.setPatternDetectionMode( artoolkit.AR_MATRIX_CODE_DETECTION );     
+                 arController.setPatternDetectionMode( this.trackableDetectionMode );     
 
                 // Add an event listener to listen to getMarker events on the ARController.
                 // Whenever ARController#process detects a marker, it fires a getMarker event
                 // with the marker details.
-                arController.addEventListener('getMarker',this.onMarkerFound);         
+                arController.addEventListener('getMarker',this.onMarkerFound.bind(this));         
 
                 // Camera matrix is used to define the “perspective” that the camera would see.
                 // The camera matrix returned from arController.getCameraMatrix() is already the OpenGLProjectionMatrix
@@ -66,7 +81,7 @@ ArControllerComponent.prototype.startAR = function() {
                     requestAnimationFrame(tick);
 
                     // Hide the marker, we don't know if it's visible in this frame.
-                    for (var [trackableName,trackableId] of trackableMarkerMap){
+                    for (var [trackableName,trackableId] of this.trackableMarkerMap){
                         let markerRoot = LS.GlobalScene.getNodeByName(trackableName);
                         markerRoot.visible = false;
                     }
@@ -78,7 +93,7 @@ ArControllerComponent.prototype.startAR = function() {
                     // Render the updated scene.
                     LS.GlobalScene.refresh();
                     //renderer.render(scene, camera);
-                };
+                }.bind(this);
                 tick();
 
             }.bind(this);
@@ -95,14 +110,14 @@ ArControllerComponent.prototype.stopAR = function(){
 
 ArControllerComponent.prototype.registerTrackable = function(arTrackableComponent){
     console.log("Register trackable");
-    this.arTrackableComponentList.push(arTrackableComponent);
+    this._arTrackableComponentList.push(arTrackableComponent);
 }
 
 ArControllerComponent.prototype.unRegisterTrackable = function(arTrackableComponent){
     console.log(`Unregister trackable`);
-    const indexToRemove = this.arTrackableComponentList.indexOf(arTrackableComponent);
+    const indexToRemove = this._arTrackableComponentList.indexOf(arTrackableComponent);
     if(indexToRemove > -1) {
-        this.arTrackableComponentList.splice(indexToRemove,1);
+        this._arTrackableComponentList.splice(indexToRemove,1);
     }
 }
 
@@ -120,7 +135,7 @@ ArControllerComponent.prototype.onMarkerFound = function (ev){
     if (trackableId !== -1) {
         console.log("saw a trackable with id", trackableId);
 
-        arTrackableComponentList.forEach(arTrackable => {
+        this._arTrackableComponentList.forEach(arTrackable => {
             if(trackableId === arTrackable.trackableId) {
                 let markerRoot = arTrackable.attachedGameObject;
                 markerRoot.visible = true;
@@ -145,4 +160,4 @@ ArControllerComponent.prototype.onMarkerFound = function (ev){
             } // end if(value === barcodeId)
         });
     }
-}
+};
