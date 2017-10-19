@@ -833,10 +833,15 @@ div {
 .litedialog .content .inspector .widget {
 	padding: 10px;
 }
-.litedialog .content .inspector.one_line .widget{padding: 0;}
+.litedialog .content .inspector.one_line .widget{padding: 0;vertical-align:middle;}
+
 .litedialog .inspector .widget .wname {
-	min-width: 150px;
+	min-width: 130px;
 	margin-bottom: 10px;
+}
+#select-resource-dialog .inspector .widget .wname {
+	min-width: 0px;
+	margin-bottom: 0px;
 }
 .litedialog .inspector .wcontent {
 	width: calc(100% - 160px);
@@ -867,7 +872,6 @@ div {
     width: 100%;
     text-align: center;
     font-size: 24px;
-    background: #999;
 }
 
 .litemodalbg {
@@ -1316,7 +1320,7 @@ a:hover {
 	position: absolute;
 	top: 0px;
 	left: 5px;
-	min-width: 200px;
+	width: 265px;
 	background-color: #423d47;
 	box-shadow: 0 0 3px black;
 	z-index: 10;
@@ -3044,8 +3048,8 @@ textarea.code {
 }
 
 .alert {
-	background-color: #422;
-	color: #FAA;
+	background-color: #423d47;
+	color: white;
 	padding: 5px;
 }
 
@@ -3391,6 +3395,13 @@ button.exit.litebutton {
     color: red;
     font-size: 18px;
     padding: 0 15px;    
+}
+#dialog_save_scene{
+	width: 360px;
+	height: 615px;
+}
+#dialog_save_scene .content .widget button.litebutton.single{
+	background: #999;
 }
 
 #dialog_save_scene #snapshot {
