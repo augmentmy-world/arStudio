@@ -834,10 +834,15 @@ div {
 	padding: 10px;
 }
 .litedialog .content .inspector.one_line .widget{padding: 0;}
-/* .litedialog .inspector .widget .wname {
-	min-width: 150px;
+
+.litedialog .inspector .widget .wname {
+	min-width: 130px;
 	margin-bottom: 10px;
-} */
+}
+#select-resource-dialog .inspector .widget .wname {
+	min-width: 0px;
+	margin-bottom: 0px;
+}
 .litedialog .inspector .wcontent {
 	width: calc(100% - 160px);
 }
@@ -3395,6 +3400,10 @@ button.exit.litebutton {
 	width: 360px;
 	height: 615px;
 }
+#dialog_save_scene .content .widget button.litebutton.single{
+	background: #999;
+}
+
 #dialog_save_scene #snapshot {
 	width: 256px;
     height: 256px;
