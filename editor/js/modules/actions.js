@@ -191,12 +191,12 @@ LS.Component.doAction = function( component, name_action )
 }
 
 
-LS.Component.actions["enable"] = { 
-	title:"Enable/Disable",
-	callback: function(){
-		this.enabled = !this.enabled;
-	}
-};
+// LS.Component.actions["enable"] = { 
+// 	title:"Enable/Disable",
+// 	callback: function(){
+// 		this.enabled = !this.enabled;
+// 	}
+// };
 
 
 LS.Component.actions["info"] = { 
@@ -206,26 +206,26 @@ LS.Component.actions["info"] = {
 	}
 };
 
-LS.Component.actions["copy"] = { 
-	title:"Copy",
-	callback: function(){
-		EditorModule.copyComponentToClipboard(this);
-	}
-};
+// LS.Component.actions["copy"] = { 
+// 	title:"Copy",
+// 	callback: function(){
+// 		EditorModule.copyComponentToClipboard(this);
+// 	}
+// };
 
-LS.Component.actions["paste"] = { 
-	title:"Paste",
-	callback: function(){
-		EditorModule.pasteComponentFromClipboard(this);
-	}
-};
+// LS.Component.actions["paste"] = { 
+// 	title:"Paste",
+// 	callback: function(){
+// 		EditorModule.pasteComponentFromClipboard(this);
+// 	}
+// };
 
-LS.Component.actions["paste"] = { 
-	title:"Paste",
-	callback: function(){
-		EditorModule.pasteComponentFromClipboard(this);
-	}
-};
+// LS.Component.actions["paste"] = { 
+// 	title:"Paste",
+// 	callback: function(){
+// 		EditorModule.pasteComponentFromClipboard(this);
+// 	}
+// };
 
 LS.Component.actions["delete"] = { 
 	title:"Delete",
@@ -234,26 +234,26 @@ LS.Component.actions["delete"] = {
 	}
 };
 
-LS.Component.actions["reset"] = { 
-	title:"Reset",
-	callback: function(){
-		EditorModule.resetNodeComponent(this);
-	}
-};
+// LS.Component.actions["reset"] = { 
+// 	title:"Reset",
+// 	callback: function(){
+// 		EditorModule.resetNodeComponent(this);
+// 	}
+// };
 
-LS.Component.actions["share"] = { 
-	title:"Share",
-	callback: function(){
-		EditorModule.shareNodeComponent(this);
-	}
-};
+// LS.Component.actions["share"] = { 
+// 	title:"Share",
+// 	callback: function(){
+// 		EditorModule.shareNodeComponent(this);
+// 	}
+// };
 
-LS.Component.actions["select"] = { 
-	title:"Select",
-	callback: function(){
-		SelectionModule.setSelection(this);
-	}
-};
+// LS.Component.actions["select"] = { 
+// 	title:"Select",
+// 	callback: function(){
+// 		SelectionModule.setSelection(this);
+// 	}
+// };
 
 
 
