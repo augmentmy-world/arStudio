@@ -47,6 +47,11 @@ function ResourcesPanelWidget( options )
 		top_inspector.addButton(null,"Add", {className: 'add', callback: function(v,e){ DriveModule.showCreateNewFileMenu( that.current_folder, e ); }});
 		top_inspector.addButton(null,"Copy", {className: 'copy', callback: function(v,e){ /* todo */ }});
 		top_inspector.addButton(null,"Delete", {className: 'delete', callback: function(v,e){ /* todo */ }});
+
+		top_inspector.addButton(null,"Import File", {className: 'import', callback: function(){ 
+			ImporterModule.showImportResourceDialog(null,{ folder: that.current_folder }, function(){ that.refreshContent(); });
+		}});
+
 	}
 
 	//filter by name

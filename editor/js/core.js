@@ -2,7 +2,31 @@
 
 
 //################################################################
-/*
+/* cw: Test define of an object 'class'
+
+function UserInfo()	// UserInfo Constructor
+{
+	this.name="john";
+	this.age = 48;
+	this.group = "admin";
+}
+// Methods
+UserInfo.prototype.showName = function() { console.log("the name"); }
+
+// Create class
+var User1 = new UserInfo();
+// Here autocomplete works.
+
+// Override the method.
+//User1.showName = function() { console.log("overidden method"); }
+
+User1.showName();
+
+// detect TYPE of User1 var
+if (User1 instance of UserInfo)
+{
+	console.log("user1 is a Userinfo");
+}
 */
 //################################################################
 
@@ -566,13 +590,6 @@ var CORE = {
 		cssNode.rel = 'stylesheet';
 		cssNode.media = 'screen';		
 		cssNode.href = 'skins/'+this.config.skin+'/css/style.css';
-		head.appendChild(cssNode);
-
-		cssNode = document.createElement('link');
-		cssNode.type = 'text/css';
-		cssNode.rel = 'stylesheet';
-		cssNode.media = 'screen';
-		cssNode.href = 'skins/'+this.config.skin+'/css/litegui.css';
 		head.appendChild(cssNode);
 	}
 }
