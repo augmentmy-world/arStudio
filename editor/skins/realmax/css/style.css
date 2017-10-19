@@ -2837,7 +2837,7 @@ textarea.code {
 }
 
 #maincanvas {
-	height: calc( 100% - 20px );
+	height: calc( 100% - 0px );
 	width: 100%;
 	overflow: hidden;
 }
@@ -2848,6 +2848,7 @@ textarea.code {
 	width: 100%;
 	overflow: hidden;
 	border: 1px solid black;
+	display: none;
 }
 
 #statusbar.expanded {
