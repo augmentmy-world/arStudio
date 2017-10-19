@@ -561,7 +561,7 @@ var CollaborateModule = {
 					LS.GlobalScene.clear();	// cw: get rid of everything and load from this data...
 					action.data.extra=null;	// cw: not viewpoint, user camera etc
 					LS.GlobalScene.configure( action.data );
-
+					LS.GlobalScene.loadResources(function () { console.log("loaded resources collab");});
 				CollaborateModule.loading_scene=false;	// Can now send 'changed' events to others.
 
 				//@todo check if the thing we were looking at has GONE
