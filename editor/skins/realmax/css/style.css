@@ -2847,7 +2847,7 @@ textarea.code {
 	height: 20px;
 	width: 100%;
 	overflow: hidden;
-	border: 1px solid black;
+	border: 1px solid #eee;
 	display: none;
 }
 
