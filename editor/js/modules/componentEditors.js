@@ -135,7 +135,7 @@ LS.Components.Camera["@inspector"] = function (camera, inspector) {
     // 	}});
     // }
 
-    // var is_node_camera = (node && !node._is_root);
+    var is_node_camera = (node && !node._is_root);
 
     // inspector.addSeparator();
     // inspector.addLayers("Layers", camera.layers, { pretitle: AnimationModule.getKeyframeCode( camera, "layers"), callback: function (value) { 
@@ -144,19 +144,19 @@ LS.Components.Camera["@inspector"] = function (camera, inspector) {
     // }});
 
 
-    // if(!is_node_camera)
-    // {
-    // 	inspector.addSeparator();
-    // 	inspector.addVector3("Eye", camera.eye, { name_width: 80, pretitle: AnimationModule.getKeyframeCode( camera, "eye" ), disabled: is_node_camera, callback: function(v) { 
-    // 		camera.eye = v;
-    // 	}});
-    // 	inspector.addVector3("Center", camera.center, { name_width: 80, pretitle: AnimationModule.getKeyframeCode( camera, "center" ), disabled: is_node_camera, callback: function(v) { 
-    // 		camera.center = v;
-    // 	}});
-    // 	inspector.addVector3("Up", camera.up, { name_width: 80, pretitle: AnimationModule.getKeyframeCode( camera, "up" ), disabled: is_node_camera, callback: function(v) { 
-    // 		camera.up = vec3.normalize(vec3.create(), v);
-    // 	}});
-    // }
+    if(!is_node_camera)
+    {
+    	inspector.addSeparator();
+    	inspector.addVector3("Eye", camera.eye, { name_width: 80, pretitle: AnimationModule.getKeyframeCode( camera, "eye" ), disabled: is_node_camera, callback: function(v) { 
+    		camera.eye = v;
+    	}});
+    	inspector.addVector3("Center", camera.center, { name_width: 80, pretitle: AnimationModule.getKeyframeCode( camera, "center" ), disabled: is_node_camera, callback: function(v) { 
+    		camera.center = v;
+    	}});
+    	inspector.addVector3("Up", camera.up, { name_width: 80, pretitle: AnimationModule.getKeyframeCode( camera, "up" ), disabled: is_node_camera, callback: function(v) { 
+    		camera.up = vec3.normalize(vec3.create(), v);
+    	}});
+    }
 
     // inspector.addButtons(null,["Copy from current","View from here"],{ callback: function(v){ 
     // 	if(v == "Copy from current")
