@@ -999,12 +999,7 @@ LS.Components.Skybox["@inspector"] = function (component, inspector) {
                 LS.ResourcesManager.load(filename);
         }
     });
-
-
-    inspector.addCheckbox("Use Environment", component.use_environment, function (v) {
-        component.use_environment = v;
-        inspector.refresh();
-    });
+ 
 }
 
 
