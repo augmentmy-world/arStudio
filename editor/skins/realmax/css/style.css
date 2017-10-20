@@ -3422,6 +3422,9 @@ button.exit.litebutton {
 	width: 800px;
 	height: 541px;
 }
+#select-resource-dialog div.content{
+	height: 476px;
+}
 
 .litedialog .content button.litebutton[data-value="no"] {
 	background: #702cad;
