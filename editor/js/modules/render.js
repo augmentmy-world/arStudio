@@ -146,7 +146,11 @@ var RenderModule = {
 			<ul><li>Perspective</li><li>Orthographic</li><li>HeadTracking</li><li>MarkerTracking</li></ul></div>";
 
 		document.getElementById("mainmenubar").appendChild( viewmode );
-				
+		$('.litegui-maincontent').on('click', function(){
+			var vmodeList = $("#perspective > .select");
+			if(vmodeList.hasClass('is-open'))
+				vmodeList.removeClass('is-open');
+		});
 		$('.select').on('click', '.placeholder', function() {
 		    var parent = $(this).closest('.select');
 		    if (!parent.hasClass('is-open')) {
@@ -155,6 +159,7 @@ var RenderModule = {
 		    } else {
 		        parent.removeClass('is-open');
 		    }
+		    return false;
 		}).on('click', 'ul>li', function() {
 			var viewport = RenderModule.getActiveViewport();		
 		    var parent = $(this).closest('.select');
