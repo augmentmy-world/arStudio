@@ -3321,7 +3321,7 @@ button.exit.litebutton {
 #visortab {
     overflow: hidden;
     width: 100%;
-    height: calc(100% - 40px);
+    height: calc(100% - 120px) !important;
     outline: none;
     /*border: 1px solid rgba(150, 144, 154, 0.7);*/
 }
