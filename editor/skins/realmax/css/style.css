@@ -37,6 +37,23 @@
 .inspector:not(.one_line) .widget.even {
 
 }
+#hierarchy_panel .panel-header button.litegui.litebutton.button{
+	position: absolute;
+    right: 0;
+    top: 7px;
+    border: 1px solid;
+    line-height: 0;
+    padding: 0;
+    width: 25px;
+    min-width: 25px;
+    height: 25px;
+    box-shadow: 0 0 0;
+    border-radius: 100%;
+    background-image: url(../imgs/close_29.png);
+    color: white;
+    outline: none;
+}
+    
 
 .inspector.one_line .widget {
 	display: inline-block;
@@ -209,6 +226,7 @@
 
 .inspector .wname {
     font-size: 20px;
+    line-height: 26px;
     color: white;
     display: inline-block;
     -moz-box-sizing: border-box;
@@ -623,7 +641,13 @@ div {
 	position: absolute;
 	z-index: 10;
 }
-
+#dialog_texture_sampler.litedialog {
+	height: 650px !important;
+	overflow-y: scroll;
+}
+#dialog_texture_sampler.litedialog .inspector .widget .wname{
+	display: block;
+}
 .litepanel, .litedialog {
 	background-color: #423d47;
 	box-sizing: border-box;
@@ -816,6 +840,7 @@ div {
 .litedialog .panel-footer button {
 	font-size: inherit;
 	padding: 0.1em 0.6em;
+	background: #96909a;
 }
 
 .litedialog .buttons {
@@ -873,7 +898,9 @@ div {
     text-align: center;
     font-size: 12px;
 }
-
+#dialog_materials.litedialog .content button.litebutton.single{
+	background:#96909a;
+}
 .litemodalbg {
 	position: absolute;
 	top:0;
@@ -2561,6 +2588,21 @@ button.wcombobutton.selected {
 	overflow: hidden;
 }
 
+.liteareacontent button.litebutton.mini-button{
+	position: absolute;
+	right: 0;
+	top: 4px;
+	outline: none;
+	line-height: 0;
+    padding: 0;
+    width: 29px;
+    min-width: 29px;
+    height: 29px;
+    box-shadow: 0 0 0;
+    border-radius: 100%;
+    background-image: url(../imgs/close_29.png);
+    color: white;
+}
 body.player #work-area, body.player #main-area  {
 	height: 100%;
 }
@@ -3425,6 +3467,7 @@ button.exit.litebutton {
 #select-resource-dialog div.content{
 	height: 476px;
 }
+
 
 .litedialog .content button.litebutton[data-value="no"] {
 	background: #702cad;
