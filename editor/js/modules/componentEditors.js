@@ -1171,8 +1171,9 @@ LS.Components.Marker2D["@inspector"] = function (component, inspector) {
             pretitle: AnimationModule.getKeyframeCode(component, "marker_img"),
             callback: function (v,e) { 
                 component.marker_img =v;
-                var pattern = e.target.dataset["pattern"];
+                var pattern = e.target.dataset["pattern"]; 
                 console.log("---------------pattern file:"+pattern);
+                inspector.refresh();
              }
         });
 }
