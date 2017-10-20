@@ -3420,7 +3420,7 @@ button.exit.litebutton {
 }
 #select-resource-dialog {
 	width: 800px;
-	height: 540px;
+	height: 541px;
 }
 
 .litedialog .content button.litebutton[data-value="no"] {
