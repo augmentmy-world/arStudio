@@ -3363,7 +3363,7 @@ button.exit.litebutton {
 #visortab {
     overflow: hidden;
     width: 100%;
-    height: calc(100% - 40px);
+    height: calc(100% - 120px) !important;
     outline: none;
     /*border: 1px solid rgba(150, 144, 154, 0.7);*/
 }
@@ -3440,8 +3440,8 @@ button.exit.litebutton {
     padding: 0 15px;    
 }
 #dialog_save_scene{
-	width: 360px;
-	height: 615px;
+	width: 568px;
+	height: 430px;
 }
 #dialog_save_scene .content .widget button.litebutton.single{
 	background: #999;
@@ -3460,6 +3460,14 @@ button.exit.litebutton {
     background: #423d47;
     line-height: 15px;
 }
+#select-resource-dialog {
+	width: 800px;
+	height: 541px;
+}
+#select-resource-dialog div.content{
+	height: 476px;
+}
+
 
 .litedialog .content button.litebutton[data-value="no"] {
 	background: #702cad;
