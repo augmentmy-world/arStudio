@@ -3418,6 +3418,10 @@ button.exit.litebutton {
     background: #423d47;
     line-height: 15px;
 }
+#select-resource-dialog {
+	width: 800px;
+	height: 540px;
+}
 
 .litedialog .content button.litebutton[data-value="no"] {
 	background: #702cad;
