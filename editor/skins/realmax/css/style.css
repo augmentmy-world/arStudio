@@ -3399,7 +3399,7 @@ button.exit.litebutton {
 }
 #dialog_save_scene{
 	width: 568px;
-	height: 615px;
+	height: 430px;
 }
 #dialog_save_scene .content .widget button.litebutton.single{
 	background: #999;
