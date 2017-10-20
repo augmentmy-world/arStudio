@@ -833,7 +833,7 @@ div {
 .litedialog .content .inspector .widget {
 	padding: 10px;
 }
-.litedialog .content .inspector.one_line .widget{padding: 0;vertical-align:middle;}
+.litedialog .content .inspector.one_line .widget{padding: 0;}
 
 .litedialog .inspector .widget .wname {
 	min-width: 130px;
@@ -871,7 +871,7 @@ div {
 .litedialog .content button.litebutton.single {
     width: 100%;
     text-align: center;
-    font-size: 24px;
+    font-size: 12px;
 }
 
 .litemodalbg {
