@@ -3321,7 +3321,7 @@ button.exit.litebutton {
 #visortab {
     overflow: hidden;
     width: 100%;
-    height: calc(100% - 40px);
+    height: calc(100% - 120px) !important;
     outline: none;
     /*border: 1px solid rgba(150, 144, 154, 0.7);*/
 }
@@ -3398,7 +3398,7 @@ button.exit.litebutton {
     padding: 0 15px;    
 }
 #dialog_save_scene{
-	width: 360px;
+	width: 580px;
 	height: 615px;
 }
 #dialog_save_scene .content .widget button.litebutton.single{
