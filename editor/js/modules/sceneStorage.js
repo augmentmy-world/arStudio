@@ -678,6 +678,7 @@ var SceneStorageModule = {
 		widgets.addButton(null,"Save", { className: "big", callback: inner_save });
 
 		dialog.add( widgets );
+		dialog.center();
 
 		var preview_info = null;
 		inner_preview();
