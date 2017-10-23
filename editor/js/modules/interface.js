@@ -1177,7 +1177,7 @@ LiteGUI.Inspector.prototype.addColor = function( name, value, options )
 	inspector.widgets_per_row += 1;
 
 	if(!options.name_width)
-		options.name_width = "40%";
+		options.name_width = "45%";
 
 	var widget = inspector.addColorOld( name, value, options );
 	var color_picker_icon = colorPickerTool.icon;

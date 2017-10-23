@@ -38,9 +38,10 @@ const JsARToolKitModule = {
             
 
             //Add 3D cube to trackable1
-            let cube = new LS.Components.GeometricPrimitive();
-            cube.size = 40;
-            arTrackable1.addComponent(cube);
+            let plane = new LS.Components.GeometricPrimitive();
+            // plane.geometry = LS.Components.GeometricPrimitive.PLANE;
+            plane.size = arControllerComponent.defaultMarkerWidth;
+            arTrackable1.addComponent(plane);
 
             //Add 3D sphere to trackable2
             let sphere = new LS.Components.GeometricPrimitive();

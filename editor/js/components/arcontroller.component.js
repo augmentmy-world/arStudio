@@ -5,7 +5,7 @@ function ArControllerComponent( o )
     this.defaultMarkerWidth = 40;
     this.cameraCalibrationFile = 'data/camera_para.dat';
     this._video = undefined;
-    this._arTrackableComponentList = [];
+    this._arTrackable2DList = [];
     this._defaultMarkerWidthUnit = 'mm';
     //Square tracking options
     this.trackableDetectionModeList = {
@@ -80,10 +80,9 @@ ArControllerComponent.prototype.startAR = function() {
                 var tick = function() {
                     requestAnimationFrame(tick);
 
-                    // Hide the marker, we don't know if it's visible in this frame.
-                    for (var [trackableName,trackableId] of this.trackableMarkerMap){
-                        let markerRoot = LS.GlobalScene.getNodeByName(trackableName);
-                        markerRoot.visible = false;
+                    // Hide the marker, as we don't know if it's visible in this frame.
+                    for (var trackable2D of this._arTrackable2DList){
+                        trackable2D.attachedGameObject.visible = false;
                     }
 
                     // Process detects markers in the video frame and sends
@@ -108,16 +107,16 @@ ArControllerComponent.prototype.stopAR = function(){
     }
 };
 
-ArControllerComponent.prototype.registerTrackable = function(arTrackableComponent){
+ArControllerComponent.prototype.registerTrackable = function(arTrackable2D){
     console.log("Register trackable");
-    this._arTrackableComponentList.push(arTrackableComponent);
+    this._arTrackable2DList.push(arTrackable2D);
 }
 
-ArControllerComponent.prototype.unRegisterTrackable = function(arTrackableComponent){
+ArControllerComponent.prototype.unRegisterTrackable = function(arTrackable2D){
     console.log(`Unregister trackable`);
-    const indexToRemove = this._arTrackableComponentList.indexOf(arTrackableComponent);
+    const indexToRemove = this._arTrackable2DList.indexOf(arTrackable2D);
     if(indexToRemove > -1) {
-        this._arTrackableComponentList.splice(indexToRemove,1);
+        this._arTrackable2DList.splice(indexToRemove,1);
     }
 }
 
@@ -135,7 +134,7 @@ ArControllerComponent.prototype.onMarkerFound = function (ev){
     if (trackableId !== -1) {
         console.log("saw a trackable with id", trackableId);
 
-        this._arTrackableComponentList.forEach(arTrackable => {
+        this._arTrackable2DList.forEach(arTrackable => {
             if(trackableId === arTrackable.trackableId) {
                 let markerRoot = arTrackable.attachedGameObject;
                 markerRoot.visible = true;

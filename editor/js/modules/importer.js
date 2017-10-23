@@ -82,7 +82,17 @@ var ImporterModule  = {
 		var files = this.getFilesFromEvent( evt, options );
 		//console.log("Files found: ", files.length, "Items:",  evt.dataTransfer.items.length, " Files:",  evt.dataTransfer.files.length );
 		if(files && files.length)
-			this.processFileList( files, options );
+		{
+
+			//cw: assets can only come from "assets" in collab mode.
+			if (CollaborateModule.collaborating)
+			{
+				LiteGUI.alert("When in Collaboration mode, please drag and drop the file into Assets, then drag onto the object from there.");
+				return;
+			}
+			else
+				this.processFileList(files, options);
+		}
 
 		//drag something else on the canvas
 		//check if they are resources from other folder
@@ -229,6 +239,8 @@ var ImporterModule  = {
 				return;
 			}
 
+
+
 			try
 			{
 				if(callback)
@@ -247,6 +259,8 @@ var ImporterModule  = {
 		{
 			//console.log(e);
 		}
+
+
 
 		var extension = LS.ResourcesManager.getExtension( file.name ).toLowerCase();
 		var format_info = LS.Formats.supported[ extension ];

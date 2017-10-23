@@ -107,6 +107,9 @@
 .resources-panel button.litebutton.delete {
 	background-image: url(../imgs/mini-icon-del.png);	
 }
+.resources-panel button.litebutton.import {
+	background-image: url(../imgs/mini-icon-folder2.png);
+}
 
 .resources-panel .inspector.one_line {
     background: #2c2531;	

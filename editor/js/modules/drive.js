@@ -1134,9 +1134,15 @@ var DriveModule = {
 					continue;
 
 				found = true;
+
+				//cw: force a collab update here...
+				if (CollaborateModule.collaborating)
+					CollaborateModule.onUserAction([]);	// Send changed scene
+
 				return;
 			}
 		}
+
 
 		var type = resource ? LS.getObjectClassName( resource ) : restype;
 
