@@ -844,7 +844,7 @@ div {
 .litedialog .content .inspector.one_line .widget{padding: 0;}
 
 .litedialog .inspector .widget .wname {
-	min-width: 230px;
+	min-width: 215px;
 	margin-bottom: 10px;
 }
 #select-resource-dialog .inspector .widget .wname {
