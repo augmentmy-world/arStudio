@@ -8,14 +8,32 @@ function ArTrackable2D( o )
     this._trackablePath = this.trackablePath;
     this._trackableId = 1;
     this._barcodeIds = [];
-    this.selectedBarcodeId = this._barcodeIds[0];
 
     for(i = 0; i <= 63; i++){
         this._barcodeIds.push(i);
     }
+    this.selectedBarcodeId = this._barcodeIds[0];
 
     if(o)
     	this.configure(o);
+}
+
+ArTrackable2D.prototype.serialize = function()
+{
+	return {
+        trackableId: this._trackableId,
+        trackableType: this._trackableType
+	};
+}
+
+ArTrackable2D.prototype.configure = function(o)
+{
+    if(o.trackableType !== undefined){
+        this._trackableType = o.trackableType;
+    }
+
+	if(o.trackableId !== undefined) //we can control if the parameter exist
+		this.trackableId = o.trackableId;
 }
 
 Object.defineProperty(ArTrackable2D.prototype, "trackablePath", {

@@ -169,7 +169,6 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
                 let outQuat = quat.create();
                 quat.fromMat4(outQuat,markerRootMatrix);
 
-
                 markerRoot.transform.setPosition(vec3.fromValues(markerRootMatrix[12],markerRootMatrix[13]*-1,markerRootMatrix[14]*-1));
                 markerRoot.transform.setRotation(outQuat);
             } // end if(trackableId === arTrackable.trackableId)
