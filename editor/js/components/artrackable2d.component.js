@@ -1,5 +1,3 @@
-const trackableName= '2D Trackable';
-
 function ArTrackable2D( o )
 {   
     this.arControllerComponent = LS.GlobalScene.findNodeComponents('ArControllerComponent')[0];
@@ -29,6 +27,9 @@ Object.defineProperty(ArTrackable2D.prototype, "trackablePath", {
         return this._trackablePath;
     }
 });
+
+ArTrackable2D.trackableName = '2D Trackable';
+
 
 // ArTrackable2D.prototype.updateMaterial = function(){
 //     if (!this.root.material)

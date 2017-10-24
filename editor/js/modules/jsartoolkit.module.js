@@ -1,6 +1,3 @@
-const trackableName= '2D Trackable';
-const arCameraName= 'arcamera';
-
 const JsARToolKitModule = {
     /**
      * If the scene is empty we setup an example scene that shows simple barcode marker tracking with two markers each having one cube assigned.
@@ -14,7 +11,7 @@ const JsARToolKitModule = {
         //Check if scene root is empty
         if(sceneRoot.childNodes.length === 0){
             //Add the AR-Camera to the scene
-            let arCameraNode = new LS.SceneNode(arCameraName);
+            let arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
             let arCamera = new LS.Camera();
             arCameraNode.addComponent(arCamera);
             sceneRoot.addChild(arCameraNode);
@@ -25,12 +22,12 @@ const JsARToolKitModule = {
 
             //Add two trackables to the scene
             //Trackable 1
-            let arTrackable1 = new LS.SceneNode(trackableName);
+            let arTrackable1 = new LS.SceneNode(ArTrackable2D.trackableName);
             sceneRoot.addChild(arTrackable1);
             arTrackable1.addComponent(new ArTrackable2D());
 
             //Trackable 2
-            let arTrackable2 = new LS.SceneNode(trackableName);
+            let arTrackable2 = new LS.SceneNode(ArTrackable2D.trackableName);
             sceneRoot.addChild(arTrackable2);
             const arTrackableComponent = new ArTrackable2D();
             arTrackableComponent.trackableId = 2;

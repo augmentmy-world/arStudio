@@ -1,5 +1,3 @@
-const arCameraName= 'arcamera';
-
 function ArControllerComponent( o )
 {
     this.farPlane = 1000;
@@ -28,6 +26,8 @@ function ArControllerComponent( o )
     if(o)
     	this.configure(o);
 }
+
+ArControllerComponent.arCameraName = 'arcamera';
 
 ArControllerComponent["@inspector"] = function( arController, inspector )
 {   
@@ -161,7 +161,7 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
                 // console.log(transform);
 
                 // Apply transform to marker root
-                scene_arCameraNode= LS.GlobalScene.getNodeByName( arCameraName );
+                scene_arCameraNode= LS.GlobalScene.getNodeByName( ArControllerComponent.arCameraName );
 
                 let cameraGlobalMatrix = scene_arCameraNode.transform.getGlobalMatrix();
                 let markerRootMatrix = mat4.create();
