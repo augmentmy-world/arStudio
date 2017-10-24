@@ -2,6 +2,10 @@
 
 
 //################################################################
+/*
+	kb: todo: make core.fromPlayer not init liteGUI
+*/
+
 /* cw: Test define of an object 'class'
 
 function UserInfo()	// UserInfo Constructor
@@ -57,9 +61,10 @@ var CORE = {
 
 
 	//called from index.html
-	init: function( )
+	init: function( fromPlayer )
 	{
 		this.root = document.body;
+		this.fromPlayer = fromPlayer;
 		
 		//Load config file
 		LiteGUI.request({
@@ -263,21 +268,26 @@ var CORE = {
 		LiteGUI.remove(".startup-console-msg");
 		this.send_log_to_console = true;
 		
-		//launch LiteGUI
-		LiteGUI.init(); 
+		if (!this.fromPlayer) {
+			
+			//launch LiteGUI
+			LiteGUI.init(); 
 
-		//load local user preferences for every systemo module
-		this.loadUserPreferences();
-
+			//load local user preferences for every system module
+			this.loadUserPreferences();
+		}
+		
 		//Init all system modules
 		this.initModules();
 
 		//some modules may need to be unloaded
 		window.onbeforeunload = CORE.onBeforeUnload.bind(this);
 
-		this.addScene( LS.GlobalScene );
-		this.selectScene( LS.GlobalScene );
-
+		if (!this.fromPlayer) {
+			this.addScene( LS.GlobalScene );
+			this.selectScene( LS.GlobalScene );
+		}
+		
 		LiteGUI.trigger( CORE, "system_ready" );
 	},
 

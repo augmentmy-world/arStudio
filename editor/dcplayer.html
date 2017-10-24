@@ -17,16 +17,20 @@
 <body>
 
 <!-- core libraries -->
-<script type="text/javascript" src="js/extra/devcap.js"></script>
 <script type="text/javascript" src="js/extra/gl-matrix-min.js"></script>
+<script type="text/javascript" src="js/extra/jquery-2.1.1.min.js"></script>
 <script type="text/javascript" src="js/extra/litegl.js"></script>
+<script type="text/javascript" src="js/extra/litegui.js"></script>
 <script type="text/javascript" src="js/extra/litegraph.js"></script>
 <script type="text/javascript" src="js/extra/litescene.js"></script>
 <script type="text/javascript" src="js/extra/Canvas2DtoWebGL.js"></script>
 <script type="text/javascript" src="js/extra/socket.io.js"></script>
+<script type="text/javascript" src="js/extra/devcap.js"></script>
+<script type="text/javascript" src="js/core.js"></script>
 
 <script type="text/javascript">
-
+	//CORE.init();
+	
 	// LiteSCENE CODE *************************
 	var player = new LS.Player( {
 		alpha: false, //enables to have alpha in the canvas to blend with background
@@ -37,9 +41,9 @@
 		loadingbar: true, //shows loading bar progress
 		proxy: "@/proxy.php?url=" //allows to proxy request to avoid cross domain problems, in this case the @ means same domain, so it will be http://hostname/proxy
 	});
-
+    
 	var allow_remote_scenes = false; //allow scenes with full urls? this could be not safe...
-
+    
 	// support for external server
 	var data = localStorage.getItem("wgl_user_preferences" );
 	if( data ) {
@@ -49,13 +53,13 @@
 			LS.ResourcesManager.setPath( config.modules.Drive.fileserver_files_url );
 		}
 	}
-
+    
 	// allow to use Canvas2D call in the WebGLCanvas (this is not mandatory, just useful)
 	if( window.enableWebGLCanvas )
 		enableWebGLCanvas( gl.canvas );
 	if( LS.queryString["debug"] )
 		player.enableDebug();
-
+    
 	// this code defines which scene to load, in case you are loading a specific scene replce it with player.loadScene( scene_url )
 	if( LS.queryString["session"] ) {
 		player.setScene( JSON.parse( localStorage.getItem( LS.queryString["session"] ) ) );
@@ -64,12 +68,12 @@
 	} else if( LS.queryString["preview"] === undefined ) {
 		player.loadConfig("config.json");
 	}
-
-	//wht to do if scene reqs mor capabil thn com has...
-		//disabl bits
-		//dont load
-
-	//kb device capabilities
+    
+	// what to do if scene requires more capabilities than platform has...
+		// disable bits of scene?
+		// dont load scene?
+    
+	// scene device capabilities
 	if (player.scene.devcap != null || player.scene.devplat != null) {
 		// get the device capabilities to determine how to present scene
 		getDeviceCapabilities().then(function(result) {
@@ -77,15 +81,15 @@
 			player.platform = getPlatform(result);
 			// desktop, laptop, mobile, glasses, glasses+pi
 			console.log(player.platform);
-
+    
 			// check device support
 			if (player.scene.devplat != null) {
 				if (!player.scene.devplat.includes(player.platform)) {
 					// unsupported device
-					console.log("Scene unsupported device: " + player.platform);
+					alert("Scene unsupported device: " + player.platform);
 				}
 			}
-
+    
 			// check specific capabilities
 			if (player.scene.devcap != null) {
 				// view results as int
@@ -111,19 +115,18 @@
 				// if requirements not met
 				if (d != 0) {
 					// unsupported requirements
-					console.log("Scene unsupported requirements: " + d.toString());
+					alert("Scene unsupported requirements: " + d.toString());
 				}
 			}
-
+    
 			// enable stereo rendering
 			if (player.platform == 'mobile') {
-				// attach to scene camera
+				// attach device orientation controller to scene camera
 			} else if (player.platform == 'glasses' || player.platform == 'glasses+pi') {
 				// look at VRCameraController code (liteScene) for stereo rendering
-				// also dewarp
-			} else {
-				console.log("unsupported device");
+				// also dewarp camerafx
 			}
+			
 		}, function(err) { console.log("should never happen"); });
 		
 	}

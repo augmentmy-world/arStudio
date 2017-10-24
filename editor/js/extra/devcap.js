@@ -1,3 +1,17 @@
+
+/*/	Usage:
+ *
+ *	getDeviceCapabilities().then(function(result) {
+ *		console.log(result);
+ *		console.log(getPlatform(result));
+ *	}, function(err) {
+ *		console.log('should never happen');	
+ *	});
+ *
+ *	glasses+pi glasses mobile laptop desktop piNFC glassesNFC hasDeviceOrientation hasDeviceMotion hasFrontCamera hasRearCamera hasGlassesOrient userAgent gravityVector orientVector screenOrientation
+ *
+/*/
+
 function ping(source, callback) {
 	if (!this.inUse) {
 		this.status = 'unchecked';
@@ -165,15 +179,26 @@ var getPlatform = function(dev) {
 	return 'desktop';
 }
 
-/*/	Usage:
- *
- *	var devCapInst = getDeviceCapabilities().then(function(result) {
- *		console.log(result);
- *		console.log(getPlatform(result));
- *	}, function(err) {
- *		console.log('should never happen');	
- *	});
- *
- *	glasses+pi glasses mobile laptop desktop piNFC glassesNFC hasDeviceOrientation hasDeviceMotion hasFrontCamera hasRearCamera hasGlassesOrient userAgent gravityVector orientVector screenOrientation
- *
-/*/
+var DeviceCapabilitiesModule = {
+	//LS event
+	KylesEvent: function() {
+		getDeviceCapabilities().then(function(result) {
+			console.log(result);
+			console.log(getPlatform(result));
+		}, function(err) {
+			console.log('should never happen');	
+		});
+	},
+	// called when added
+	init: function() {
+		LEvent.bind(LS.GlobalScene, "KylesEvent", this.KylesEvent);
+		LEvent.trigger(this, "KylesEvent");
+		debugger;
+	},
+	// called when removed
+	deinit: function() {
+		
+	}
+}
+
+if (typeof(CORE) != 'undefined') CORE.registerModule( DeviceCapabilitiesModule );

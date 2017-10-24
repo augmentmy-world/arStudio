@@ -246,19 +246,20 @@ var PMMModule = {
 	icon: "imgs/mini-icon-pmm.png",
 	preferences: {},
 
-	// needs camera frame and tracking input
+	//needs camera frame and tracking input
 	pmm: function() {
 		var that = PMMinstance;
 		//var SNAP_DIST = 10.0;
 		var zFar = 100.0;
 		
-		// pose container for info	
+		//pose container for info	
 		var pose = {
-			// view matrix
+			//view matrix
 			view: mat4.create(),
-			// size of marker in cm
+			//size of marker in cm
 			size: 10.0
 		}
+
 		//cheat and pre-bake a pose in here
 		pose.view[0] = 1.0; pose.view[1] = 0.0; pose.view[2] = 0.0; pose.view[3] = 0.0;
 		pose.view[4] = 0.0; pose.view[5] = 0.0; pose.view[6] = -1.0; pose.view[7] = 0.0; 
@@ -340,9 +341,12 @@ var PMMModule = {
 				[ ROI[2], ROI[3] ],
 				[ 0.0, ROI[3] ]
 			];
+
+			//TODO: create canvas, warp perspective, eventually save below
+
 			//warp perspective
 			var mat = getPerspective(p, p2);
-			//save image
+			//store image
 			plnImgs.push(null);
 			
 			//fill in poly where it was
@@ -370,9 +374,9 @@ var PMMModule = {
 			console.log("farthestZ " + farthestZ.toString());
 		}
 
+		//final backdrop plane with rest of image
 		var backdrop = new plane();
 		var fz640 = farthestZ / 640.0;
-		//final backdrop plane with rest of image via inverse perspective transform
 		var wp = [
 			[-midpt[0] * fz640, -midpt[1] * fz640, -farthestZ],
 			[ midpt[0] * fz640, -midpt[1] * fz640, -farthestZ],
