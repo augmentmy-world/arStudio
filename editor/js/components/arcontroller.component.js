@@ -63,12 +63,12 @@ ArControllerComponent.prototype.startAR = function() {
                 console.log('ARController ready for use', arController);
                 
                 //TODO: Add select box and use selected detection mode here
-                 arController.setPatternDetectionMode( this.trackableDetectionMode );     
+                arController.setPatternDetectionMode( this.trackableDetectionMode );     
 
                 // Add an event listener to listen to getMarker events on the ARController.
                 // Whenever ARController#process detects a marker, it fires a getMarker event
                 // with the marker details.
-                arController.addEventListener('getMarker',this.onMarkerFound.bind(this));         
+                arController.addEventListener('getMarker',this.onTrackableFound.bind(this));         
 
                 // Camera matrix is used to define the “perspective” that the camera would see.
                 // The camera matrix returned from arController.getCameraMatrix() is already the OpenGLProjectionMatrix
@@ -120,7 +120,7 @@ ArControllerComponent.prototype.unRegisterTrackable = function(arTrackable2D){
     }
 }
 
-ArControllerComponent.prototype.onMarkerFound = function (ev){
+ArControllerComponent.prototype.onTrackableFound = function (ev){
     const markerIndex = ev.data.index;
     const markerType = ev.data.type;
     const marker = ev.data.marker;
@@ -138,7 +138,8 @@ ArControllerComponent.prototype.onMarkerFound = function (ev){
             if(trackableId === arTrackable.trackableId) {
                 let markerRoot = arTrackable.attachedGameObject;
                 markerRoot.visible = true;
-
+                LEvent.trigger(this, "onTrackableFound", arTrackable);
+                
                 // Note that you need to copy the values of the transformation matrix,
                 // as the event transformation matrix is reused for each marker event
                 // sent by an ARController.
