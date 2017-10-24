@@ -2983,6 +2983,10 @@ textarea.code {
 	background:#2c2531;
 	vertical-align: middle;
 }
+.inspector_widget .widget button.litebutton img.colorpicker {
+	width: 14px;
+	height: 14px;
+}
 .inspector_widget .widget .slider-container .slider {
     position: relative;
     width: calc(100% - 4em);
