@@ -879,8 +879,10 @@ div {
 .litedialog .content button.litebutton.single {
     width: 100%;
     text-align: center;
-    font-size: 12px;
+    font-size: 18px;
+    background: #999;
 }
+
 #dialog_materials.litedialog .content button.litebutton.single{
 	background:#96909a;
 }
@@ -3425,7 +3427,8 @@ button.exit.litebutton {
 #dialog_save_scene{
 	width: 568px;
 }
-#dialog_save_scene .info_content.wcontent  .litebutton,#dialog_save_scene .content .widget button.litebutton.single{
+#dialog_save_scene .info_content.wcontent  .litebutton,#dialog_save_scene .content .widget button.litebutton.single,#dialog_components .content button.litebutton.single{
+	font-size: 18px;
 	background: #999;
 	outline:none;
 }
@@ -3451,9 +3454,11 @@ button.exit.litebutton {
 #select-resource-dialog div.content{
 	height: 476px;
 }
+ #select-resource-dialog .content button.litebutton.single{
+	font-size: 12px;
+} 
 
-
-.litedialog .content button.litebutton[data-value="no"] {
+#select-resource-dialog.litedialog .content button.litebutton[data-value="no"] {
 	background: #702cad;
 }
 .litedialog.alert {
