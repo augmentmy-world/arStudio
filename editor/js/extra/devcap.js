@@ -153,7 +153,7 @@ var getDeviceCapabilities = function() {
 }
 
 var getPlatform = function(dev) {
-	// unused: 	dev.glassesNFC	dev.hasRearCamera	dev.gravityVector	dev.orientVector
+	// unused: 	glassesNFC	hasRearCamera	gravityVector	orientVector
 	if (dev.userAgent.includes('mobile') || dev.hasDeviceMotion || dev.hasDeviceOrientation) {
 		if (dev.hasGlassesOrient) {
 			if (dev.piNFC) return 'glasses+pi';
@@ -173,5 +173,7 @@ var getPlatform = function(dev) {
  *	}, function(err) {
  *		console.log('should never happen');	
  *	});
+ *
+ *	glasses+pi glasses mobile laptop desktop piNFC glassesNFC hasDeviceOrientation hasDeviceMotion hasFrontCamera hasRearCamera hasGlassesOrient userAgent gravityVector orientVector screenOrientation
  *
 /*/

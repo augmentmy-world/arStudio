@@ -42,11 +42,9 @@
 
 	// support for external server
 	var data = localStorage.getItem("wgl_user_preferences" );
-	if(data)
-	{
+	if( data ) {
 		var config = JSON.parse(data);
-		if(config.modules.Drive && config.modules.Drive.fileserver_files_url)
-		{
+		if(config.modules.Drive && config.modules.Drive.fileserver_files_url) {
 			allow_remote_scenes = true;
 			LS.ResourcesManager.setPath( config.modules.Drive.fileserver_files_url );
 		}
@@ -67,29 +65,68 @@
 		player.loadConfig("config.json");
 	}
 
-	// get the device capabilities to determine how to present scene
-	getDeviceCapabilities().then(function(result) {
-		// piNFC, glassesNFC, hasDeviceOrientation, hasDeviceMotion, hasFrontCamera, hasRearCamera, hasGlassesOrient, userAgent, gravityVector, orientVector, screenOrientation
-		console.log(result);
-		var platform = getPlatform(result);
-		// desktop, laptop, mobile, glasses, glasses+pi
-		console.log(platform);
+	//wht to do if scene reqs mor capabil thn com has...
+		//disabl bits
+		//dont load
 
-		if (platform == 'desktop') {
-			
-		} else if (platform == 'laptop') {
-			
-		} else if (platform == 'mobile') {
-			// load up orientation camera controller, attach to scene camera
-		} else if (platform == 'glasses' || platform == 'glasses+pi') {
-			// look at VRCameraController code (liteScene) for stereo rendering
-		} else {
-			console.log("unsupported device");
-		}
+	//kb device capabilities
+	if (player.scene.devcap != null || player.scene.devplat != null) {
+		// get the device capabilities to determine how to present scene
+		getDeviceCapabilities().then(function(result) {
+			// piNFC, glassesNFC, hasDeviceOrientation, hasDeviceMotion, hasFrontCamera, hasRearCamera, hasGlassesOrient, userAgent, gravityVector, orientVector, screenOrientation
+			player.platform = getPlatform(result);
+			// desktop, laptop, mobile, glasses, glasses+pi
+			console.log(player.platform);
 
-	}, function(err) {
-		console.log("should never happen");	
-	});
+			// check device support
+			if (player.scene.devplat != null) {
+				if (!player.scene.devplat.includes(player.platform)) {
+					// unsupported device
+					console.log("Scene unsupported device: " + player.platform);
+				}
+			}
+
+			// check specific capabilities
+			if (player.scene.devcap != null) {
+				// view results as int
+				var r = result.piNFC +
+						result.glassesNFC * 2 +
+						result.hasDeviceOrientation * 4 +
+						result.hasDeviceMotion* 8 +
+						result.hasFrontCamera * 16 +
+						result.hasRearCamera * 32 +
+						result.hasGlassesOrient * 64;
+				// view requirements as int
+				var t = player.scene.devcap.includes('piNFC') +
+						player.scene.devcap.includes('glassesNFC') * 2 +
+						player.scene.devcap.includes('hasDeviceOrientation') * 4 +
+						player.scene.devcap.includes('hasDeviceMotion') * 8 +
+						player.scene.devcap.includes('hasFrontCamera') * 16 +
+						player.scene.devcap.includes('hasRearCamera') * 32 +
+						player.scene.devcap.includes('hasGlassesOrient') * 64;
+				// calc mismatches
+				var m = r ^ t;
+				// calc deficiencies
+				var d = m & t;
+				// if requirements not met
+				if (d != 0) {
+					// unsupported requirements
+					console.log("Scene unsupported requirements: " + d.toString());
+				}
+			}
+
+			// enable stereo rendering
+			if (player.platform == 'mobile') {
+				// attach to scene camera
+			} else if (player.platform == 'glasses' || player.platform == 'glasses+pi') {
+				// look at VRCameraController code (liteScene) for stereo rendering
+				// also dewarp
+			} else {
+				console.log("unsupported device");
+			}
+		}, function(err) { console.log("should never happen"); });
+		
+	}
 
 </script>
 
