@@ -133,6 +133,7 @@ var InterfaceModule = {
 
 		//test dock panel
 		var docked = new LiteGUI.Panel("hierarchy_panel", {title:i18n.gettext('HIERARCHY')});
+		
 		this.mainarea.getSection(0).add( docked );
 		LiteGUI.hierarchypanel = docked;
 
@@ -160,6 +161,10 @@ var InterfaceModule = {
 		tabs_widget.getTab("Hierarchy").add( this.scene_tree );
 
 		LiteGUI.menubar.add("Window/Hierarchy Panel", { callback: function() { InterfaceModule.setHierarchyPanelVisibility(); } });
+
+
+		var hp = document.getElementById("hierarchy_panel").getElementsByClassName("close-button")[0];
+		hp.onclick = function() { InterfaceModule.setHierarchyPanelVisibility(); }
 
 		//default
 		tabs_widget.selectTab("Hierarchy");
