@@ -2984,8 +2984,8 @@ textarea.code {
 	vertical-align: middle;
 }
 .inspector_widget .widget button.litebutton img.colorpicker {
-	width: 14px;
-	height: 14px;
+	width: 10px;
+	height: 12px;
 }
 .inspector_widget .widget .slider-container .slider {
     position: relative;
