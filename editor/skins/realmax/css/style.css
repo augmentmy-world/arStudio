@@ -3424,6 +3424,9 @@ button.exit.litebutton {
     font-size: 18px;
     padding: 0 15px;
 }
+#dialog_login.litedialog .inspector .widget .wname{
+	min-width: 166px;
+}
 #dialog_save_scene{
 	width: 568px;
 }
