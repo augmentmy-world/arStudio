@@ -1,3 +1,5 @@
+const trackableName= '2D Trackable';
+
 function ArTrackable2D( o )
 {   
     this.arControllerComponent = LS.GlobalScene.findNodeComponents('ArControllerComponent')[0];
@@ -97,5 +99,21 @@ Object.defineProperty(ArTrackable2D.prototype,'trackableId', {
             this.selectedBarcodeId = trackableId;
         }
 
+    }
+});
+Object.defineProperty(ArTrackable2D.prototype,'visible', {
+    get: function() {
+        return this._visible;
+    },
+    set: function(visible) {
+        this._visible = visible;
+        if(visible){
+            LEvent.trigger(this, "onTrackableFound", this);    
+            this.attachedGameObject.visible = true;        
+        }
+        else{
+            LEvent.trigger(this, "onTrackableLost", this);  
+            this.attachedGameObject.visible = false;
+        }
     }
 });

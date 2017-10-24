@@ -1,3 +1,5 @@
+const arCameraName= 'arcamera';
+
 function ArControllerComponent( o )
 {
     this.farPlane = 1000;
@@ -7,6 +9,7 @@ function ArControllerComponent( o )
     this._video = undefined;
     this._arTrackable2DList = [];
     this._defaultMarkerWidthUnit = 'mm';
+    this._visibleTrackables = [];
     //Square tracking options
     this.trackableDetectionModeList = {
         'Trackable square pattern (color)' : artoolkit.AR_TEMPLATE_MATCHING_COLOR,
@@ -17,6 +20,9 @@ function ArControllerComponent( o )
     };    
     
     this.trackableDetectionMode = artoolkit.AR_TEMPLATE_MATCHING_COLOR_AND_MATRIX;
+    
+    LEvent.bind(LS.GlobalScene, "onTrackableFound", this.trackableFound);
+    LEvent.bind(LS.GlobalScene, "onTrackableLost", this.trackableLost);
     
 
     if(o)
@@ -31,7 +37,7 @@ ArControllerComponent["@inspector"] = function( arController, inspector )
     inspector.addNumber("Far plane", arController.farPlane, {callback: v => arController.farPlane = v, precision:2, step:1});
     inspector.addNumber("Near plane", arController.nearPlane, {callback: v => arController.nearPlane = v, precision:2, step:0.01});
     
-    inspector.addNumber("Marker width", arController.defaultMarkerWidth, {callback: v => arController.defaultMarkerWidth = v, precision:0, step:1, units: arController._defaultMarkerWidthUnit, min: 10});
+    inspector.addNumber("Trackable width", arController.defaultMarkerWidth, {callback: v => arController.defaultMarkerWidth = v, precision:0, step:1, units: arController._defaultMarkerWidthUnit, min: 10});
 }
 
 LS.registerComponent(ArControllerComponent);
@@ -62,8 +68,8 @@ ArControllerComponent.prototype.startAR = function() {
                 arController.setDefaultMarkerWidth(this.defaultMarkerWidth);
                 console.log('ARController ready for use', arController);
                 
-                //TODO: Add select box and use selected detection mode here
-                arController.setPatternDetectionMode( this.trackableDetectionMode );     
+                // FIXME: In Player-Mode the detection Mode is undefined 
+                arController.setPatternDetectionMode( (this.trackableDetectionMode || 3) );     
 
                 // Add an event listener to listen to getMarker events on the ARController.
                 // Whenever ARController#process detects a marker, it fires a getMarker event
@@ -82,12 +88,20 @@ ArControllerComponent.prototype.startAR = function() {
 
                     // Hide the marker, as we don't know if it's visible in this frame.
                     for (var trackable2D of this._arTrackable2DList){
-                        trackable2D.attachedGameObject.visible = false;
+                        trackable2D.currentState = undefined;
                     }
 
                     // Process detects markers in the video frame and sends
                     // getMarker events to the event listeners.
                     arController.process(this._video);
+
+                    // If after the processing trackable2D.currentState is still undefined we assume that the marker was not visible within that frame
+
+                    this._arTrackable2DList.forEach(arTrackable => {
+                        if( arTrackable.currentState === undefined){
+                            arTrackable.visible = false;
+                        }
+                    });
                     
                     // Render the updated scene.
                     LS.GlobalScene.refresh();
@@ -137,17 +151,18 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
         this._arTrackable2DList.forEach(arTrackable => {
             if(trackableId === arTrackable.trackableId) {
                 let markerRoot = arTrackable.attachedGameObject;
-                markerRoot.visible = true;
-                LEvent.trigger(this, "onTrackableFound", arTrackable);
+                arTrackable.visible = true;
+                arTrackable.currentState = 'visible';
                 
                 // Note that you need to copy the values of the transformation matrix,
                 // as the event transformation matrix is reused for each marker event
                 // sent by an ARController.
                 var transform = ev.data.matrix;
-                console.log(transform);
+                // console.log(transform);
 
                 // Apply transform to marker root
-                let scene_arCameraNode= LS.GlobalScene.getNodeByName(arCameraName);
+                scene_arCameraNode= LS.GlobalScene.getNodeByName( arCameraName );
+
                 let cameraGlobalMatrix = scene_arCameraNode.transform.getGlobalMatrix();
                 let markerRootMatrix = mat4.create();
                 mat4.multiply(markerRootMatrix,cameraGlobalMatrix,transform);
@@ -157,7 +172,15 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
 
                 markerRoot.transform.setPosition(vec3.fromValues(markerRootMatrix[12],markerRootMatrix[13]*-1,markerRootMatrix[14]*-1));
                 markerRoot.transform.setRotation(outQuat);
-            } // end if(value === barcodeId)
+            } // end if(trackableId === arTrackable.trackableId)
         });
     }
 };
+
+ArControllerComponent.prototype.trackableFound = (event, arTrackable) => {
+    console.log(`TrackableID ${arTrackable.trackableId}`);    
+}
+
+ArControllerComponent.prototype.trackableLost = (event, arTrackable) => {
+    console.log(`TrackableId ${arTrackable.trackableId}`);
+}
