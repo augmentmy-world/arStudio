@@ -581,7 +581,13 @@ div {
 	margin: 0;
 	padding: 0;
 }
-
+#select-folder-dialog #files-tree{
+	margin-bottom: 10px;
+}
+#select-folder-dialog .litedialog .panel-footer button{
+	width: 100%;
+	background: #999;
+}
 .litegui-wrap {
 	width: 1000px;
 	height: 600px;
@@ -630,6 +636,9 @@ div {
 }
 #dialog_texture_sampler.litedialog .inspector .widget .wname{
 	display: block;
+}
+#dialog_texture_sampler.litedialog .panel-footer button{
+	width: 45%
 }
 .litepanel, .litedialog {
 	background-color: #423d47;
