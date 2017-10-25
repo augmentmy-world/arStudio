@@ -10,11 +10,6 @@ const JsARToolKitModule = {
 
         //Check if scene root is empty
         if(sceneRoot.childNodes.length === 0){
-            //Add the AR-Camera to the scene
-            let arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
-            let arCamera = new LS.Camera();
-            arCameraNode.addComponent(arCamera);
-            sceneRoot.addChild(arCameraNode);
 
             //Attached ARControllerComponent to scene root
             const arControllerComponent = new ArControllerComponent();
