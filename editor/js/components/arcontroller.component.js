@@ -81,6 +81,17 @@ ArControllerComponent.prototype.startAR = function() {
                 // LiteScene supports setting a custom projection matrix but an update of LiteScene is needed to do that.
                 //FIX ME: arCamera.setCustomProjectionMatrix(arController.getCameraMatrix());
 
+                for (var trackable2D of this._arTrackable2DList){
+
+                    if(trackable2D._trackableType==trackable2D.trackableTypes[1])
+                    {
+                        this.arController.loadMarker(trackable2D.trackablePath, function(markerId) {
+                                        console.log("Register trackable - Pattern");
+                                        trackable2D.trackableId = markerId;
+                                    });
+                    }
+                }
+
                 // On each frame, detect markers, update their positions and
                 // render the frame on the renderer.
                 var tick = function() {
@@ -168,7 +179,7 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
                 mat4.multiply(markerRootMatrix,cameraGlobalMatrix,transform);
                 let outQuat = quat.create();
                 quat.fromMat4(outQuat,markerRootMatrix);
-
+                quat[0]*=-1;
                 markerRoot.transform.setPosition(vec3.fromValues(markerRootMatrix[12],markerRootMatrix[13]*-1,markerRootMatrix[14]*-1));
                 markerRoot.transform.setRotation(outQuat);
             } // end if(trackableId === arTrackable.trackableId)
