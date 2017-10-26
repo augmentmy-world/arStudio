@@ -1332,8 +1332,8 @@ a:hover {
 	cursor: pointer;
 }
 
-.litemenubar li:hover {
-	background-color: #777;
+#perspective li:hover {
+	background-color: #818082;
 	color: #EEE;
 }
 
@@ -1463,7 +1463,9 @@ button.litebutton {
 #pause-button{
 	background-image: url(../imgs/mid-icon-pause.png);
 }
-
+#component_info.litedialog .content button.litebutton{
+	background: #999;
+}
 button.litebutton:disabled {
 	opacity: 0.5;
 }
@@ -2704,8 +2706,30 @@ li.ltreeitem:nth-child(even) {
 	opacity: 0.4;
 	transition: all 0.2s;
 }
-
 .opensidepanel-button:hover {
+	opacity: 1;
+	color: #EEE;
+    background-color: #666;
+	cursor: pointer;
+}
+.openHierachy-button{
+	color: #AAA;
+    background-color: #444;
+    border-radius: 0px 10px 10px 0px;
+    display: block;
+    width: 20px;
+    height: 80px;
+    font-size: 2em;
+    text-align: center;
+    line-height: 80px;
+
+	position: absolute;
+	top: 50%;
+	left: : 0;
+	opacity: 0.4;
+	transition: all 0.2s;
+}
+.openHierachy-button:hover {
 	opacity: 1;
 	color: #EEE;
     background-color: #666;
@@ -2837,7 +2861,8 @@ textarea.code {
     height: 100%;
 }
 #side_panel .panel-header{
-	display: none;
+	display: block;
+	border-bottom: 1px solid #666;
 }
 .wsection.error .wsectiontitle {
 	background-color: #A33 !important;
@@ -3464,7 +3489,9 @@ button.exit.litebutton {
     background: #423d47;
     line-height: 15px;
 }
-
+#dialog_load_scene.litedialog .content button.litebutton{
+	background: #999;
+}
 #select-resource-dialog {
 	width: 800px;
 	height: 541px;
