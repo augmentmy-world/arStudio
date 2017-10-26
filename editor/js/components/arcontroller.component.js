@@ -132,7 +132,8 @@ ArControllerComponent.prototype.startAR = function() {
                             arBackgroundNode.transform.scale(6.25, 1, 5);
 
 
-                            var videoPlayer = new LS.Components.VideoPlayer(this._video);
+                            var videoPlayer = new LS.Components.VideoPlayer();
+                            videoPlayer.video = this._video;
                             videoPlayer.render_mode = LS.Components.VideoPlayer.TO_MATERIAL;
                             //videoPlayer.src = "http://localhost:8080/big_buck_bunny.mp4";
                             arBackgroundNode.addComponent(videoPlayer);
