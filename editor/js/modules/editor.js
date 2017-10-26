@@ -1832,7 +1832,7 @@ var EditorModule = {
 			placeHolder: "search by name..."
 		});
 
-		list = widgets.addList(null, nodes, { height: "calc(100% - 40px)", callback: inner_selected });
+		list = widgets.addList(null, nodes, { height: "calc(100% - 170px)", callback: inner_selected });
 		widgets.widgets_per_row = 1;
 		widgets.addButton(null,"Select", { callback: function() { 
 			if(!selected_value)

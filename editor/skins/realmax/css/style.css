@@ -3679,3 +3679,6 @@ button.exit.litebutton {
     font-size: 18px;
     margin-bottom: 10px;
 }
+#SelectGraph{
+	width: 300px !important;
+}
