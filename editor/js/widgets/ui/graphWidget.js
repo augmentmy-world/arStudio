@@ -336,7 +336,7 @@ GraphWidget.prototype.onNewGraph = function()
 GraphWidget.prototype.onOpenGraph = function()
 {
 	var that = this;
-	var dialog = new LiteGUI.Dialog( { title:"Select Graph", draggable: true, closable: true });
+	var dialog = new LiteGUI.Dialog( {id: "SelectGraph" ,title:"Select Graph", draggable: true, closable: true });
 	
 	var widgets = new LiteGUI.Inspector();
 

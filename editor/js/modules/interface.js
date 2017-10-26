@@ -320,7 +320,6 @@ var InterfaceModule = {
 		visor.appendChild( open_button );
 		open_button.style.display = "none";
 		open_button.addEventListener("click", function() { InterfaceModule.setSidePanelVisibility(true); });
-		console.log(open_button);
 	},
 
 	createHierarchybarOpener:function(){
