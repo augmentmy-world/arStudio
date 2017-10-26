@@ -287,6 +287,7 @@
 	border: 0;
 	border-radius: 0;
 	background-color: transparent;
+	resize: none;
 }
 
 .inspector .wcontent input:focus, .inspector .wcontent textarea:focus  {
@@ -1649,7 +1650,7 @@ ul.wtabcontainer > li.wtab.selected {
 
 .litesplit .split-section {
 	display: inline-block;
-	vertical-align: top;
+	vertical-align: middle;
 	margin: 0;
 	padding: 0;
 	height: 100%;
@@ -3470,7 +3471,7 @@ button.exit.litebutton {
 #dialog_save_scene{
 	width: 568px;
 }
-#dialog_save_scene .info_content.wcontent  .litebutton,#dialog_save_scene .content .widget button.litebutton.single,#dialog_components .content button.litebutton.single{
+#dialog_save_scene .info_content.wcontent  .litebutton,#dialog_save_scene .content .widget button.litebutton.single,#dialog_components .content button.litebutton.single,#layers_editor.litedialog .content button.litebutton{
 	font-size: 18px;
 	background: #999;
 	outline:none;
