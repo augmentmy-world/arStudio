@@ -117,6 +117,9 @@ var InterfaceModule = {
 		//sidepanelarea.hide();
 		//LiteGUI.sidepanel.splitarea = sidepanelarea;
 		LiteGUI.sidepanel.add( sidepanelarea );
+		var side = document.getElementById("side_panel").getElementsByTagName("button")[0];
+
+		side.onclick = function() { InterfaceModule.setSidePanelVisibility(); }
 
 		//create inspector
 		EditorModule.inspector = this.inspector_widget = new InspectorWidget();
@@ -317,6 +320,24 @@ var InterfaceModule = {
 		visor.appendChild( open_button );
 		open_button.style.display = "none";
 		open_button.addEventListener("click", function() { InterfaceModule.setSidePanelVisibility(true); });
+		console.log(open_button);
+	},
+
+	createHierarchybarOpener:function(){
+		if(this.openHierachy_button)
+			return;
+
+		var visor = document.getElementById("visor");
+		if(!visor)
+			return;
+
+		var openH_button = this.openHierachy_button = document.createElement("div");
+		openH_button.className = "openHierachy-button";
+		openH_button.innerHTML = "&#10097;";
+		visor.appendChild( openH_button );
+		openH_button.style.display = "none";
+		openH_button.addEventListener("click", function() { InterfaceModule.setHierarchyPanelVisibility(true); });
+		console.log(openH_button);
 	},
 
 	setSidePanelVisibility: function(v)
@@ -347,14 +368,22 @@ var InterfaceModule = {
 		if (v === undefined)
 			v = !this.hierarchy_panel_visibility;
 
+		if(!this.openHierachy_button){
+			this.createHierarchybarOpener();
+		}
+
 		this.hierarchy_panel_visibility = v;
 		if(v)
 		{
 			this.mainarea.showSection(0);
+			if(this.openHierachy_button)
+				this.openHierachy_button.style.display = "none";
 		}
 		else
 		{
 			this.mainarea.hideSection(0);
+			if(this.openHierachy_button)
+				this.openHierachy_button.style.display = "block";
 		}
 	},
 
