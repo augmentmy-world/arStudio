@@ -1158,7 +1158,10 @@
 		var hdConstraints = {
 			audio: false,
 			video: {
-				mandatory: constraints
+                mandatory: {
+                    facingMode : 'environment'
+                },
+                facingMode : 'environment'
 		  	}
 		};
 
