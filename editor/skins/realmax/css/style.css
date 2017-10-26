@@ -630,9 +630,9 @@ div {
 	position: absolute;
 	z-index: 10;
 }
-#dialog_texture_sampler.litedialog {
+#dialog_texture_sampler.litedialog,#RenderSate.litedialog {
 	height: 650px !important;
-	overflow-y: scroll;
+	overflow-y: auto;
 }
 #dialog_texture_sampler.litedialog .inspector .widget .wname{
 	display: block;
@@ -895,6 +895,7 @@ div {
 #dialog_materials.litedialog .content button.litebutton.single{
 	background:#96909a;
 }
+
 .litemodalbg {
 	position: absolute;
 	top:0;
