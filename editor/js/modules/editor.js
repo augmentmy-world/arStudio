@@ -835,7 +835,7 @@ var EditorModule = {
 
 	showRenderStateDialog: function( render_state, callback )
 	{
-		var dialog = new LiteGUI.Dialog( { title:"Render State", width: 400, draggable: true, closable: true });
+		var dialog = new LiteGUI.Dialog( {id: "RenderSate", title:"Render State", width: 400, draggable: true, closable: true });
 		
 		var inspector = new LiteGUI.Inspector( {name_width:"50%"});
 		inspector.showObjectFields( render_state );
