@@ -9,6 +9,8 @@ function ArControllerComponent( o )
     this._defaultMarkerWidthUnit = 'mm';
     this._visibleTrackables = [];
     this.initVideo = true;
+    this.running = false;
+    this.arController = null;
     //Square tracking options
     this.trackableDetectionModeList = {
         'Trackable square pattern (color)' : artoolkit.AR_TEMPLATE_MATCHING_COLOR,
@@ -25,6 +27,8 @@ function ArControllerComponent( o )
 }
 
 ArControllerComponent.arCameraName = 'arcamera';
+ArControllerComponent.arBackgroundCamera = 'arbackgroundcamera';
+ArControllerComponent.arBackground = 'arBackground';
 
 ArControllerComponent["@inspector"] = function( arController, inspector )
 {   
@@ -49,7 +53,7 @@ ArControllerComponent.prototype.onRemovedFromScene = function( scene ) {
 
 ArControllerComponent.prototype.startAR = function() {
     console.log("Start AR");
-
+    this.running = true;
     let scene = LS.GlobalScene;
 
     // Read the marker-root from the LiteScene
@@ -61,17 +65,18 @@ ArControllerComponent.prototype.startAR = function() {
             console.log('got video', stream);
             var cameraPara = new ARCameraParam(this.cameraCalibrationFile);
             cameraPara.onload = function() {
-                var arController = new ARController(this._video.videoWidth, this._video.videoHeight, cameraPara);
-                arController.setDefaultMarkerWidth(this.defaultMarkerWidth);
-                console.log('ARController ready for use', arController);
+                
+                this.arController = new ARController(this._video.videoWidth, this._video.videoHeight, cameraPara);
+                this.arController.setDefaultMarkerWidth(this.defaultMarkerWidth);
+                console.log('ARController ready for use', this.arController);
                 
                 // FIXME: In Player-Mode the detection Mode is undefined 
-                arController.setPatternDetectionMode( (this.trackableDetectionMode || 3) );     
+                this.arController.setPatternDetectionMode( (this.trackableDetectionMode || 3) );     
 
                 // Add an event listener to listen to getMarker events on the ARController.
                 // Whenever ARController#process detects a marker, it fires a getMarker event
                 // with the marker details.
-                arController.addEventListener('getMarker',this.onTrackableFound.bind(this));         
+                this.arController.addEventListener('getMarker',this.onTrackableFound.bind(this));         
 
                 // Camera matrix is used to define the “perspective” that the camera would see.
                 // The camera matrix returned from arController.getCameraMatrix() is already the OpenGLProjectionMatrix
@@ -89,64 +94,66 @@ ArControllerComponent.prototype.startAR = function() {
                     }
                 }
 
+                if(this.initVideo)
+                {
+                    if((this._video.videoWidth>0)&&(this._video.videoHeight>0))
+                    {
+                        const sceneRoot = LS.GlobalScene.root;
+
+                        let arBackgroundCameraNode = new LS.SceneNode(ArControllerComponent.arBackgroundCamera);
+                        let arBackgroundCamera = new LS.Camera();
+                        arBackgroundCamera.type = 2; //Apply orthographic projection to this camera.
+                        arBackgroundCameraNode.transform.rotate(180, [0,1,0]);
+                        arBackgroundCameraNode.addComponent(arBackgroundCamera);
+                        sceneRoot.addChild(arBackgroundCameraNode);
+
+                        let arBackgroundNode = new LS.SceneNode(ArControllerComponent.arBackground);
+                        sceneRoot.addChild(arBackgroundNode, 0);
+
+                        //Attached ARControllerComponent to scene root
+                        const arControllerComponent = new ArControllerComponent();
+                        sceneRoot.addComponent(arControllerComponent, 0);
+
+                        //texture = initTexture(gl);
+                        //let textureVideo = GL.Texture.fromVideo(video);
+                        var background  = new LS.Components.GeometricPrimitive();
+                        background.geometry = LS.Components.GeometricPrimitive.PLANE;
+                        //background.size = 100;
+                        //Translate node so that it is positioned on the first background camera.
+                        arBackgroundNode.material = new LS.StandardMaterial({flags:{ignore_lights:true}});
+                        arBackgroundNode.addComponent(background);
+                        arBackgroundNode.setPropertyValue("translate.Z", 100);
+                        arBackgroundNode.setPropertyValue("xrotation", -90);
+                        arBackgroundNode.setPropertyValue("yrotation", 180);
+                        arBackgroundNode.transform.scale(6.25, 1, 5);
+
+
+                        var videoPlayer = new LS.Components.VideoPlayer();
+                        videoPlayer.video = this._video;
+                        videoPlayer.render_mode = LS.Components.VideoPlayer.TO_MATERIAL;
+                        //videoPlayer.src = "http://localhost:8080/big_buck_bunny.mp4";
+                        arBackgroundNode.addComponent(videoPlayer);
+
+                        //Add the AR-Camera to the scene
+                        let arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
+                        let arCamera = new LS.Camera();
+                        arCamera.background_color=[0, 0, 0, 0];
+                        arCamera.clear_color = false; //Do not clear buffer from first camera.
+                        arCameraNode.addComponent(arCamera);
+                        sceneRoot.addChild(arCameraNode, 0);
+
+                        this.initVideo= false;
+                    }
+                }
+
                 // On each frame, detect markers, update their positions and
                 // render the frame on the renderer.
                 var tick = function() {
+                    if(!this.running)
+                        return;
                     requestAnimationFrame(tick);
-
-                    if(this.initVideo)
-                    {
-                        if((this._video.videoWidth>0)&&(this._video.videoHeight>0))
-                        {
-                            const sceneRoot = LS.GlobalScene.root;
-
-                            let arBackgroundCameraNode = new LS.SceneNode("arbackgroundcamera");
-                            let arBackgroundCamera = new LS.Camera();
-                            arBackgroundCamera.type = 2; //Apply orthographic projection to this camera.
-                            arBackgroundCameraNode.transform.rotate(180, [0,1,0]);
-                            arBackgroundCameraNode.addComponent(arBackgroundCamera);
-                            sceneRoot.addChild(arBackgroundCameraNode);
-
-                            let arBackgroundNode = new LS.SceneNode("arbackground");
-                            sceneRoot.addChild(arBackgroundNode, 0);
-
-                            //Attached ARControllerComponent to scene root
-                            const arControllerComponent = new ArControllerComponent();
-                            sceneRoot.addComponent(arControllerComponent, 0);
-
-                            //texture = initTexture(gl);
-                            //let textureVideo = GL.Texture.fromVideo(video);
-                            var background  = new LS.Components.GeometricPrimitive();
-                            background.geometry = LS.Components.GeometricPrimitive.PLANE;
-                            //background.size = 100;
-                            //Translate node so that it is positioned on the first background camera.
-                            arBackgroundNode.material = new LS.StandardMaterial({flags:{ignore_lights:true}});
-                            arBackgroundNode.addComponent(background);
-                            arBackgroundNode.setPropertyValue("translate.Z", 100);
-                            arBackgroundNode.setPropertyValue("xrotation", -90);
-                            arBackgroundNode.setPropertyValue("yrotation", 180);
-                            arBackgroundNode.transform.scale(6.25, 1, 5);
-
-
-                            var videoPlayer = new LS.Components.VideoPlayer();
-                            videoPlayer.video = this._video;
-                            videoPlayer.render_mode = LS.Components.VideoPlayer.TO_MATERIAL;
-                            //videoPlayer.src = "http://localhost:8080/big_buck_bunny.mp4";
-                            arBackgroundNode.addComponent(videoPlayer);
-
-                            //Add the AR-Camera to the scene
-                            let arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
-                            let arCamera = new LS.Camera();
-                            arCamera.background_color=[0, 0, 0, 0];
-                            arCamera.clear_color = false; //Do not clear buffer from first camera.
-                            arCameraNode.addComponent(arCamera);
-                            sceneRoot.addChild(arCameraNode, 0);
-
-                            this.initVideo= false;
-                        }
-                    }
-
-                    // Set the marker to undefined, as we don't know if it's visible in this frame.
+                    
+                    // Hide the marker, as we don't know if it's visible in this frame.
                     for (var trackable2D of this._arTrackable2DList){
                         trackable2D._previousState = trackable2D._currentState;                        
                         trackable2D._currentState = undefined;
@@ -154,7 +161,7 @@ ArControllerComponent.prototype.startAR = function() {
 
                     // Process detects markers in the video frame and sends
                     // getMarker events to the event listeners.
-                    arController.process(this._video);
+                    this.arController.process(this._video);
 
                     // If after the processing trackable2D.currentState is still undefined and the previous state wasn't undefined we assume that the marker was not visible within that frame
                     this._arTrackable2DList.forEach(arTrackable => {
@@ -176,9 +183,25 @@ ArControllerComponent.prototype.startAR = function() {
 
 ArControllerComponent.prototype.stopAR = function(){
     console.log("Stop AR");    
+    this.running = false;
+    if(this.arController)
+        this.arController.dispose();
     if(this._video !== undefined){
         this._video.srcObject.getTracks()[0].stop();
     }
+
+    var arCamera = LS.GlobalScene.getNode(ArControllerComponent.arCameraName);
+    if(arCamera)
+        LS.GlobalScene.root.removeChild(arCamera);
+    
+    var arBackgroundCamera = LS.GlobalScene.getNode(ArControllerComponent.arBackgroundCamera);
+    if(arBackgroundCamera)
+        LS.GlobalScene.root.removeChild(arBackgroundCamera);
+    
+    var arBackground = LS.GlobalScene.getNode(ArControllerComponent.arBackground);
+    if(arBackground)
+        LS.GlobalScene.root.removeChild(arBackground);
+    this.initVideo = true;
 };
 
 ArControllerComponent.prototype.registerTrackable = function(arTrackable2D){
