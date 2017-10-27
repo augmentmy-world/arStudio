@@ -26,11 +26,8 @@
 <script type="text/javascript" src="js/extra/Canvas2DtoWebGL.js"></script>
 <script type="text/javascript" src="js/extra/socket.io.js"></script>
 <script type="text/javascript" src="js/extra/devcap.js"></script>
-<script type="text/javascript" src="js/core.js"></script>
 
 <script type="text/javascript">
-	//CORE.init();
-	
 	// LiteSCENE CODE *************************
 	var player = new LS.Player( {
 		alpha: false, //enables to have alpha in the canvas to blend with background
@@ -68,11 +65,12 @@
 	} else if( LS.queryString["preview"] === undefined ) {
 		player.loadConfig("config.json");
 	}
-    
+
+	// scene loads files in SceneTree.getScriptsList
 	// what to do if scene requires more capabilities than platform has...
 		// disable bits of scene?
 		// dont load scene?
-    
+	
 	// scene device capabilities
 	if (player.scene.devcap != null || player.scene.devplat != null) {
 		// get the device capabilities to determine how to present scene

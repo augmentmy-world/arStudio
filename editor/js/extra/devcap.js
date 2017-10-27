@@ -1,4 +1,3 @@
-
 /*/	Usage:
  *
  *	getDeviceCapabilities().then(function(result) {
@@ -180,25 +179,102 @@ var getPlatform = function(dev) {
 }
 
 var DeviceCapabilitiesModule = {
-	//LS event
-	KylesEvent: function() {
-		getDeviceCapabilities().then(function(result) {
-			console.log(result);
-			console.log(getPlatform(result));
-		}, function(err) {
-			console.log('should never happen');	
-		});
-	},
+	//trigger with LEvent?
+	monitor: function() {
+        //update LS.GlobalScene.devcap and devplat
+    },
+    showDialog: function(that) {
+		// alias lists
+		var devcap = LS.GlobalScene.devcap || "";
+		var devplat = LS.GlobalScene.devplat || "";
+        // put in Publish Scene dialog?
+        // create own dialog
+		that.devcapDialog = new LiteGUI.Dialog("devcapDialog", { width: 640, height: 480, closable: true });
+		that.devcapDialog.content.style = "height: 428px;";
+		// shortcut
+		var chkbx = function(list, group, name) {
+			var chkd = '', res = list.includes(name);
+			if (res) chkd = '" checked="' + res.toString();
+			return '<input id="' + group + '" type="checkbox" name="' + group + '" value="' + name + chkd + '" />' + name + '<br />';
+		}
+        // create some check boxes for device capabilities
+        that.devcapDialog.content.innerHTML += '<fieldset><legend>Device Capabilities</legend>' +
+			chkbx( devcap, 'devcap', 'piNFC') +
+			chkbx( devcap, 'devcap', 'glassesNFC') +
+			chkbx( devcap, 'devcap', 'hasDeviceOrientation') +
+			chkbx( devcap, 'devcap', 'hasDeviceMotion') +
+			chkbx( devcap, 'devcap', 'hasFrontCamera') +
+			chkbx( devcap, 'devcap', 'hasRearCamera') +
+			chkbx( devcap, 'devcap', 'hasGlassesOrient') +
+			'</fieldset>';
+        // create some more for platforms
+        that.devcapDialog.content.innerHTML += '<fieldset><legend>Supported Platforms</legend>' +
+			chkbx( devplat, 'devplat', 'glasses+pi') +
+			chkbx( devplat, 'devplat', 'glasses') +
+			chkbx( devplat, 'devplat', 'mobile') +
+			chkbx( devplat, 'devplat', 'laptop') +
+			chkbx( devplat, 'devplat', 'desktop') +
+			'</fieldset>';
+		that.devcapDialog.addButton("Save and Close", { callback: function() {
+            // save devcap
+			var dcd = that.devcapDialog.content.getRootNode();
+			// get all check boxes
+			var dcElements = dcd.getElementsByName('devcap');
+			var dpElements = dcd.getElementsByName('devplat');
+			// reset
+            devcap = '';
+            devplat = '';
+			// build strings
+			for (i in dcElements) {
+				if (!dcElements[i].checked) continue;
+				var v = dcElements[i].value;
+				if (v != null) devcap += v + ' ';
+			}
+			for (i in dpElements) {
+				if (!dpElements[i].checked) continue;
+				var v = dpElements[i].value;
+				if (v != null) devplat += v + ' ';
+			}
+			LS.GlobalScene.devcap = devcap;
+			LS.GlobalScene.devplat = devplat;
+			// exit window
+			that.closeDialog(that);
+		}});
+		that.devcapDialog.addButton("Discard and Close", { callback: function() {
+			that.closeDialog(that);
+		}});
+
+		that.devcapDialog.show();
+		that.devcapDialog.center();
+		that.devcapDialog.fadeIn(500);
+		
+		//this.devcapDialog.content.getElementsByTagName('canvas')[0];
+
+    },
+    closeDialog: function(that) {
+		//custom fade out
+    	that.devcapDialog.fadeOut(500);
+    	//wait for transition to finish
+    	window.setTimeout(function() {
+    		//close the window
+    		that.devcapDialog.close();
+    	}, 500);
+    },
 	// called when added
 	init: function() {
-		LEvent.bind(LS.GlobalScene, "KylesEvent", this.KylesEvent);
-		LEvent.trigger(this, "KylesEvent");
-		debugger;
+	    // root?
+		var that = this;
+		//this module is loaded before others because it's in js/extra
+		window.setTimeout(function () {
+			LiteGUI.menubar.add("Project/Supported Devices", { callback: function() {
+				that.showDialog(that);
+			}});
+		}, 500);
 	},
 	// called when removed
 	deinit: function() {
-		
+		LiteGUI.menubar.remove("Project/Supported Devices");
 	}
 }
 
-if (typeof(CORE) != 'undefined') CORE.registerModule( DeviceCapabilitiesModule );
+CORE.registerModule( DeviceCapabilitiesModule );

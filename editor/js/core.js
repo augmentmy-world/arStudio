@@ -64,7 +64,7 @@ var CORE = {
 	init: function( fromPlayer )
 	{
 		this.root = document.body;
-		this.fromPlayer = fromPlayer;
+		this.fromPlayer = fromPlayer || false;
 		
 		//Load config file
 		LiteGUI.request({
@@ -196,7 +196,7 @@ var CORE = {
 		});
 
 		//Init skin
-		this.initSkin();		
+		if (!this.fromPlayer) this.initSkin();		
 	},
 
 	//Loads all the files ***********************
