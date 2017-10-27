@@ -716,7 +716,19 @@ div {
 .litedialog .content .item.prj main{
 	width: 459px;
 	padding-left:16px;
+	color: #999;
+}
+.litedialog .content .item.prj.selected main{
+	width: 459px;
+	padding-left:16px;
 	color: white;
+}
+.litedialog .content .item.prj.selected main:after{
+	content: "√";
+    position: relative;
+    right: -50px;
+    top: -15px;
+    font-size: 20px;
 }
 .litedialog .content .item.prj main h2{
 	font-size: 24px;
