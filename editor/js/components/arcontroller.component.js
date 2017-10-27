@@ -2,7 +2,7 @@ function ArControllerComponent( o )
 {
     this.farPlane = 1000;
     this.nearPlane= 0.01;
-    this.defaultMarkerWidth = 40;
+    this.defaultMarkerWidth = 80;
     this.cameraCalibrationFile = 'data/camera_para.dat';
     this._video = undefined;
     this._arTrackable2DList = [];
@@ -86,12 +86,12 @@ ArControllerComponent.prototype.startAR = function() {
 
                 for (var trackable2D of this._arTrackable2DList){
 
-                    if(trackable2D._trackableType==trackable2D.trackableTypes[1])
+                    if(trackable2D._trackableType === trackable2D.trackableTypes[1])
                     {
                         this.arController.loadMarker(trackable2D.trackablePath, function(markerId) {
-                                        console.log("Register trackable - Pattern");
-                                        trackable2D.trackableId = markerId;
-                                    });
+                            console.log("Register trackable - Pattern");
+                            trackable2D.trackableId = markerId;
+                        });
                     }
                 }
 
@@ -223,10 +223,10 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
     const markerType = ev.data.type;
     const marker = ev.data.marker;
     //Look for a barcode trackable
-    const trackableId = ev.data.marker.idMatrix;
+    let trackableId = ev.data.marker.idMatrix;
     //Look for a pattern trackable
     if(trackableId === undefined || trackableId < 0) {
-        const trackableId = ev.data.marker.idPatt;
+        trackableId = ev.data.marker.idPatt;
     }
     
     if (trackableId !== -1) {
