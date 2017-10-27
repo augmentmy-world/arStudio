@@ -132,8 +132,6 @@ var EditorModule = {
 		mainmenu.add("Edit/Paste Node", { callback: function() { EditorModule.pasteNodeFromClipboard(); }});
 		mainmenu.add("Edit/Clone Node", { callback: function() { EditorModule.cloneNode( SelectionModule.getSelectedNode() ); }});
 		mainmenu.add("Edit/Delete Node", { callback: function() { EditorModule.removeSelectedNodes(); }});
-		mainmenu.add("Edit/Undo", { callback: function() { }});
-		mainmenu.add("Edit/Redo", { callback: function() { }});
 
         mainmenu.add("Game Object/Create", { callback: function() { EditorModule.createNullNode(); }} );
         mainmenu.add("Game Object/Create Child", { callback: function() { EditorModule.createNullNode(SelectionModule.getSelectedNode()); }} );

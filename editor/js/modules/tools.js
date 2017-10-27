@@ -261,7 +261,7 @@ var ToolsModule = {
 		var root = document.getElementById("canvas-tools");
 
 		var element = this.createButton( tool, root );
-		element.className += " tool-" + tool.name + " " + (tool.enabled ? "enabled":"");
+		element.className += " tool-" + tool.name;
 
 		if(!tool.className)
 			tool.className = "tool";
@@ -269,7 +269,8 @@ var ToolsModule = {
 			ToolsModule.enableTool( this.data );
 			LS.GlobalScene.refresh();
 			$("#canvas-tools .enabled").removeClass("enabled");
-			this.classList.add("enabled");
+			if(!tool._stateful)
+				this.classList.add("enabled");
 		});
 
 		element.addEventListener("contextmenu", function(e) { 
