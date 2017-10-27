@@ -8,6 +8,8 @@ function ArTrackable2D( o )
     this._trackablePath = this.trackablePath;
     this._trackableId = 1;
     this._barcodeIds = [];
+    this._currentState = undefined;
+    this._previousState = this._currentState;
 
     for(i = 0; i <= 63; i++){
         this._barcodeIds.push(i);
@@ -127,11 +129,22 @@ Object.defineProperty(ArTrackable2D.prototype,'visible', {
     set: function(visible) {
         this._visible = visible;
         if(visible){
-            LEvent.trigger(this, "onTrackableFound", this);    
+            this._currentState = 'visible';
+            // Only send the event when the trackable wasn't visible inside the previous frame.
+            if(this._previousState === undefined){
+                LEvent.trigger(LS.GlobalScene, "onTrackableFound", this);    
+            }
+            // This means the trackable was visible inside the previous frame and is still visible. In that case we send a onTrackableTracking event
+            else {
+                LEvent.trigger(LS.GlobalScene, "onTrackableTracking", this);                    
+            }
             this.attachedGameObject.visible = true;        
         }
         else{
-            LEvent.trigger(this, "onTrackableLost", this);  
+            // Sanity: Make sure to only send the trackable lost event if trackable was visible inside the previous frame
+            if( this._previousState !== undefined ) {
+                LEvent.trigger(LS.GlobalScene, "onTrackableLost", this);  
+            }
             this.attachedGameObject.visible = false;
         }
     }

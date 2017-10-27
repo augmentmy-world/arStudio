@@ -19,10 +19,6 @@ function ArControllerComponent( o )
     };    
     
     this.trackableDetectionMode = artoolkit.AR_TEMPLATE_MATCHING_COLOR_AND_MATRIX;
-    
-    LEvent.bind(LS.GlobalScene, "onTrackableFound", this.trackableFound);
-    LEvent.bind(LS.GlobalScene, "onTrackableLost", this.trackableLost);
-    
 
     if(o)
     	this.configure(o);
@@ -150,19 +146,19 @@ ArControllerComponent.prototype.startAR = function() {
                         }
                     }
 
-                    // Hide the marker, as we don't know if it's visible in this frame.
+                    // Set the marker to undefined, as we don't know if it's visible in this frame.
                     for (var trackable2D of this._arTrackable2DList){
-                        trackable2D.currentState = undefined;
+                        trackable2D._previousState = trackable2D._currentState;                        
+                        trackable2D._currentState = undefined;
                     }
 
                     // Process detects markers in the video frame and sends
                     // getMarker events to the event listeners.
                     arController.process(this._video);
 
-                    // If after the processing trackable2D.currentState is still undefined we assume that the marker was not visible within that frame
-
+                    // If after the processing trackable2D.currentState is still undefined and the previous state wasn't undefined we assume that the marker was not visible within that frame
                     this._arTrackable2DList.forEach(arTrackable => {
-                        if( arTrackable.currentState === undefined){
+                        if( arTrackable._currentState === undefined && arTrackable._previousState !== undefined){
                             arTrackable.visible = false;
                         }
                     });
@@ -210,13 +206,12 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
     }
     
     if (trackableId !== -1) {
-        console.log("saw a trackable with id", trackableId);
+        // console.log("saw a trackable with id", trackableId);
 
         this._arTrackable2DList.forEach(arTrackable => {
             if(trackableId === arTrackable.trackableId) {
                 let markerRoot = arTrackable.attachedGameObject;
                 arTrackable.visible = true;
-                arTrackable.currentState = 'visible';
                 
                 // Note that you need to copy the values of the transformation matrix,
                 // as the event transformation matrix is reused for each marker event
@@ -239,11 +234,3 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
         });
     }
 };
-
-ArControllerComponent.prototype.trackableFound = (event, arTrackable) => {
-    console.log(`TrackableID ${arTrackable.trackableId}`);    
-}
-
-ArControllerComponent.prototype.trackableLost = (event, arTrackable) => {
-    console.log(`TrackableId ${arTrackable.trackableId}`);
-}
