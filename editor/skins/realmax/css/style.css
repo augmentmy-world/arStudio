@@ -1,7 +1,7 @@
 .inspector {
 	/* margin-top: 10px; */
 	/*margin-bottom: 20px;*/
-	color: #999;
+	color: #ccc;
 	/*
 	user-select: none;
 	-moz-user-select: none;
@@ -387,7 +387,7 @@
 }
 
 .inspector .wcontent .flag {
-	font-size: 1em;
+	font-size: 14px;
 	margin-left: 5px;
 	user-select: none;
 	-moz-user-select: none;
@@ -556,6 +556,8 @@
 	user-select: none;
 	-moz-user-select: none;
 	-webkit-user-select: none;
+	font-size: 14px;
+	outline: 0;
 }
 
 .inspector ul.lite-list li {
@@ -565,15 +567,13 @@
 	border-radius: 2px;
 }
 
-.inspector ul.lite-list li.selected {
-	background-color: #336da7;
+.inspector ul.lite-list li.selected,
+.inspector ul.lite-list li:hover {
+	background-color: #702cad;
 	color: white;
 }
 
-.inspector ul.lite-list li:hover {
-	color: black;
-	background-color: #258;
-}html, body {
+html, body {
 	height: 100%;
 	background-color: #111;
 }
@@ -846,6 +846,8 @@ div {
     padding: 24px 14px;
     font-size: 24px;
     margin-bottom: 25px;
+    text-align: center;
+    line-height: 1.4em;    
 }
 
 .litedialog .content .inspector .widget {
@@ -879,6 +881,7 @@ div {
     padding: 3px 10px;
 }
 .litedialog .inspector .wcontent input {
+	font-size: 14px;
     padding: 7px 10px;
     color: white;
     background: #2c2531;

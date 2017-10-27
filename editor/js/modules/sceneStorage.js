@@ -877,7 +877,7 @@ var SceneStorageModule = {
 		//check if it has name
 		if(!scene.extra.fullpath)
 		{
-			LiteGUI.alert("You must save the scene before publishing it.");
+			LiteGUI.alert("You must save the scene in server before publishing it.");
 			return;
 		}
 
