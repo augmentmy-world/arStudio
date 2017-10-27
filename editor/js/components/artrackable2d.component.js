@@ -1,10 +1,12 @@
 function ArTrackable2D( o )
 {   
     this.arControllerComponent = LS.GlobalScene.findNodeComponents('ArControllerComponent')[0];
+    // FIXME: make that static
     this.trackableTypes = ["Barcode", "Pictorial"];
+    // FIXME: make that static
     this._defaultTrackableType = 0;
+
     this._trackableType = this.trackableTypes[this._defaultTrackableType];
-    this.trackablePath = "";
     this._trackablePath = this.trackablePath;
     this._trackableId = 1;
     this._barcodeIds = [];
@@ -41,6 +43,7 @@ ArTrackable2D.prototype.configure = function(o)
 Object.defineProperty(ArTrackable2D.prototype, "trackablePath", {
     set: function (v) {
         this._trackablePath = v; 
+        this._trackableType = this.trackableTypes[1];
         //this.updateMaterial();
     },
     get: function () {
@@ -122,6 +125,7 @@ Object.defineProperty(ArTrackable2D.prototype,'trackableId', {
 
     }
 });
+
 Object.defineProperty(ArTrackable2D.prototype,'visible', {
     get: function() {
         return this._visible;
