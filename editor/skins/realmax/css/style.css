@@ -1,12 +1,5 @@
 .inspector {
-	/* margin-top: 10px; */
-	/*margin-bottom: 20px;*/
 	color: #ccc;
-	/*
-	user-select: none;
-	-moz-user-select: none;
-	-webkit-user-select: none;
-	*/
 }
 
 .inspector.one_line {
