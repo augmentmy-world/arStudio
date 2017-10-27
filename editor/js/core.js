@@ -2,10 +2,6 @@
 
 
 //################################################################
-/*
-	kb: todo: make core.fromPlayer not init liteGUI
-*/
-
 /* cw: Test define of an object 'class'
 
 function UserInfo()	// UserInfo Constructor
@@ -61,11 +57,10 @@ var CORE = {
 
 
 	//called from index.html
-	init: function( fromPlayer )
+	init: function()
 	{
 		this.root = document.body;
-		this.fromPlayer = fromPlayer || false;
-		
+
 		//Load config file
 		LiteGUI.request({
 			url:"config.json?nocache=" + performance.now(),
@@ -196,7 +191,7 @@ var CORE = {
 		});
 
 		//Init skin
-		if (!this.fromPlayer) this.initSkin();		
+		this.initSkin();		
 	},
 
 	//Loads all the files ***********************
@@ -268,25 +263,20 @@ var CORE = {
 		LiteGUI.remove(".startup-console-msg");
 		this.send_log_to_console = true;
 		
-		if (!this.fromPlayer) {
-			
-			//launch LiteGUI
-			LiteGUI.init(); 
-
-			//load local user preferences for every system module
-			this.loadUserPreferences();
-		}
-		
+		//launch LiteGUI
+		LiteGUI.init(); 
+    
+		//load local user preferences for every system module
+		this.loadUserPreferences();
+	
 		//Init all system modules
 		this.initModules();
 
 		//some modules may need to be unloaded
 		window.onbeforeunload = CORE.onBeforeUnload.bind(this);
 
-		if (!this.fromPlayer) {
-			this.addScene( LS.GlobalScene );
-			this.selectScene( LS.GlobalScene );
-		}
+		this.addScene( LS.GlobalScene );
+		this.selectScene( LS.GlobalScene );
 		
 		LiteGUI.trigger( CORE, "system_ready" );
 	},
