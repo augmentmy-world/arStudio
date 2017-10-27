@@ -316,7 +316,7 @@ ResourcesPanelWidget.prototype.addItemToBrowser = function( resource )
 		return;
 
 	//if(!this.dialog) return;
-	//var parent = $("#dialog_resources-browser .resources-container ul.file-list")[0];
+	//var parent = $("div.resources-panel-container ul.file-list")[0];
 	var parent = this.browser_container.querySelector(".file-list");
 
 	var element =  document.createElement("li");
@@ -553,7 +553,7 @@ ResourcesPanelWidget.prototype.refreshTree = function()
 ResourcesPanelWidget.prototype.refreshContent = function()
 {
 	if( this.current_bridge )
-		this.current_bridge.updateContent( this.current_folder );
+		this.current_bridge.updateContent( this.current_folder, null, this );
 	else {
 		//memory
 		this.showInBrowserContent( LS.ResourcesManager.resources );
@@ -586,7 +586,7 @@ ResourcesPanelWidget.prototype.unbindEvents = function()
 
 ResourcesPanelWidget.prototype.onResourceRegistered = function(e,res)
 {
-	if(!this.current_folder)
+	if(this.current_folder)
 	{
 		this.addItemToBrowser( res );
 		//this.refreshContent(); //very slow!
