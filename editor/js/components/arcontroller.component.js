@@ -48,7 +48,8 @@ ArControllerComponent.prototype.onAddedToScene = function( scene ){
     LEvent.bind(scene,'finish',this.stopAR, this );
 }
 ArControllerComponent.prototype.onRemovedFromScene = function( scene ) {
-    //LEvent.bind(scene,"stop",this.stopAR,this);    
+    LEvent.unbind(scene,"start", this.startAR, this); 
+    LEvent.unbind(scene,'finish',this.stopAR, this );
 }
 
 ArControllerComponent.prototype.startAR = function() {
