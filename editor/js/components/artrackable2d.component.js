@@ -12,6 +12,12 @@ function ArTrackable2D( o )
     this._barcodeIds = [];
     this._currentState = undefined;
     this._previousState = this._currentState;
+    this.pictorialTrackableList = {
+        'ICVE' : 'data/icon-08.patt',
+        '智慧职教' : 'data/icon-09.patt',
+        'Hiro' : 'data/hiro.patt',
+        'Kanji' : 'data/kanji.patt'
+    }
 
     for(i = 0; i <= 63; i++){
         this._barcodeIds.push(i);
@@ -71,15 +77,23 @@ ArTrackable2D["@inspector"] = function( arTrackable, inspector )
     }});
 
     if(arTrackable._trackableType === arTrackable.trackableTypes[1]) {
-        inspector.addMarker2D("Image", arTrackable.trackablePath,
-        {
-            pretitle: AnimationModule.getKeyframeCode(arTrackable, "marker_pattern"),
-            callback: function (v,e) { 
-                arTrackable.trackablePath =v;
-                var pattern = e.target.dataset["pattern"];
-                console.log("---------------pattern file:"+pattern);
+        inspector.addCombo("Pictorial marker", arTrackable._trackablePath, { 
+            values: arTrackable.pictorialTrackableList, 
+            callback: selection => { 
+                arTrackable._trackablePath = selection;
             }
         });
+        
+        // TODO: For a first demo we add a dropdown with static paths. After that we will add this again to have an upload function
+        // inspector.addMarker2D("Image", arTrackable.trackablePath,
+        // {
+        //     // pretitle: AnimationModule.getKeyframeCode(arTrackable, "marker_pattern"),
+        //     // callback: function (v,e) { 
+        //     //     arTrackable.trackablePath =v;
+        //     //     var pattern = e.target.dataset["pattern"];
+        //     //     console.log("---------------pattern file:"+pattern);
+        //     // }
+        // });
     }
     else {
         inspector.addCombo("Barcode Id", arTrackable.selectedBarcodeId, {values: arTrackable._barcodeIds, callback: v => {
