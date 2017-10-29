@@ -7,7 +7,7 @@ function ArTrackable2D( o )
     this._defaultTrackableType = 0;
 
     this._trackableType = this.trackableTypes[this._defaultTrackableType];
-    this._trackablePath = this.trackablePath;
+    this._trackablePath = '';
     this._trackableId = 1;
     this._barcodeIds = [];
     this._currentState = undefined;
@@ -32,7 +32,8 @@ ArTrackable2D.prototype.serialize = function()
 {
 	return {
         trackableId: this._trackableId,
-        trackableType: this._trackableType
+        trackableType: this._trackableType,
+        trackablePath: this._trackablePath
 	};
 }
 
@@ -42,8 +43,13 @@ ArTrackable2D.prototype.configure = function(o)
         this._trackableType = o.trackableType;
     }
 
-	if(o.trackableId !== undefined) //we can control if the parameter exist
-		this.trackableId = o.trackableId;
+	if(o.trackableId !== undefined) {//we can control if the parameter exist
+        this.trackableId = o.trackableId;
+    }
+        
+    if(o.trackablePath !== undefined) {
+        this._trackablePath = o.trackablePath;
+    }
 }
 
 Object.defineProperty(ArTrackable2D.prototype, "trackablePath", {
