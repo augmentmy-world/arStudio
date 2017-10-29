@@ -25,7 +25,7 @@ const JsARToolKitModule = {
 
             //Trackable 2
             let arTrackable2 = new LS.SceneNode(ArTrackable2D.trackableName);
-            // sceneRoot.addChild(arTrackable2);
+            sceneRoot.addChild(arTrackable2);
             const arTrackableComponent = new ArTrackable2D();
             arTrackableComponent.trackableId = 2;
             arTrackable2.addComponent(arTrackableComponent);

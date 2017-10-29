@@ -84,8 +84,7 @@ ArControllerComponent.prototype.startAR = function() {
                 // LiteScene supports setting a custom projection matrix but an update of LiteScene is needed to do that.
                 //FIX ME: arCamera.setCustomProjectionMatrix(arController.getCameraMatrix());
 
-                for (var trackable2D of this._arTrackable2DList){
-
+                this._arTrackable2DList.forEach(trackable2D => { 
                     if(trackable2D._trackableType === trackable2D.trackableTypes[1])
                     {
                         this.arController.loadMarker(trackable2D.trackablePath, function(markerId) {
@@ -93,7 +92,7 @@ ArControllerComponent.prototype.startAR = function() {
                             trackable2D.trackableId = markerId;
                         });
                     }
-                }
+                });
 
                 if(this.initVideo)
                 {
