@@ -132,7 +132,8 @@ var EditorModule = {
 		mainmenu.add("Edit/Paste Node", { callback: function() { EditorModule.pasteNodeFromClipboard(); }});
 		mainmenu.add("Edit/Clone Node", { callback: function() { EditorModule.cloneNode( SelectionModule.getSelectedNode() ); }});
 		mainmenu.add("Edit/Delete Node", { callback: function() { EditorModule.removeSelectedNodes(); }});
-
+		mainmenu.add("Edit/Focus on node", { callback: function() { EditorModule.centerCameraInSelection(); }});
+		
         mainmenu.add("Game Object/Create", { callback: function() { EditorModule.createNullNode(); }} );
         mainmenu.add("Game Object/Create Child", { callback: function() { EditorModule.createNullNode(SelectionModule.getSelectedNode()); }} );
         mainmenu.add("Game Object/Light", { callback: function() { EditorModule.createLightNode(); }} );
@@ -141,7 +142,7 @@ var EditorModule = {
 		mainmenu.add("Game Object/3D Object/Cube", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.CUBE, size: 10, subdivisions: 10 }); }});
 		mainmenu.add("Game Object/3D Object/Sphere", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.SPHERE, size: 10, subdivisions: 32 }); }});
         mainmenu.add("Game Object/2D Marker", { callback: function() { EditorModule.create2DMarker(); }}); 
-		//mainmenu.add("Edit/Focus on node", { callback: function() { cameraTool.setFocusPointOnNode( SelectionModule.getSelectedNode(), true ); }});
+
 		//mainmenu.add("Edit/Paste component", { callback: function() { EditorModule.pasteComponentInNode( SelectionModule.getSelectedNode() ); }});
 
 	},
