@@ -46,7 +46,24 @@ function ResourcesPanelWidget( options )
 	{
 		top_inspector.addButton(null,"Add", {className: 'add', callback: function(v,e){ DriveModule.showCreateNewFileMenu( that.current_folder, e ); }});
 		top_inspector.addButton(null,"Copy", {className: 'copy', callback: function(v,e){ /* todo */ }});
-		top_inspector.addButton(null,"Delete", {className: 'delete', callback: function(v,e){ /* todo */ }});
+		top_inspector.addButton(null,"Delete", {className: 'delete', callback: function(v,e){ 
+
+			var selected = document.getElementById("visorarea").getElementsByClassName("litearea")[1].getElementsByTagName("ul")[1].getElementsByClassName("selected");	
+			var fullpath = selected[0].dataset["fullpath"];
+			if(selected){
+				LiteGUI.confirm("Do you want to delete this file?", function(v){
+				if(!v)
+					return;
+				LS.RM.unregisterResource( fullpath );
+				DriveModule.serverDeleteFile( fullpath, function(v) { 
+					if(v)
+						that.refreshContent();
+				});
+			});
+			}
+			
+
+		}});
 
 		top_inspector.addButton(null,"Import File", {className: 'import', callback: function(){ 
 			ImporterModule.showImportResourceDialog(null,{type:that.options.type, folder: that.current_folder }, function(){ that.refreshContent(); });
