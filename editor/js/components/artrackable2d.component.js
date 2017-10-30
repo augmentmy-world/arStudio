@@ -125,6 +125,7 @@ ArTrackable2D.prototype.onRemovedFromScene = function( scene ) {
 Object.defineProperty(ArTrackable2D.prototype,'attachedGameObject', {
     get: function() {
         return this._root;
+        return this.getRootNode();
     },
     set: function() {
         console.log(`Not allowed to set the GameObject`);
