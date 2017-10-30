@@ -494,12 +494,17 @@ var PMMModule = {
 		LiteGUI.menubar.add("Game Object/Capture Reference", { callback: this.startCamera });
 
 		PMMinstance = this;
-
-		//var root = document.getElementById("visor");
-		//if(root)
-		//	root.appendChild(canvas);
 	
 /*
+
+		this.onStart = function() {
+			LEvent.bind(LS.GlobalScene, "onTrackableTracking", this.trackableTracking);
+		}
+
+		this.trackableTracking = (event,trackable) => {
+			console.log(`Trackaing trackable with id: ${trackable.trackableId}`);
+		}
+
 		//warp shader
 		var fsquad = GL.Mesh.plane({ coords: true });
 		// available as "gl_TexCoord" in the vertex shader
@@ -534,4 +539,5 @@ var PMMModule = {
 	}
 };
 
-CORE.registerModule( PMMModule );
+if (typeof CORE !== 'undefined')
+	CORE.registerModule( PMMModule );

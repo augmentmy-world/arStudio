@@ -189,16 +189,18 @@ var DeviceCapabilitiesModule = {
 		var devplat = LS.GlobalScene.devplat || "";
         // put in Publish Scene dialog?
         // create own dialog
-		that.devcapDialog = new LiteGUI.Dialog("devcapDialog", { width: 640, height: 480, closable: true });
-		that.devcapDialog.content.style = "height: 428px;";
+		that.devcapDialog = new LiteGUI.Dialog("devcapDialog", { width: 320, height: 370, closable: true });
+		that.devcapDialog.content.style = "height: 310px; padding: 10px;";
 		// shortcut
 		var chkbx = function(list, group, name) {
 			var chkd = '', res = list.includes(name);
 			if (res) chkd = '" checked="' + res.toString();
-			return '<input id="' + group + '" type="checkbox" name="' + group + '" value="' + name + chkd + '" />' + name + '<br />';
+			return '<input id="' + group + '" type="checkbox" name="' + group + '" value="' + name + chkd + '" /> <font size="3">' + name + '</font> <br />';
 		}
+		//create a style
+		that.devcapDialog.content.innerHTML += '<style type="text/css"> dcstyle { padding: 10px; } dcbuttonstyle { padding: 10px; background-color:#000; } </style>'
         // create some check boxes for device capabilities
-        that.devcapDialog.content.innerHTML += '<fieldset><legend>Device Capabilities</legend>' +
+        that.devcapDialog.content.innerHTML += '<dcstyle> <fieldset> <legend> <font size="5"> Required Capabilities </font> </legend>' +
 			chkbx( devcap, 'devcap', 'piNFC') +
 			chkbx( devcap, 'devcap', 'glassesNFC') +
 			chkbx( devcap, 'devcap', 'hasDeviceOrientation') +
@@ -206,17 +208,17 @@ var DeviceCapabilitiesModule = {
 			chkbx( devcap, 'devcap', 'hasFrontCamera') +
 			chkbx( devcap, 'devcap', 'hasRearCamera') +
 			chkbx( devcap, 'devcap', 'hasGlassesOrient') +
-			'</fieldset>';
+			'</fieldset> <br />';
         // create some more for platforms
-        that.devcapDialog.content.innerHTML += '<fieldset><legend>Supported Platforms</legend>' +
+        that.devcapDialog.content.innerHTML += '<fieldset> <legend> <font size="5"> Supported Platforms </font> </legend>' +
 			chkbx( devplat, 'devplat', 'glasses+pi') +
 			chkbx( devplat, 'devplat', 'glasses') +
 			chkbx( devplat, 'devplat', 'mobile') +
 			chkbx( devplat, 'devplat', 'laptop') +
 			chkbx( devplat, 'devplat', 'desktop') +
-			'</fieldset>';
-		that.devcapDialog.addButton("Save and Close", { callback: function() {
-            // save devcap
+			'</fieldset> <br /> </dcstyle>';
+		// our save buton
+		that.devcapDialog.addButton('<dcbuttonstyle> <font size="3"> Save </font> </dcbuttonstyle>', { callback: function() {
 			var dcd = that.devcapDialog.content.getRootNode();
 			// get all check boxes
 			var dcElements = dcd.getElementsByName('devcap');
@@ -235,12 +237,14 @@ var DeviceCapabilitiesModule = {
 				var v = dpElements[i].value;
 				if (v != null) devplat += v + ' ';
 			}
+			// write strings to scene
 			LS.GlobalScene.devcap = devcap;
 			LS.GlobalScene.devplat = devplat;
 			// exit window
 			that.closeDialog(that);
 		}});
-		that.devcapDialog.addButton("Discard and Close", { callback: function() {
+		// our nvm gtfo button
+		that.devcapDialog.addButton('<dcbuttonstyle> <font size="3"> Discard </font> </dcbuttonstyle>', { callback: function() {
 			that.closeDialog(that);
 		}});
 
@@ -277,4 +281,6 @@ var DeviceCapabilitiesModule = {
 	}
 }
 
-CORE.registerModule( DeviceCapabilitiesModule );
+// this file can be included outside of the editor
+if (typeof CORE !== 'undefined')
+	CORE.registerModule( DeviceCapabilitiesModule );
