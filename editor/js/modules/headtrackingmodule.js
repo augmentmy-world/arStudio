@@ -186,7 +186,7 @@ var HeadtrackingModule = {
 		
 		// force update all
 		htm.camera.updateMatrices(true);
-		//// save the projection matrix
+		// save the projection matrix
 		htm.camMatrix = htm.camera._projection_matrix;
 		
 		// delta to absolute, CM to M

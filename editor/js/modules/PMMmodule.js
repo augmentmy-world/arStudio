@@ -169,19 +169,19 @@ function plane() {
 		var name = "pln" + plnNum.toString();
 		// object
 		output += "o " + name + "\n";
-		// output verts
-		output += "v " + plnp[0][0].toString() + " " + plnp[0][1].toString() + " " + plnp[0][2].toString() + "\n";
-		output += "v " + plnp[1][0].toString() + " " + plnp[1][1].toString() + " " + plnp[1][2].toString() + "\n";
-		output += "v " + plnp[2][0].toString() + " " + plnp[2][1].toString() + " " + plnp[2][2].toString() + "\n";
+		// output verts (JSARTK IS BACKWARDS, WIND CW)
 		output += "v " + plnp[3][0].toString() + " " + plnp[3][1].toString() + " " + plnp[3][2].toString() + "\n";
+		output += "v " + plnp[2][0].toString() + " " + plnp[2][1].toString() + " " + plnp[2][2].toString() + "\n";
+		output += "v " + plnp[1][0].toString() + " " + plnp[1][1].toString() + " " + plnp[1][2].toString() + "\n";
+		output += "v " + plnp[0][0].toString() + " " + plnp[0][1].toString() + " " + plnp[0][2].toString() + "\n";
 		// generate UV's
 		output += "vt 0.0 1.0\n";
 		output += "vt 1.0 1.0\n";
 		output += "vt 1.0 0.0\n";
 		output += "vt 0.0 0.0\n";
-		// normals are just plane normals
+		// normals are just plane normals (JSARTK IS BACKWARDS)
 		var o1 = mat3row(this.o, 1);
-		var nstr = "vn " + o1[0].toString() + " " + o1[1].toString() + " " + o1[2].toString() + "\n";
+		var nstr = "vn " + (-o1[0]).toString() + " " + (-o1[1]).toString() + " " + (-o1[2]).toString() + "\n";
 		output += nstr + nstr + nstr + nstr;
 		// generate shading/texture stuff
 		output += "g " + name + "\n";
@@ -250,22 +250,23 @@ var PMMModule = {
 	pmm: function() {
 		var that = PMMinstance;
 		//var SNAP_DIST = 10.0;
-		var zFar = 100.0;
+		var zFar = 10000.0;
 		
-		//pose container for info	
-		var pose = {
-			//view matrix
-			view: mat4.create(),
-			//size of marker in cm
-			size: 10.0
-		}
+		if (that.pose == null) return;
 
-		//cheat and pre-bake a pose in here
-		pose.view[0] = 1.0; pose.view[1] = 0.0; pose.view[2] = 0.0; pose.view[3] = 0.0;
-		pose.view[4] = 0.0; pose.view[5] = 0.0; pose.view[6] = -1.0; pose.view[7] = 0.0; 
-		pose.view[8] = 0.0; pose.view[9] = 1.0; pose.view[10] = 0.0; pose.view[11] = 0.0;
-		pose.view[12] = 0.0; pose.view[13] = 0.0; pose.view[14] = 30.0; pose.view[15] = 0.0;
-		var poses = [ pose ];
+		//pose container for info	
+		//var pose = {
+		//	//view matrix
+		//	view: mat4.create(),
+		//	//size of marker in cm
+		//	size: 10.0
+		//}
+		// cheat and pre-bake a pose in here
+		//pose.view[0] = 1.0; pose.view[1] = 0.0; pose.view[2] = 0.0; pose.view[3] = 0.0;
+		//pose.view[4] = 0.0; pose.view[5] = 0.0; pose.view[6] = -1.0; pose.view[7] = 0.0; 
+		//pose.view[8] = 0.0; pose.view[9] = 1.0; pose.view[10] = 0.0; pose.view[11] = 0.0;
+		//pose.view[12] = 0.0; pose.view[13] = 0.0; pose.view[14] = 30.0; pose.view[15] = 0.0;
+		var poses = [ that.pose ];
 
 		var plnImgs = [];
 		var plns = [];
@@ -288,9 +289,9 @@ var PMMModule = {
 		//one plane for each pose
 		for (var i = 0; i < poses.length; i++) {
 			plns.push(new plane());
-			var loc = mat4row(poses[i].view, 3), //starting loc
+			var loc = mat4row(poses[i].view, 3), //starting loc (SIZE IN MM)
 				s = poses[i].size;				 //size
-			plns[i].l = vec3.fromValues(loc[0], loc[1], loc[2]);
+			plns[i].l = vec3.fromValues(loc[0] * .1, loc[1] * .1, loc[2] * .1);
 			plns[i].o = mat3.fromMat4(mat3.create(), poses[i].view);
 			plns[i].s = vec4.fromValues(s, s, s, s);
 			plns[i].m = poses[i].size;
@@ -410,21 +411,53 @@ var PMMModule = {
 
 		//LFSBridge.uploadFile() ??
 		
-		//fade out window
+		// stop tracking
+		JsARToolKitModule.stopAR();
+		// fade out window
 		closeWindow(that);
+	},
+
+	// maintain list of poses
+	markerTracking: function(ev) {
+		// if a marker is seen
+		if (ev.data.marker.id === -1) return;
+		var that = PMMinstance;
+		// record pose
+		that.pose = {
+			//view matrix
+			view: ev.data.matrix,
+			//size of marker in cm
+			size: ev.target.patternMarkers[0].markerWidth * .1
+		}
 	},
 
 	// open a window or dialog and start up the camera
 	startCamera: function() {
 		var that = PMMinstance;
 		
+		// start tracking first
+		if (typeof JsARToolKitModule !== 'undefined') {
+			// thanks Thor
+			JsARToolKitModule.createAR();
+			JsARToolKitModule.startAR();
+			// wait a bit for JSARTK to create video element and arController on window
+			window.setTimeout(function() {
+				window.arController.addEventListener('getMarker', that.markerTracking);
+			}, 1000);
+		}
+		
 		//liteGUI dialog
-		that.pmmwindow = new LiteGUI.Dialog("pmm_dialog", { width: 640, height: 480, closable: true });
-		that.pmmwindow.addButton("Capture", { callback: that.pmm });
-		that.pmmwindow.addButton("Close", { callback: function() {
+		that.pmmwindow = new LiteGUI.Dialog("pmm_dialog", { width: 640, height: 530, closable: true });
+		//create a style
+		that.pmmwindow.content.innerHTML += '<style type="text/css"> pmmbuttonstyle { padding: 10px; background-color:#000; } </style>'
+		// capture and save obj and mtl
+		that.pmmwindow.addButton('<pmmbuttonstyle> <font size="3"> Capture </font> </pmmbuttonstyle>', { callback: that.pmm });
+		// gtfo button
+		that.pmmwindow.addButton('<pmmbuttonstyle> <font size="3"> Close </font> </pmmbuttonstyle>', { callback: function() {
+			JsARToolKitModule.stopAR();
 			closeWindow(that);
 		}});
-		that.pmmwindow.content.style = "height: 428px;";
+		that.pmmwindow.content.style = "height: 480px;";
 		that.pmmwindow.content.innerHTML += '<canvas  width="640" height="480" id=\"pmmcanvas\"></canvas>';
 		that.canvas = that.pmmwindow.content.getElementsByTagName('canvas')[0];
 		that.canvas.width = 640;
@@ -496,6 +529,8 @@ var PMMModule = {
 		PMMinstance = this;
 	
 /*
+
+		JsARToolKitModule.createAR();
 
 		this.onStart = function() {
 			LEvent.bind(LS.GlobalScene, "onTrackableTracking", this.trackableTracking);
