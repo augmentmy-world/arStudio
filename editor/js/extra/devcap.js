@@ -9,6 +9,9 @@
  *
  *	glasses+pi glasses mobile laptop desktop piNFC glassesNFC hasDeviceOrientation hasDeviceMotion hasFrontCamera hasRearCamera hasGlassesOrient userAgent gravityVector orientVector screenOrientation
  *
+ * measure GPU power
+ * hold device specific calib
+ *
 /*/
 
 function ping(source, callback) {
@@ -197,7 +200,7 @@ var DeviceCapabilitiesModule = {
 			if (res) chkd = '" checked="' + res.toString();
 			return '<input id="' + group + '" type="checkbox" name="' + group + '" value="' + name + chkd + '" /> <font size="3">' + name + '</font> <br />';
 		}
-		//create a style
+		// create a style
 		that.devcapDialog.content.innerHTML += '<style type="text/css"> dcstyle { padding: 10px; } dcbuttonstyle { padding: 10px; background-color:#000; } </style>'
         // create some check boxes for device capabilities
         that.devcapDialog.content.innerHTML += '<dcstyle> <fieldset> <legend> <font size="5"> Required Capabilities </font> </legend>' +
@@ -256,11 +259,11 @@ var DeviceCapabilitiesModule = {
 
     },
     closeDialog: function(that) {
-		//custom fade out
+		// custom fade out
     	that.devcapDialog.fadeOut(500);
-    	//wait for transition to finish
+    	// wait for transition to finish
     	window.setTimeout(function() {
-    		//close the window
+    		// close the window
     		that.devcapDialog.close();
     	}, 500);
     },
@@ -268,7 +271,7 @@ var DeviceCapabilitiesModule = {
 	init: function() {
 	    // root?
 		var that = this;
-		//this module is loaded before others because it's in js/extra
+		// when the module is loaded by the player check if LiteGUI exists yet
 		window.setTimeout(function () {
 			LiteGUI.menubar.add("Project/Supported Devices", { callback: function() {
 				that.showDialog(that);

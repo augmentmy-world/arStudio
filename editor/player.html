@@ -72,7 +72,22 @@
 	// what to do if scene requires more capabilities than platform has...
 		// disable bits of scene?
 		// dont load scene?
-	
+
+	//4 scenrios
+		//rear facing camera marker tracking
+		//front facing camera marker tracking
+		//front facing head tracking
+		//imu only
+
+	//if marker tracking PC and mobile show background video
+	//if head tracking no background video
+	//if glasses no background video
+	//listen to marker found event to laod scenes
+	//load closest scene from marker ID
+	//ask johnny about imu camera controller
+	//laptop or mobile if two cameras choose camera f/r front headtrackikng rear marker tracking
+		//display thumbnails of cameras, have them choose f/r with radio button and head/marker tracking with checkbox
+
 	// scene device capabilities
 	if (player.scene.devcap != null || player.scene.devplat != null) {
 		// get the device capabilities to determine how to present scene
