@@ -578,7 +578,7 @@ div {
 #select-folder-dialog #files-tree{
 	margin-bottom: 10px;
 }
-#select-folder-dialog .litedialog .panel-footer button{
+#select-folder-dialog.litedialog .panel-footer button{
 	width: 100%;
 	background: #999;
 }
@@ -1442,7 +1442,7 @@ a:hover {
 }
 
 .litecontextmenu .litemenu-entry {
-	margin: 3px 10px;
+	margin: 3px 0px;
 	padding: 5px 7px;
 }
 
