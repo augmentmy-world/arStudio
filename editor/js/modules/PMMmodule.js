@@ -424,6 +424,7 @@ var PMMModule = {
 		m[4] = 0.0; m[5] = 1.0;
 		m[7] = 1.0; m[8] = 0.0;
 		backdrop.o = m;
+		backdrop.d = 'BG';
 		//add to scene
 		addPlnToScene(pmmgroup, backdrop, wp);
 		

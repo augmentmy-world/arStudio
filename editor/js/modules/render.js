@@ -162,6 +162,9 @@ var RenderModule = {
             var v = $(this).text();
 			
 			// KB: had to change for headtracking secret feature
+			if (v !== 'HeadTracking')
+				HeadtrackingModule.Stop();
+			
             JsARToolKitModule.stopAR();
             
 			switch( v )
@@ -169,25 +172,17 @@ var RenderModule = {
 				case "Perspective": 
 					viewport.editor_camera.type = LS.Camera.PERSPECTIVE; 
 					viewport.name = "perspective";
-					// Kyle: switch OFF headtracking, switch OFF marker tracking mode.
-					HeadtrackingModule.Stop();
 					break;
 				case "Orthographic": 
 					viewport.editor_camera.type = LS.Camera.ORTHOGRAPHIC; 
 					viewport.name = "orthographic";
-					// Kyle: switch OFF headtracking, switch OFF marker tracking mode.
-					HeadtrackingModule.Stop();
 					break;
 				case "HeadTracking":
 					viewport.name = "headtracking";
-					// Kyle: switch ON headtracking, switch OFF marker tracking mode.
 					HeadtrackingModule.Start();
 					break;
-
 				case "MarkerTracking":
 					viewport.name = "markertracking";
-					// Kyle: switch OFF headtracking, switch ON marker tracking mode.
-					HeadtrackingModule.Stop();
                     JsARToolKitModule.createAR();
 					break;
 				default:
