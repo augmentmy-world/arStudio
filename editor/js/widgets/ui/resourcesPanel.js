@@ -46,16 +46,20 @@ function ResourcesPanelWidget( options )
 	{
 		top_inspector.addButton(null,"Add", {className: 'add', callback: function(v,e){ DriveModule.showCreateNewFileMenu( that.current_folder, e ); }});
 		top_inspector.addButton(null,"Copy", {className: 'copy', callback: function(v,e){ 
-			var selected = document.getElementById("visorarea").getElementsByClassName("litearea")[1].getElementsByTagName("ul")[1].getElementsByClassName("selected");
-			var resource = selected[0].resource;
-			DriveModule.showCloneResourceDialog( resource );
-
+			var selected = document.getElementById("visorarea").getElementsByClassName("litearea")[1].getElementsByTagName("ul")[1].getElementsByClassName("selected");		
+			if(selected.length){
+				var resource = selected[0].resource;
+				DriveModule.showCloneResourceDialog( resource );
+			}else{
+				return;
+			}
+			
 		 }});
 		top_inspector.addButton(null,"Delete", {className: 'delete', callback: function(v,e){ 
 
-			var selected = document.getElementById("visorarea").getElementsByClassName("litearea")[1].getElementsByTagName("ul")[1].getElementsByClassName("selected");	
-			var fullpath = selected[0].dataset["fullpath"];
-			if(selected){
+			var selected = document.getElementById("visorarea").getElementsByClassName("litearea")[1].getElementsByTagName("ul")[1].getElementsByClassName("selected");				
+			if(selected.length){
+				var fullpath = selected[0].dataset["fullpath"];
 				LiteGUI.confirm("Do you want to delete this file?", function(v){
 				if(!v)
 					return;
@@ -65,6 +69,8 @@ function ResourcesPanelWidget( options )
 						that.refreshContent();
 				});
 			});
+			}else{
+				return;
 			}
 			
 
