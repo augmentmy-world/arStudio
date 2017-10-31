@@ -904,7 +904,10 @@ div {
 #dialog_materials.litedialog .content button.litebutton.single{
 	background:#96909a;
 }
-
+/* #mainarea > div.litearea{
+	display: block;
+	float: left;
+} */
 .litemodalbg {
 	position: absolute;
 	top:0;
