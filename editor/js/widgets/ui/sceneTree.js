@@ -60,6 +60,8 @@ function SceneTreeWidget( options )
 		LiteGUI.focus_widget = that;
 	});
 
+	this.tree.root.addEventListener("item_dblclicked", onItemFocused.bind(this) );
+
 	this.tree.onItemContextMenu = function(e, item_info)
 	{
 		if(!item_info || !item_info.data)
@@ -77,6 +79,14 @@ function SceneTreeWidget( options )
 
 	this.bindEvents( LS.GlobalScene );
 
+	function onItemFocused(e) {
+		if(this._ignore_events) 
+			return;
+		EditorModule.centerCameraInSelection();
+		e.preventDefault();
+		return false;
+	}
+
 	function onItemSelected(e)
 	{
 		if(this._ignore_events) 
@@ -84,7 +94,7 @@ function SceneTreeWidget( options )
 
 		if(!that._scene)
 		{
-			console.error("how??!");
+			console.error("invalid scene!");
 			return;
 		}
 

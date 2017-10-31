@@ -1361,7 +1361,7 @@ CodingPadWidget.prototype.createMonacoEditor = function(code_container) {
             '\tconsole.log("Hello world!");',
             '}'
         ].join('\n'),
-        language: 'javascript',
+        language: 'typescript',
         theme: 'vs-dark',
         automaticLayout: true
     });

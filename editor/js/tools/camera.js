@@ -7,7 +7,7 @@ var cameraTool = {
 	control_mode: "max", //not used
 
 	auto_select: true,
-	smooth_camera: false,
+	smooth_camera: true,
 
 	wsad_controls: false,
 	last_camera: null,

@@ -144,13 +144,14 @@ var DriveModule = {
 			DriveModule.onResourceRegistered(res); 
 		});
 
-		//create a lower panel too
+		//this create widget inside of the #visortab
 		InterfaceModule.lower_tabs_widget.addWidgetTab( ResourcesPanelWidget );
 
 		//keep original files to store on server
 		LS.ResourcesManager.keep_original = true;
 
-		this.createPanel(); //creates tree too
+		//this create widget inside of the #drivetab, initially this is hidden
+		this.createPanel();
 
 		//LiteGUI.menubar.add("Window/Resources Panel", { callback: function(){ ResourcesPanelWidget.createDialog(); }});
 

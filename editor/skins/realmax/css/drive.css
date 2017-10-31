@@ -96,6 +96,22 @@
     outline: 0;
 }
 
+#select-resource-dialog .resources-panel button.litebutton.add {
+	background: url(../imgs/mini-icon-plus.png) no-repeat center center;	
+}
+
+#select-resource-dialog .resources-panel button.litebutton.copy {
+	background: url(../imgs/mini-icon-copy.png) no-repeat center center;	
+}
+
+#select-resource-dialog .resources-panel button.litebutton.delete {
+	background: url(../imgs/mini-icon-del.png) no-repeat center center;	
+}
+#select-resource-dialog .resources-panel button.litebutton.import {
+	background: url(../imgs/mini-icon-folder2.png) no-repeat center center;
+}
+
+
 .resources-panel button.litebutton.add {
 	background-image: url(../imgs/mini-icon-plus.png);	
 }
@@ -110,7 +126,6 @@
 .resources-panel button.litebutton.import {
 	background-image: url(../imgs/mini-icon-folder2.png);
 }
-
 .resources-panel .inspector.one_line {
     background: #2c2531;	
 }

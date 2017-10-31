@@ -73,6 +73,15 @@ var SceneStorageModule = {
 			inner_save(this);
 		});
 
+		var lst_items = dialog.content.querySelector("fieldset.templ");
+		lst_items.addEventListener("click", function(e) {
+
+			var opts = $("#frm-nav").find("input[type='radio']").parent().removeClass('selected');
+			var selected_opt = $("#frm-nav input[type='radio']:checked");
+			selected_opt.parent().addClass('selected');
+
+		});
+
 		dialog.show();
 		dialog.center();
 		dialog.fadeIn();
@@ -851,7 +860,7 @@ var SceneStorageModule = {
 		//check if it has name
 		if(!scene.extra.fullpath)
 		{
-			LiteGUI.alert("You must save the scene before publishing it.");
+			LiteGUI.alert("You must save the scene in server before publishing it.");
 			return;
 		}
 

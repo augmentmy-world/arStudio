@@ -117,6 +117,9 @@ var InterfaceModule = {
 		//sidepanelarea.hide();
 		//LiteGUI.sidepanel.splitarea = sidepanelarea;
 		LiteGUI.sidepanel.add( sidepanelarea );
+		var side = document.getElementById("side_panel").getElementsByTagName("button")[0];
+
+		side.onclick = function() { InterfaceModule.setSidePanelVisibility(); }
 
 		//create inspector
 		EditorModule.inspector = this.inspector_widget = new InspectorWidget();
@@ -133,6 +136,7 @@ var InterfaceModule = {
 
 		//test dock panel
 		var docked = new LiteGUI.Panel("hierarchy_panel", {title:i18n.gettext('HIERARCHY')});
+		
 		this.mainarea.getSection(0).add( docked );
 		LiteGUI.hierarchypanel = docked;
 
@@ -160,6 +164,10 @@ var InterfaceModule = {
 		tabs_widget.getTab("Hierarchy").add( this.scene_tree );
 
 		LiteGUI.menubar.add("Window/Hierarchy Panel", { callback: function() { InterfaceModule.setHierarchyPanelVisibility(); } });
+
+
+		var hp = document.getElementById("hierarchy_panel").getElementsByClassName("close-button")[0];
+		hp.onclick = function() { InterfaceModule.setHierarchyPanelVisibility(); }
 
 		//default
 		tabs_widget.selectTab("Hierarchy");
@@ -314,6 +322,23 @@ var InterfaceModule = {
 		open_button.addEventListener("click", function() { InterfaceModule.setSidePanelVisibility(true); });
 	},
 
+	createHierarchybarOpener:function(){
+		if(this.openHierachy_button)
+			return;
+
+		var visor = document.getElementById("visor");
+		if(!visor)
+			return;
+
+		var openH_button = this.openHierachy_button = document.createElement("div");
+		openH_button.className = "openHierachy-button";
+		openH_button.innerHTML = "&#10097;";
+		visor.appendChild( openH_button );
+		openH_button.style.display = "none";
+		openH_button.addEventListener("click", function() { InterfaceModule.setHierarchyPanelVisibility(true); });
+		console.log(openH_button);
+	},
+
 	setSidePanelVisibility: function(v)
 	{
 		if (v === undefined)
@@ -342,14 +367,22 @@ var InterfaceModule = {
 		if (v === undefined)
 			v = !this.hierarchy_panel_visibility;
 
+		if(!this.openHierachy_button){
+			this.createHierarchybarOpener();
+		}
+
 		this.hierarchy_panel_visibility = v;
 		if(v)
 		{
 			this.mainarea.showSection(0);
+			if(this.openHierachy_button)
+				this.openHierachy_button.style.display = "none";
 		}
 		else
 		{
 			this.mainarea.hideSection(0);
+			if(this.openHierachy_button)
+				this.openHierachy_button.style.display = "block";
 		}
 	},
 

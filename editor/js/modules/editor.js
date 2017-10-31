@@ -132,9 +132,8 @@ var EditorModule = {
 		mainmenu.add("Edit/Paste Node", { callback: function() { EditorModule.pasteNodeFromClipboard(); }});
 		mainmenu.add("Edit/Clone Node", { callback: function() { EditorModule.cloneNode( SelectionModule.getSelectedNode() ); }});
 		mainmenu.add("Edit/Delete Node", { callback: function() { EditorModule.removeSelectedNodes(); }});
-		mainmenu.add("Edit/Undo", { callback: function() { }});
-		mainmenu.add("Edit/Redo", { callback: function() { }});
-
+		mainmenu.add("Edit/Focus on node", { callback: function() { EditorModule.centerCameraInSelection(); }});
+		
         mainmenu.add("Game Object/Create", { callback: function() { EditorModule.createNullNode(); }} );
         mainmenu.add("Game Object/Create Child", { callback: function() { EditorModule.createNullNode(SelectionModule.getSelectedNode()); }} );
         mainmenu.add("Game Object/Light", { callback: function() { EditorModule.createLightNode(); }} );
@@ -143,7 +142,7 @@ var EditorModule = {
 		mainmenu.add("Game Object/3D Object/Cube", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.CUBE, size: 10, subdivisions: 10 }); }});
 		mainmenu.add("Game Object/3D Object/Sphere", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.SPHERE, size: 10, subdivisions: 32 }); }});
         mainmenu.add("Game Object/AR Trackable 2D", { callback: function() { EditorModule.create2DMarker(); }}); 
-		//mainmenu.add("Edit/Focus on node", { callback: function() { cameraTool.setFocusPointOnNode( SelectionModule.getSelectedNode(), true ); }});
+
 		//mainmenu.add("Edit/Paste component", { callback: function() { EditorModule.pasteComponentInNode( SelectionModule.getSelectedNode() ); }});
 
 	},
@@ -835,7 +834,7 @@ var EditorModule = {
 
 	showRenderStateDialog: function( render_state, callback )
 	{
-		var dialog = new LiteGUI.Dialog( { title:"Render State", width: 400, draggable: true, closable: true });
+		var dialog = new LiteGUI.Dialog( {id: "RenderSate", title:"Render State", width: 400, draggable: true, closable: true });
 		
 		var inspector = new LiteGUI.Inspector( {name_width:"50%"});
 		inspector.showObjectFields( render_state );
@@ -1832,7 +1831,7 @@ var EditorModule = {
 			placeHolder: "search by name..."
 		});
 
-		list = widgets.addList(null, nodes, { height: "calc(100% - 40px)", callback: inner_selected });
+		list = widgets.addList(null, nodes, { height: "calc(100% - 170px)", callback: inner_selected });
 		widgets.widgets_per_row = 1;
 		widgets.addButton(null,"Select", { callback: function() { 
 			if(!selected_value)
