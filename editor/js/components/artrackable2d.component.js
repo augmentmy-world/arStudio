@@ -3,9 +3,10 @@ function ArTrackable2D( o )
     this.arControllerComponent = LS.GlobalScene.findNodeComponents('ArControllerComponent')[0];
     // FIXME: make that static
     this.trackableTypes = ["Barcode", "Pictorial"];
+    this._initSubScene = true;
     // FIXME: make that static
     this._defaultTrackableType = 0;
-
+    this._defaultMarkerWidth = 80;
     this._trackableType = this.trackableTypes[this._defaultTrackableType];
     this._trackablePath = '';
     this._trackableId = 1;
@@ -64,6 +65,7 @@ Object.defineProperty(ArTrackable2D.prototype, "trackablePath", {
 });
 
 ArTrackable2D.trackableName = '2D Trackable';
+ArTrackable2D.markerSceneName = 'Marker Scene';
 
 
 // ArTrackable2D.prototype.updateMaterial = function(){
@@ -125,7 +127,6 @@ ArTrackable2D.prototype.onRemovedFromScene = function( scene ) {
 Object.defineProperty(ArTrackable2D.prototype,'attachedGameObject', {
     get: function() {
         return this._root;
-        return this.getRootNode();
     },
     set: function() {
         console.log(`Not allowed to set the GameObject`);
@@ -163,14 +164,14 @@ Object.defineProperty(ArTrackable2D.prototype,'visible', {
             else {
                 LEvent.trigger(LS.GlobalScene, "onTrackableTracking", this);                    
             }
-            this.attachedGameObject.visible = true;        
+            this._root.childNodes[0].visible = true;        
         }
         else{
             // Sanity: Make sure to only send the trackable lost event if trackable was visible inside the previous frame
             if( this._previousState !== undefined ) {
                 LEvent.trigger(LS.GlobalScene, "onTrackableLost", this);  
             }
-            this.attachedGameObject.visible = false;
+            this._root.childNodes[0].visible = false;
         }
     }
 });

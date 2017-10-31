@@ -21,7 +21,17 @@ const JsARToolKitModule = {
             sceneRoot.addChild(arTrackable1);
             let arTrackableComponentPatt = new ArTrackable2D();
             arTrackableComponentPatt.trackablePath = "data/icon-08.patt";
+
+
+            let arMarkerSceneNode = new LS.SceneNode(ArTrackable2D.trackableName+"_scene");
+            arTrackable1.addChild(arMarkerSceneNode);
             arTrackable1.addComponent(arTrackableComponentPatt);
+            arMarkerSceneNode.setPropertyValue("translate.Z", -arControllerComponent.defaultMarkerWidth/2);
+
+            //Add 3D cube to trackable1
+            let cube = new LS.Components.GeometricPrimitive();
+            cube.size = arControllerComponent.defaultMarkerWidth;
+            arMarkerSceneNode.addComponent(cube);
 
             //Trackable 2
             let arTrackable2 = new LS.SceneNode(ArTrackable2D.trackableName);
@@ -29,12 +39,6 @@ const JsARToolKitModule = {
             const arTrackableComponent = new ArTrackable2D();
             arTrackableComponent.trackableId = 2;
             arTrackable2.addComponent(arTrackableComponent);
-            
-
-            //Add 3D cube to trackable1
-            let cube = new LS.Components.GeometricPrimitive();
-            cube.size = arControllerComponent.defaultMarkerWidth;
-            arTrackable1.addComponent(cube);
 
             //Add 3D sphere to trackable2
             let sphere = new LS.Components.GeometricPrimitive();

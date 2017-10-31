@@ -146,6 +146,58 @@ ArControllerComponent.prototype.startAR = function() {
                     }
                 }
 
+                if(this.initVideo)
+                {
+                    if((this._video.videoWidth>0)&&(this._video.videoHeight>0))
+                    {
+                        const sceneRoot = LS.GlobalScene.root;
+
+                        let arBackgroundCameraNode = new LS.SceneNode(ArControllerComponent.arBackgroundCamera);
+                        let arBackgroundCamera = new LS.Camera();
+                        arBackgroundCamera.type = 2; //Apply orthographic projection to this camera.
+                        arBackgroundCameraNode.transform.rotate(180, [0,1,0]);
+                        arBackgroundCameraNode.addComponent(arBackgroundCamera);
+                        sceneRoot.addChild(arBackgroundCameraNode);
+
+                        let arBackgroundNode = new LS.SceneNode(ArControllerComponent.arBackground);
+                        sceneRoot.addChild(arBackgroundNode, 0);
+
+                        //Attached ARControllerComponent to scene root
+                        const arControllerComponent = new ArControllerComponent();
+                        sceneRoot.addComponent(arControllerComponent, 0);
+
+                        //texture = initTexture(gl);
+                        //let textureVideo = GL.Texture.fromVideo(video);
+                        var background  = new LS.Components.GeometricPrimitive();
+                        background.geometry = LS.Components.GeometricPrimitive.PLANE;
+                        //background.size = 100;
+                        //Translate node so that it is positioned on the first background camera.
+                        arBackgroundNode.material = new LS.StandardMaterial({flags:{ignore_lights:true}});
+                        arBackgroundNode.addComponent(background);
+                        arBackgroundNode.setPropertyValue("translate.Z", 100);
+                        arBackgroundNode.setPropertyValue("xrotation", -90);
+                        arBackgroundNode.setPropertyValue("yrotation", 180);
+                        arBackgroundNode.transform.scale(6.25, 1, 5);
+
+
+                        var videoPlayer = new LS.Components.VideoPlayer();
+                        videoPlayer.video = this._video;
+                        videoPlayer.render_mode = LS.Components.VideoPlayer.TO_MATERIAL;
+                        //videoPlayer.src = "http://localhost:8080/big_buck_bunny.mp4";
+                        arBackgroundNode.addComponent(videoPlayer);
+
+                        //Add the AR-Camera to the scene
+                        let arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
+                        let arCamera = new LS.Camera();
+                        arCamera.background_color=[0, 0, 0, 0];
+                        arCamera.clear_color = false; //Do not clear buffer from first camera.
+                        arCameraNode.addComponent(arCamera);
+                        sceneRoot.addChild(arCameraNode, 0);
+
+                        this.initVideo= false;
+                    }
+                }
+
                 // On each frame, detect markers, update their positions and
                 // render the frame on the renderer.
                 var tick = function() {
