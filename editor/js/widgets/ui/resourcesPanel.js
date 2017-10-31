@@ -45,7 +45,12 @@ function ResourcesPanelWidget( options )
 	if(!options.skip_actions)
 	{
 		top_inspector.addButton(null,"Add", {className: 'add', callback: function(v,e){ DriveModule.showCreateNewFileMenu( that.current_folder, e ); }});
-		top_inspector.addButton(null,"Copy", {className: 'copy', callback: function(v,e){ /* todo */ }});
+		top_inspector.addButton(null,"Copy", {className: 'copy', callback: function(v,e){ 
+			var selected = document.getElementById("visorarea").getElementsByClassName("litearea")[1].getElementsByTagName("ul")[1].getElementsByClassName("selected");
+			var resource = selected[0].resource;
+			DriveModule.showCloneResourceDialog( resource );
+
+		 }});
 		top_inspector.addButton(null,"Delete", {className: 'delete', callback: function(v,e){ 
 
 			var selected = document.getElementById("visorarea").getElementsByClassName("litearea")[1].getElementsByTagName("ul")[1].getElementsByClassName("selected");	
