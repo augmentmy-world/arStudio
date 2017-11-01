@@ -26,7 +26,6 @@ var SceneStorageModule = {
 
 		menubar.add("Project/Save Project/Local", { callback: this.showSaveSceneInLocalDialog.bind(this) });
 		menubar.add("Project/Publish", { callback: this.showPublishDialog.bind(this) });
-		menubar.add("Project/Test AR Scene (with ARJS)", { callback: this.testSceneARJS.bind(this) });
 
 		//LiteGUI.mainmenu.separator();
 
@@ -793,31 +792,6 @@ var SceneStorageModule = {
 		SceneStorageModule.saveLocalScene("_test", {}, LS.GlobalScene, SceneStorageModule.takeScreenshot(256,256) );
 		var name = SceneStorageModule.localscene_prefix + "_test";
 		var fullurl = "player.html?session=" + name;
-		if(!this._test_window)
-			this._test_window = window.open(fullurl,'_blank');
-		else
-		{
-			this._test_window.location.replace(fullurl);
-			this._test_window.focus();
-		}
-		var that = this;
-		this._test_window.onclose = function()
-		{
-			if(that._test_window)
-				this._test_window = null;
-		}
-	},
-
-	//======================================================================
-	// cw: Comes here from "project->test ar scene (ARJS)"
-	// Opens a new tab with arplayer.html so user can check the scene
-	// @todo find out how resources are handled
-	//======================================================================
-	testSceneARJS: function()
-	{
-		SceneStorageModule.saveLocalScene("_test", {}, LS.GlobalScene, SceneStorageModule.takeScreenshot(256,256) );
-		var name = SceneStorageModule.localscene_prefix + "_test";
-		var fullurl = "arplayer.html?session=" + name;
 		if(!this._test_window)
 			this._test_window = window.open(fullurl,'_blank');
 		else

@@ -18,15 +18,19 @@
 
 <!-- core libraries -->
 <script type="text/javascript" src="js/extra/gl-matrix-min.js"></script>
-<script type="text/javascript" src="js/extra/litegl.js"></script>
+<script type="text/javascript" src="js/extra/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="js/extra/litegl.js"></script> 
+<script type="text/javascript" src="js/extra/litegui.js"></script>
 <script type="text/javascript" src="js/extra/litegraph.js"></script>
 <script type="text/javascript" src="js/extra/litescene.js"></script>
 <script type="text/javascript" src="js/extra/Canvas2DtoWebGL.js"></script>
 <script type="text/javascript" src="js/extra/socket.io.js"></script>
+<script type="text/javascript" src="js/extra/devcap.js"></script>
+<script type="text/javascript" src="js/extra/headtrackr.js"></script>
+<script type="text/javascript" src="js/modules/collaborate.js"></script>
 
 <script type="text/javascript">
-
-	//LiteSCENE CODE *************************
+	// LiteSCENE CODE *************************
 	var player = new LS.Player( {
 		alpha: false, //enables to have alpha in the canvas to blend with background
 		stencil: true,
@@ -36,34 +40,111 @@
 		loadingbar: true, //shows loading bar progress
 		proxy: "@/proxy.php?url=" //allows to proxy request to avoid cross domain problems, in this case the @ means same domain, so it will be http://hostname/proxy
 	});
-
+    
 	var allow_remote_scenes = false; //allow scenes with full urls? this could be not safe...
-
-	//support for external server
+    
+	// support for external server
 	var data = localStorage.getItem("wgl_user_preferences" );
-	if(data)
-	{
+	if( data ) {
 		var config = JSON.parse(data);
-		if(config.modules.Drive && config.modules.Drive.fileserver_files_url)
-		{
+		if(config.modules.Drive && config.modules.Drive.fileserver_files_url) {
 			allow_remote_scenes = true;
 			LS.ResourcesManager.setPath( config.modules.Drive.fileserver_files_url );
 		}
 	}
-
-	//allow to use Canvas2D call in the WebGLCanvas (this is not mandatory, just useful)
+    
+	// allow to use Canvas2D call in the WebGLCanvas (this is not mandatory, just useful)
 	if( window.enableWebGLCanvas )
 		enableWebGLCanvas( gl.canvas );
 	if( LS.queryString["debug"] )
 		player.enableDebug();
-
-	//this code defines which scene to load, in case you are loading an specific scene replce it by player.loadScene( scene_url )
-	if( LS.queryString["session"] )
+    
+	// this code defines which scene to load, in case you are loading a specific scene replace it with player.loadScene( scene_url )
+	if( LS.queryString["session"] ) {
 		player.setScene( JSON.parse( localStorage.getItem( LS.queryString["session"] ) ) );
-	else if( allow_remote_scenes || (LS.queryString["url"] && LS.queryString["url"].indexOf("://") == -1) ) //for safety measures
+	} else if( allow_remote_scenes || (LS.queryString["url"] && LS.queryString["url"].indexOf("://") == -1) ) { //for safety measures
 		player.loadScene( LS.queryString["url"] ); //the url must be something like: fileserver/files/guest/projects/Lee_FX.json
-	else if( LS.queryString["preview"] === undefined )
+	} else if( LS.queryString["preview"] === undefined ) {
 		player.loadConfig("config.json");
+	}
+
+	// scene loads files in SceneTree.getScriptsList
+	// what to do if scene requires more capabilities than platform has...
+		// disable bits of scene?
+		// dont load scene?
+
+	//4 scenrios
+		//rear facing camera marker tracking
+		//front facing camera marker tracking
+		//front facing head tracking
+		//imu only
+
+	//if marker tracking PC and mobile show background video
+	//if head tracking no background video
+	//if glasses no background video
+	//listen to marker found event to laod scenes
+	//load closest scene from marker ID
+	//ask johnny about imu camera controller
+	//laptop or mobile if two cameras choose camera f/r front headtrackikng rear marker tracking
+		//display thumbnails of cameras, have them choose f/r with radio button and head/marker tracking with checkbox
+
+	// scene device capabilities
+	if (player.scene.devcap != null || player.scene.devplat != null) {
+		// get the device capabilities to determine how to present scene
+		getDeviceCapabilities().then(function(result) {
+			// piNFC, glassesNFC, hasDeviceOrientation, hasDeviceMotion, hasFrontCamera, hasRearCamera, hasGlassesOrient, userAgent, gravityVector, orientVector, screenOrientation
+			player.platform = getPlatform(result);
+			// desktop, laptop, mobile, glasses, glasses+pi
+			console.log(player.platform);
+    
+			// check device support
+			if (player.scene.devplat != null) {
+				if (!player.scene.devplat.includes(player.platform)) {
+					// unsupported device
+					alert("Scene unsupported device: " + player.platform);
+				}
+			}
+    
+			// check specific capabilities
+			if (player.scene.devcap != null) {
+				// view results as int
+				var r = (result.piNFC? 1: 0) +
+						(result.glassesNFC? 1: 0) * 2 +
+						(result.hasDeviceOrientation? 1: 0) * 4 +
+						(result.hasDeviceMotion? 1: 0) * 8 +
+						(result.hasFrontCamera? 1: 0) * 16 +
+						(result.hasRearCamera? 1: 0) * 32 +
+						(result.hasGlassesOrient? 1: 0) * 64;
+				// view requirements as int
+				var t = (player.scene.devcap.includes('piNFC')? 1: 0) +
+						(player.scene.devcap.includes('glassesNFC')? 1: 0) * 2 +
+						(player.scene.devcap.includes('hasDeviceOrientation')? 1: 0) * 4 +
+						(player.scene.devcap.includes('hasDeviceMotion')? 1: 0) * 8 +
+						(player.scene.devcap.includes('hasFrontCamera')? 1: 0) * 16 +
+						(player.scene.devcap.includes('hasRearCamera')? 1: 0) * 32 +
+						(player.scene.devcap.includes('hasGlassesOrient')? 1: 0) * 64;
+				// calc mismatches
+				var m = r ^ t;
+				// calc deficiencies
+				var d = m & t;
+				// if requirements not met
+				if (d != 0) {
+					// unsupported requirements
+					alert("Scene unsupported requirements: " + d.toString());
+				}
+			}
+    
+			// enable stereo rendering
+			if (player.platform == 'mobile') {
+				// attach device orientation controller to scene camera
+			} else if (player.platform == 'glasses' || player.platform == 'glasses+pi') {
+				// look at VRCameraController code (liteScene) for stereo rendering
+				// also dewarp camerafx
+			}
+			
+		}, function(err) { console.log("should never happen"); });
+		
+	}
 
 </script>
 
