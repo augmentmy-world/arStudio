@@ -52,7 +52,7 @@ var HeadtrackingModule = {
 		if (htm.camera == null) htm.updateCam();
 
 		// calibrate 0,0,0 to initial head position
-		if (htm.frame == 0) {
+		if (htm._frame === 0 || htm.camera.initialPosition === undefined) {
 			htm.camera.initialPosition = {
 				x: event.x,
 				y: event.y,
