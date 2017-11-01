@@ -607,6 +607,16 @@ InspectorWidget.prototype.inspectNode = function (node, component_to_focus) {
         //components
         this.showComponentsInterface(node, inspector);
 
+    
+        //add components
+        inspector.addSection();
+        //final buttons
+        inspector.addButton(null,"Add component", { callback: function(v) { 
+                EditorModule.showAddComponentToNode( node, function(){
+                inspector.refresh();
+            });
+        }});
+
         if (component_to_focus)
             inspector.scrollTo(component_to_focus.uid.substr(1));
         AnimationModule.attachKeyframesBehaviour(inspector);
