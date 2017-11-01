@@ -159,7 +159,9 @@
 	padding-top: 0;
 	padding-bottom: 0;
 }
-
+.inspector .wsection.notitle .widget button.litebutton{
+	width: 100%;
+}
 .inspector .wgroup {
 	position: relative;
 	width: -webkit-calc( 100% - 2px );
@@ -811,6 +813,7 @@ div {
 .litepanel .content {
 	/*overflow: auto; */
 	height: calc( 100% - 20px );
+	padding-bottom: 35px;
 }
 
 
