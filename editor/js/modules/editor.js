@@ -1754,7 +1754,12 @@ var EditorModule = {
 
 	showSelectResource: function( options )
 	{
-		var dialog = new LiteGUI.Dialog({ id: "select-resource-dialog", title: i18n.gettext("Select resource"), close: true, scroll: false, /*resizable: true, */draggable: true});
+		var dialog = null;
+		if(EditorModule.selectResourceDlg !== undefined) {
+			dialog = EditorModule.selectResourceDlg;
+		} else {
+			dialog = EditorModule.selectResourceDlg = new LiteGUI.Dialog({ id: "select-resource-dialog", title: i18n.gettext("Select resource"), close: true, scroll: false, /*resizable: true, */draggable: true});
+		}
 		var resources_widget = new ResourcesPanelWidget({skip_actions:false,type:options.type});
 		if(options.type)
 			resources_widget.filterByCategory( options.type );
