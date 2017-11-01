@@ -261,10 +261,6 @@ var PlayModule = {
 			LEvent.bind( scene,"finish", this.onSceneStop, this );
 			LS.Input.reset(); //this force some events to be sent
             LS.GUI.reset();
-            
-            if(RenderModule.getActiveViewport().name === "markertracking"){
-                JsARToolKitModule.startAR();
-            }
 
 			scene.start();
 			EditorModule.render_debug_info = false;
@@ -287,9 +283,6 @@ var PlayModule = {
 		{
 			this.state = "stop";
             console.log("%c > FINISH ", 'background: #702cad; color: #fff; font-size: 1.2em; padding: 3px 5px');
-            if(RenderModule.getActiveViewport().name === "markertracking"){
-                JsARToolKitModule.stopAR();
-            }
 
 			LiteGUI.root.classList.remove("playing");
 			scene.finish();

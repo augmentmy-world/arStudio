@@ -141,8 +141,8 @@ var EditorModule = {
 		mainmenu.add("Game Object/3D Object/Plane", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.PLANE, size: 10, subdivisions: 10 }); }});
 		mainmenu.add("Game Object/3D Object/Cube", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.CUBE, size: 10, subdivisions: 10 }); }});
 		mainmenu.add("Game Object/3D Object/Sphere", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.SPHERE, size: 10, subdivisions: 32 }); }});
-        mainmenu.add("Game Object/2D Marker", { callback: function() { EditorModule.create2DMarker(); }}); 
-
+        mainmenu.add("Game Object/AR Trackable 2D", { callback: function() { EditorModule.create2DMarker(); }}); 
+		//mainmenu.add("Edit/Focus on node", { callback: function() { cameraTool.setFocusPointOnNode( SelectionModule.getSelectedNode(), true ); }});
 		//mainmenu.add("Edit/Paste component", { callback: function() { EditorModule.pasteComponentInNode( SelectionModule.getSelectedNode() ); }});
 
 	},
@@ -1276,7 +1276,7 @@ var EditorModule = {
         parent = parent || EditorModule.getAddRootNode();
         
         parent.addChild( node );
-        var component =   LS.Components[ "Marker2D" ];
+        var component = new ArTrackable2D();
         node.addComponent( component );
 
 		EditorModule.updateCreatedNodePosition( node );

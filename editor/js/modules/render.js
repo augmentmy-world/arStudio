@@ -169,9 +169,6 @@ var RenderModule = {
 			// KB: had to change for headtracking secret feature
 			if (v !== 'HeadTracking')
 				HeadtrackingModule.Stop();
-			
-            JsARToolKitModule.stopAR();
-            
 			switch( v )
 			{
 				case "Perspective": 
