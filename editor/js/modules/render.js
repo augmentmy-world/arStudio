@@ -169,6 +169,7 @@ var RenderModule = {
 			// KB: had to change for headtracking secret feature
 			if (v !== 'HeadTracking')
 				HeadtrackingModule.Stop();
+			
 			switch( v )
 			{
 				case "Perspective": 
