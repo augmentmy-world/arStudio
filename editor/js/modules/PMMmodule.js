@@ -501,21 +501,21 @@ var PMMModule = {
 		PMMinstance = this;
 	
 		//the warp shader takes UV mapped geometry, matrix, and texture input
-		this.warpshade = new GL.Shader('\
-			attribute vec3 a_vertex; \
-			attribute vec3 a_uv; \
-			uniform mat4 m;\
-			varying vec2 v_uv; \
-			void main() { \
-				v_uv = a_uv.xy; \
-				gl_Position = m * a_vertex; \
-			}','\
-			varying vec2 v_uv; \
-			uniform sampler2D tex; \
-			void main() { \
-				gl_FragColor = textureLod(tex, v_uv, 0.); \
-			}'
-		);
+		//this.warpshade = new GL.Shader('\
+		//	attribute vec3 a_vertex; \
+		//	attribute vec3 a_uv; \
+		//	uniform mat4 m;\
+		//	varying vec2 v_uv; \
+		//	void main() { \
+		//		v_uv = a_uv.xy; \
+		//		gl_Position = m * vec4(a_vertex, 1.); \
+		//	}','\
+		//	varying vec2 v_uv; \
+		//	uniform sampler2D tex; \
+		//	void main() { \
+		//		gl_FragColor = texture2d(tex, v_uv); \
+		//	}'
+		//);
 	},
 
 	/*
