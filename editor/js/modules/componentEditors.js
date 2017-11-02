@@ -1073,6 +1073,17 @@ LS.Components.VideoWindow["@inspector"] = function (component, inspector) {
         }
     });
 
+    /*inspector.addResource("animation", component.animation, {
+         pretitle: AnimationModule.getKeyframeCode(component, "animation"),
+            allow_multiple: true, callback: function (v) {
+                if (!v)
+                    return;
+                //add resource
+                scene.preloaded_resources[v] = true;
+                inspector.refresh();
+            }
+        });*/
+
 }
 
 //======================================================================================
@@ -1097,6 +1108,16 @@ LS.Components.PlayAnimation["@inspector"] = function (component, inspector) {
             inspector.refresh();
         }
     });
+    inspector.addResource("animation", component.animation, {
+        pretitle: AnimationModule.getKeyframeCode(component, "animation"),
+        allow_multiple: true, callback: function (v) {
+                if (!v)
+                    return;
+                //add resource
+                scene.preloaded_resources[v] = true;
+                inspector.refresh();
+            }
+        });
 
 }
 

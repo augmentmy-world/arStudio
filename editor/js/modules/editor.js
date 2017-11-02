@@ -142,7 +142,7 @@ var EditorModule = {
 		mainmenu.add("Game Object/3D Object/Cube", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.CUBE, size: 10, subdivisions: 10 }); }});
 		mainmenu.add("Game Object/3D Object/Sphere", { callback: function() { EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.SPHERE, size: 10, subdivisions: 32 }); }});
         mainmenu.add("Game Object/AR Trackable 2D", { callback: function() { EditorModule.create2DMarker(); }}); 
-
+		//mainmenu.add("Edit/Focus on node", { callback: function() { cameraTool.setFocusPointOnNode( SelectionModule.getSelectedNode(), true ); }});
 		//mainmenu.add("Edit/Paste component", { callback: function() { EditorModule.pasteComponentInNode( SelectionModule.getSelectedNode() ); }});
 
 	},
@@ -1754,7 +1754,12 @@ var EditorModule = {
 
 	showSelectResource: function( options )
 	{
-		var dialog = new LiteGUI.Dialog({ id: "select-resource-dialog", title: i18n.gettext("Select resource"), close: true, scroll: false, /*resizable: true, */draggable: true});
+		var dialog = null;
+		if(EditorModule.selectResourceDlg !== undefined) {
+			dialog = EditorModule.selectResourceDlg;
+		} else {
+			dialog = EditorModule.selectResourceDlg = new LiteGUI.Dialog({ id: "select-resource-dialog", title: i18n.gettext("Select resource"), close: true, scroll: false, /*resizable: true, */draggable: true});
+		}
 		var resources_widget = new ResourcesPanelWidget({skip_actions:false,type:options.type});
 		if(options.type)
 			resources_widget.filterByCategory( options.type );
