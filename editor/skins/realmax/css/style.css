@@ -657,6 +657,7 @@ div {
 	text-align: left;
 	padding-left: 16px;
 	background-color: #2c2531;
+	border-bottom: 1px solid #222;
     /*background-image: linear-gradient(right , #555, #333);
     background-image: -moz-linear-gradient(right , #555, #333);
     background-image: -webkit-linear-gradient(right , #555, #333);*/
@@ -3614,8 +3615,8 @@ button.exit.litebutton {
 
 /* import file dialog */
 #dialog_import_resource {
-    max-height: 600px;
-    overflow-y: scroll;
+    height: 435px;
+    overflow-y: auto;
     width: 580px;
 }
 #dialog_import_resource .wtitle .text{
