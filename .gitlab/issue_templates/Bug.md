@@ -1,6 +1,5 @@
 **Steps to reproduce:**
 - 
-- 
 
 
 **Expected behavior:**
