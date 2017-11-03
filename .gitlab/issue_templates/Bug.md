@@ -1,9 +1,9 @@
-**Steps to reproduce: **
+**Steps to reproduce:**
 - 
 - 
 
 
-**Expected behavior: **
+**Expected behavior:**
 
 
-**Actual behavior: **
+**Actual behavior:**
