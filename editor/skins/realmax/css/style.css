@@ -651,6 +651,11 @@ div {
 #dialog_texture_sampler.litedialog .inspector .widget .wname{
 	display: block;
 }
+#dialog_texture_sampler.litedialog .panel-footer button{
+	width: 45%;
+	font-size: 18px;
+	background: #702cad;
+}
 .litepanel, .litedialog {
 	background-color: #423d47;
 	box-sizing: border-box;
@@ -865,7 +870,7 @@ div {
 .litedialog .content .inspector.one_line .widget{padding: 0;}
 
 .litedialog .inspector .widget .wname {
-	min-width: 230px;
+	min-width: 130px;
 	margin-bottom: 10px;
 }
 #select-resource-dialog .inspector .widget .wname {
@@ -900,10 +905,12 @@ div {
 .litedialog .content button.litebutton.single {
     width: 100%;
     text-align: center;
-    font-size: 12px;
+    font-size: 18px;
+    background: #702cad;
 }
-#dialog_materials.litedialog .content button.litebutton.single{
-	background:#96909a;
+
+#undo-history.litedialog .content button.litebutton{
+	background:#702cad; 
 }
 .litemodalbg {
 	position: absolute;
@@ -3472,6 +3479,7 @@ button.exit.litebutton {
 #dialog_save_scene .info_content.wcontent  .litebutton,#dialog_save_scene .content .widget button.litebutton.single{
 	background: #999;
 	outline:none;
+	font-size: 18px;
 }
 
 #dialog_save_scene #snapshot {
@@ -3487,7 +3495,12 @@ button.exit.litebutton {
     background: #423d47;
     line-height: 15px;
 }
-
+#dialog_save_scene.litedialog .inspector .widget .wname{
+	width: 220px;
+}
+#dialog_load_scene.litedialog .content button.litebutton{
+	 background: #999;
+}
 #select-resource-dialog {
 	width: 800px;
 	height: 541px;

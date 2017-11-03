@@ -545,13 +545,11 @@ var ImporterModule  = {
 				if(on_complete)
 					on_complete();
 			}
-
-			console.log(insert_into);
 			
 			//we do this afterwards because saving it could change the name
 			if(insert_into)
 			{
-				import_options.mesh_action = ImporterModule.preferences.mesh_action;
+				import_options.mesh_action = ImporterModule.preferences.mesh_action;//origin
 				import_options.texture_action = ImporterModule.preferences.texture_action;
 				DriveModule.onInsertResourceInScene( resource, import_options );
 			}
