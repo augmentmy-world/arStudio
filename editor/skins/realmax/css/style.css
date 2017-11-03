@@ -399,8 +399,28 @@
 }
 
 .inspector .wcontent button {
+ 	
 }
-
+#select-folder-dialog.litedialog .panel-footer button{
+	width: 100%;
+	background: #702cad;
+}
+#files-tree{
+	margin-bottom: 10px;
+}
+#paneltabs{
+	padding-bottom: 30px;
+}
+#paneltabs .inspector_widget .wsection.notitle .widget button.litebutton{
+width: 100%;
+}
+#paneltabs .inspector_widget .widget button.litebutton img{
+	width: 10px;
+	height: 12px;
+}
+#dialog_components.litedialog .content button.litebutton.single{
+	background: #702cad;
+} 
 .inspector .widget.big button, .litepanel button.big {
 	font-size: 2em;
 	/*

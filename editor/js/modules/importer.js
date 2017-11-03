@@ -546,6 +546,8 @@ var ImporterModule  = {
 					on_complete();
 			}
 
+			console.log(insert_into);
+			
 			//we do this afterwards because saving it could change the name
 			if(insert_into)
 			{
