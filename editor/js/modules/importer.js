@@ -430,9 +430,8 @@ var ImporterModule  = {
 
 			inspector.addTitle("Destination" );
 			inspector.addFolder("Save to folder", folder || "", { callback: function(v){
-				folder = v;
+				folder = v;//path
 			}});
-
 			inspector.addInfo("You can also drag files here directly");
 
 			if(file)
@@ -450,6 +449,7 @@ var ImporterModule  = {
 				inspector.addCheckbox("Optimize data", import_options.optimize_data, { callback: function(v) { import_options.optimize_data = v; }});
 
 				var info = LS.Formats.getFileFormatInfo( file.name );
+
 				if(!info)
 				{
 					inspector.addTitle("Unknown resource");
@@ -499,14 +499,18 @@ var ImporterModule  = {
 		function inner_import( button, callback )
 		{
 			if(button == imp_and_insert)
-				insert_into = true;
-
+				insert_into = true;			
 			if(!file)
 				return LiteGUI.alert("No file imported");
 
 			filename = inspector.getValue("Filename");
-			filename = filename.replace(/ /g,"_"); //no spaces in names			
-
+			filefolder = inspector.getValue("Save to folder");
+		
+			filename = filename.replace(/ /g,"_"); //no spaces in names	
+			filefolder = filefolder.replace(/ /g,"_");
+				if(!filefolder){
+					return LiteGUI.alert("Please select the path to save");
+				}
 			for(var i in options)
 				import_options[i] = options[i];
 
@@ -541,11 +545,11 @@ var ImporterModule  = {
 				if(on_complete)
 					on_complete();
 			}
-
+			
 			//we do this afterwards because saving it could change the name
 			if(insert_into)
 			{
-				import_options.mesh_action = ImporterModule.preferences.mesh_action;
+				import_options.mesh_action = ImporterModule.preferences.mesh_action;//origin
 				import_options.texture_action = ImporterModule.preferences.texture_action;
 				DriveModule.onInsertResourceInScene( resource, import_options );
 			}

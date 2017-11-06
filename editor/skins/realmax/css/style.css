@@ -399,8 +399,28 @@
 }
 
 .inspector .wcontent button {
+ 	
 }
-
+#select-folder-dialog.litedialog .panel-footer button{
+	width: 100%;
+	background: #702cad;
+}
+#files-tree{
+	margin-bottom: 10px;
+}
+#paneltabs{
+	padding-bottom: 30px;
+}
+#paneltabs .inspector_widget .wsection.notitle .widget button.litebutton{
+width: 100%;
+}
+#paneltabs .inspector_widget .widget button.litebutton img{
+	width: 10px;
+	height: 12px;
+}
+#dialog_components.litedialog .content button.litebutton.single{
+	background: #702cad;
+} 
 .inspector .widget.big button, .litepanel button.big {
 	font-size: 2em;
 	/*
@@ -631,6 +651,11 @@ div {
 #dialog_texture_sampler.litedialog .inspector .widget .wname{
 	display: block;
 }
+#dialog_texture_sampler.litedialog .panel-footer button{
+	width: 45%;
+	font-size: 18px;
+	background: #702cad;
+}
 .litepanel, .litedialog {
 	background-color: #423d47;
 	box-sizing: border-box;
@@ -657,6 +682,7 @@ div {
 	text-align: left;
 	padding-left: 16px;
 	background-color: #2c2531;
+	border-bottom: 1px solid #222;
     /*background-image: linear-gradient(right , #555, #333);
     background-image: -moz-linear-gradient(right , #555, #333);
     background-image: -webkit-linear-gradient(right , #555, #333);*/
@@ -844,7 +870,7 @@ div {
 .litedialog .content .inspector.one_line .widget{padding: 0;}
 
 .litedialog .inspector .widget .wname {
-	min-width: 230px;
+	min-width: 130px;
 	margin-bottom: 10px;
 }
 #select-resource-dialog .inspector .widget .wname {
@@ -879,10 +905,12 @@ div {
 .litedialog .content button.litebutton.single {
     width: 100%;
     text-align: center;
-    font-size: 12px;
+    font-size: 18px;
+    background: #702cad;
 }
-#dialog_materials.litedialog .content button.litebutton.single{
-	background:#96909a;
+
+#undo-history.litedialog .content button.litebutton{
+	background:#702cad; 
 }
 .litemodalbg {
 	position: absolute;
@@ -3451,6 +3479,7 @@ button.exit.litebutton {
 #dialog_save_scene .info_content.wcontent  .litebutton,#dialog_save_scene .content .widget button.litebutton.single{
 	background: #999;
 	outline:none;
+	font-size: 18px;
 }
 
 #dialog_save_scene #snapshot {
@@ -3466,7 +3495,12 @@ button.exit.litebutton {
     background: #423d47;
     line-height: 15px;
 }
-
+#dialog_save_scene.litedialog .inspector .widget .wname{
+	width: 220px;
+}
+#dialog_load_scene.litedialog .content button.litebutton{
+	 background: #999;
+}
 #select-resource-dialog {
 	width: 800px;
 	height: 541px;
@@ -3614,8 +3648,8 @@ button.exit.litebutton {
 
 /* import file dialog */
 #dialog_import_resource {
-    max-height: 600px;
-    overflow-y: scroll;
+    height: 435px;
+    overflow-y: auto;
     width: 580px;
 }
 #dialog_import_resource .wtitle .text{
