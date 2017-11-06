@@ -56,20 +56,42 @@ ArControllerComponent.prototype.startAR = function() {
     console.log("Start AR");
     this.running = true;
     let scene = LS.GlobalScene;
-
+    var maxARVideoSize = 320;
     // Read the marker-root from the LiteScene
 
     this._video = ARController.getUserMedia({
-        maxARVideoSize: 320, // do AR processing on scaled down video of this size
         facing: "environment",
         onSuccess: function(stream) {
             console.log('got video', stream);
-            var cameraPara = new ARCameraParam(this.cameraCalibrationFile);
-            cameraPara.onload = function() {
+            this.cameraPara = new ARCameraParam(this.cameraCalibrationFile);
+            this.cameraPara.onload = function(param) {
+                var maxSize = maxARVideoSize || Math.max(stream.videoWidth, stream.videoHeight);
+				var f = maxSize / Math.max(stream.videoWidth, stream.videoHeight);
+				var w = f * stream.videoWidth;
+				var h = f * stream.videoHeight;
+				if (stream.videoWidth < stream.videoHeight) {
+					var tmp = w;
+					w = h;
+					h = tmp;
+				}
                 
-                this.arController = new ARController(this._video.videoWidth, this._video.videoHeight, cameraPara);
+                this.arController = new ARController(w, h, this.cameraPara);        
+				this.arController.image = stream;
+				if (stream.videoWidth < stream.videoHeight) {
+					this.arController.orientation = 'portrait';
+					this.arController.videoWidth = stream.videoHeight;
+					this.arController.videoHeight = stream.videoWidth;
+				} else {
+					this.arController.orientation = 'landscape';
+					this.arController.videoWidth = stream.videoWidth;
+					this.arController.videoHeight = stream.videoHeight;
+                }
+
                 this.arController.setDefaultMarkerWidth(this.defaultMarkerWidth);
-                console.log('ARController ready for use', this.arController);
+                
+                //this.arController = new ARController(this._video.videoWidth, this._video.videoHeight, cameraPara);
+                //this.arController.setDefaultMarkerWidth(this.defaultMarkerWidth);
+                //console.log('ARController ready for use', this.arController);
                 
                 // FIXME: In Player-Mode the detection Mode is undefined 
                 this.arController.setPatternDetectionMode( (this.trackableDetectionMode || 3) );     
@@ -94,12 +116,12 @@ ArControllerComponent.prototype.startAR = function() {
                     }
                 });
 
+                const sceneRoot = LS.GlobalScene.root;
+                
                 if(this.initVideo)
                 {
-                    if((this._video.videoWidth>0)&&(this._video.videoHeight>0))
+                    if((stream.videoWidth>0)&&(stream.videoHeight>0))
                     {
-                        const sceneRoot = LS.GlobalScene.root;
-
                         let arBackgroundCameraNode = new LS.SceneNode(ArControllerComponent.arBackgroundCamera);
                         let arBackgroundCamera = new LS.Camera();
                         arBackgroundCamera.type = 2; //Apply orthographic projection to this camera.
@@ -114,8 +136,6 @@ ArControllerComponent.prototype.startAR = function() {
                         const arControllerComponent = new ArControllerComponent();
                         sceneRoot.addComponent(arControllerComponent, 0);
 
-                        //texture = initTexture(gl);
-                        //let textureVideo = GL.Texture.fromVideo(video);
                         var background  = new LS.Components.GeometricPrimitive();
                         background.geometry = LS.Components.GeometricPrimitive.PLANE;
                         //background.size = 100;
@@ -125,26 +145,26 @@ ArControllerComponent.prototype.startAR = function() {
                         arBackgroundNode.setPropertyValue("translate.Z", 100);
                         arBackgroundNode.setPropertyValue("xrotation", -90);
                         arBackgroundNode.setPropertyValue("yrotation", 180);
-                        arBackgroundNode.transform.scale(6.25, 1, 5);
+                        arBackgroundNode.transform.scale(1.3, 1, 1);
 
 
                         var videoPlayer = new LS.Components.VideoPlayer();
-                        videoPlayer.video = this._video;
-                        videoPlayer.render_mode = LS.Components.VideoPlayer.TO_MATERIAL;
+                        videoPlayer.video = stream;
+                        videoPlayer.render_mode = LS.Components.VideoPlayer.BACKGROUND_STRETCH;
                         //videoPlayer.src = "http://localhost:8080/big_buck_bunny.mp4";
                         arBackgroundNode.addComponent(videoPlayer);
-
-                        //Add the AR-Camera to the scene
-                        let arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
-                        let arCamera = new LS.Camera();
-                        arCamera.background_color=[0, 0, 0, 0];
-                        arCamera.clear_color = false; //Do not clear buffer from first camera.
-                        arCameraNode.addComponent(arCamera);
-                        sceneRoot.addChild(arCameraNode, 0);
 
                         this.initVideo= false;
                     }
                 }
+
+                //Add the AR-Camera to the scene
+                let arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
+                let arCamera = new LS.Camera();
+                arCamera.background_color=[0, 0, 0, 0];
+                arCamera.clear_color = false; //Do not clear buffer from first camera.
+                arCameraNode.addComponent(arCamera);
+                sceneRoot.addChild(arCameraNode, 0);
 
                 // On each frame, detect markers, update their positions and
                 // render the frame on the renderer.

@@ -38,13 +38,17 @@ const JsARToolKitModule = {
             sceneRoot.addChild(arTrackable2);
             const arTrackableComponent = new ArTrackable2D();
             arTrackableComponent.trackableId = 2;
-            arTrackable2.addComponent(arTrackableComponent);
 
+            let arMarkerSceneNode2 = new LS.SceneNode(ArTrackable2D.trackableName+"_scene");
+            arTrackable2.addComponent(arTrackableComponent);
+            arTrackable2.addChild(arMarkerSceneNode2);
+            //arMarkerSceneNode2.setPropertyValue("translate.Z", -arControllerComponent.defaultMarkerWidth);
+            
             //Add 3D sphere to trackable2
             let sphere = new LS.Components.GeometricPrimitive();
             sphere.geometry = LS.Components.GeometricPrimitive.SPHERE;
             sphere.size = arControllerComponent.defaultMarkerWidth;
-            arTrackable2.addComponent(sphere);
+            arMarkerSceneNode2.addComponent(sphere);
 
         }
     }
