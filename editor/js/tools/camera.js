@@ -358,6 +358,7 @@ var cameraTool = {
 			}
 			else
 			{
+				// fix issue #85
 				camera.eye = new_eye;
 				camera.center = new_center;
 			}
