@@ -72,6 +72,8 @@
 		"js/tools/select.js",
 		"js/tools/generic.js",
 		"js/tools/colorPicker.js",
-		"js/tools/undo.js"
+        "js/tools/undo.js",
+        "js/components/arcontroller.component.js",
+        "js/components/artrackable2d.component.js"
 	]
 }

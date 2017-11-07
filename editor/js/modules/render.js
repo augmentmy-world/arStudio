@@ -170,8 +170,6 @@ var RenderModule = {
 			if (v !== 'HeadTracking')
 				HeadtrackingModule.Stop();
 			
-            JsARToolKitModule.stopAR();
-            
 			switch( v )
 			{
 				case "Perspective": 
