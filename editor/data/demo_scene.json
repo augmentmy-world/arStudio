@@ -210,7 +210,7 @@
             {
               "trackableId": 1,
               "trackableType": "Pictorial",
-              "trackablePath": "data/icon-08.patt",
+              "trackablePath": "data/kanji.patt",
               "uid": "@COMP-d5d40-10e8-14e4791-10",
               "object_class": "ArTrackable2D"
             }
