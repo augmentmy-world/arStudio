@@ -560,6 +560,9 @@ var ImporterModule  = {
 	{ 
 		options = options || {};
 
+		//var respath = resource_item.resource.unit + "/" +resource_item.resource.folder+"/"
+		if (typeof resource_base_path == "undefined") resource_base_path=""; // cw:added
+
 		if(!file.data)
 			return console.error("File data missing, use FileReader");
 

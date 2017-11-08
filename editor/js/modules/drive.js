@@ -1097,6 +1097,12 @@ var DriveModule = {
 		var restype = null;
 		var resource = null;
 
+		//cw: save the base path of this resource, so we can use it when looking for sub-resources (eg textures)
+		var respath = resource_item.resource.unit + "/" +resource_item.resource.folder+"/"
+		resource_base_path = respath;
+		//cw: end of 
+
+
 		if( resource_item.dataset ) //item from the drive
 		{
 			fullpath = resource_item.dataset["fullpath"] || resource_item.dataset["filename"];
@@ -1578,8 +1584,13 @@ var DriveModule = {
 				resource = LS.ResourcesManager.resources[resource];
 			var new_name = folder + "/" + resource.filename;
 			//ensure the scene info gets updated
+
+			// cw: only rename if there is no unit in there already.. horrendous bodge until I fix this properly.
+var old_name = new_name;
 			LS.RM.renameResource( resource.fullpath || resource.filename, new_name );
 			DriveModule.saveResource( resource, inner );
+			//cw: added as might have changed the filename when saving (adding extension)
+			LS.RM.renameResource( old_name, resource.filename );
 		}
 	},
 
@@ -2094,6 +2105,16 @@ var DriveModule = {
 
 		//get the data
 		var internal_data = LS.Resource.getDataToStore( resource );
+
+
+	//cw: if material we want to save as mtl, not txt
+	//cwx	if (category=="Material")
+	//cwx	{
+	//cwx		internal_data.extension = "wbin";
+	//cwx	}
+	
+
+
 		var data = internal_data.data;
 		if(data.data) //HACK, ugly, but sometimes returns an object with info about the file, but I want the data
 			data = data.data;
