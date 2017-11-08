@@ -84,6 +84,7 @@ var InterfaceModule = {
 	createSidePanel: function()
 	{
 		this.side_panel_visibility = true;
+		this.assets_panel_visibility = true;
 
 		//test dock panel
 		var docked = new LiteGUI.Panel("side_panel", {title:'side panel'});
@@ -336,7 +337,6 @@ var InterfaceModule = {
 		visor.appendChild( openH_button );
 		openH_button.style.display = "none";
 		openH_button.addEventListener("click", function() { InterfaceModule.setHierarchyPanelVisibility(true); });
-		console.log(openH_button);
 	},
 
 	setSidePanelVisibility: function(v)
@@ -385,7 +385,21 @@ var InterfaceModule = {
 				this.openHierachy_button.style.display = "block";
 		}
 	},
+	setLowerPanelVisibility: function(v)
+		{
+			if (v === undefined)
+				v = !this.lower_panel_visibility;
 
+			this.lower_panel_visibility = v;
+			if(v)
+				this.visorarea.showSection(1);
+			else
+				this.visorarea.hideSection(1);
+
+			this.preferences.show_low_panel = v;
+			LiteGUI.trigger( this.visorarea.root, "visibility_change" );
+			this.lower_tabs_widget.onResize();
+		},
 	//created inside RenderModule 
 	setVisorArea: function( area )
 	{
@@ -408,21 +422,7 @@ var InterfaceModule = {
 		this.lower_tabs_widget.tabs.tabs_root.appendChild(button);
 	},
 
-	setLowerPanelVisibility: function(v)
-	{
-		if (v === undefined)
-			v = !this.lower_panel_visibility;
-
-		this.lower_panel_visibility = v;
-		if(v)
-			this.visorarea.showSection(1);
-		else
-			this.visorarea.hideSection(1);
-
-		this.preferences.show_low_panel = v;
-		LiteGUI.trigger( this.visorarea.root, "visibility_change" );
-		this.lower_tabs_widget.onResize();
-	},
+	
 };
 
 CORE.registerModule( InterfaceModule );
