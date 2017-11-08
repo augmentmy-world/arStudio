@@ -121,30 +121,10 @@ ArControllerComponent.prototype.startAR = function() {
                 //Add the AR-Camera to the scene
                 let arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
                 let arCamera = new LS.Camera();
-                //arCamera.background_color=[0, 0, 0, 0];
-                //arCamera.clear_color = false; //Do not clear buffer from first camera.
+                arCamera.background_color=[0, 0, 0, 0];
+                arCamera.clear_color = false; //Do not clear buffer from first camera.
                 arCameraNode.addComponent(arCamera);
                 sceneRoot.addChild(arCameraNode, 0);
-           
-                if(this.initVideo)
-                {
-                    if((stream.videoWidth>0)&&(stream.videoHeight>0))
-                    {
-                        var videoPlayer = new LS.Components.VideoPlayer();
-                        videoPlayer.video = stream;
-                        videoPlayer.render_mode = LS.Components.VideoPlayer.BACKGROUND_STRETCH;
-                        //videoPlayer.src = "http://localhost:8080/big_buck_bunny.mp4";
-                        arCameraNode.addComponent(videoPlayer);
-
-                        //$('body').css('background-color', '#000000');                        
-                        //var canvas = $("canvas");
-                        //canvas.width(stream.videoWidth);
-                        //canvas.height(stream.videoHeight);
-                        //canvas.css('margin','0 auto');
-                        //canvas.css('display','block');
-                        this.initVideo= false;
-                    }
-                }
 
                 // On each frame, detect markers, update their positions and
                 // render the frame on the renderer.
@@ -179,6 +159,19 @@ ArControllerComponent.prototype.startAR = function() {
             }.bind(this);
         }.bind(this)
     });
+    var style = this._video.style;
+    style.position = 'absolute';
+    style.top = '50%';
+    style.left = '50%';
+    style.width = 'auto';
+    style.height = 'auto';
+    style.minWidth = '100%';
+    style.minHeight = '100%';
+    style.backgroundSize = 'cover';
+    style.overflow = 'hidden';
+    style.transform = 'translate(-50%, -50%)';
+    style.zIndex = '0';
+    document.body.insertBefore(this._video, document.body.children[0]);
 };
 
 ArControllerComponent.prototype.stopAR = function(){
