@@ -116,11 +116,46 @@ ArControllerComponent.prototype.startAR = function() {
                     }
                 });
 
+                var style = stream.style;
+                style.position = 'absolute';
+                style.top = '50%';
+                style.left = '50%';
+                style.width = 'auto';
+                style.height = 'auto';
+                style.minWidth = '100%';
+                style.minHeight = '100%';
+                style.backgroundSize = 'cover';
+                style.overflow = 'hidden';
+                style.transform = 'translate(-50%, -50%)';
+                style.zIndex = '-1';
+                var canvas = $('canvas');
+                canvas.css("z-index",99);
+                canvas[0].parentElement.insertBefore(stream, canvas[0]);
+            
+                var vw = stream.videoWidth;
+                var vh = stream.videoHeight;
+                var cw = canvas.width();
+                var ch = canvas.height();
+            
+                var ratioW = cw/vw;
+                var ratioH = ch/vh;
+                var ratioMax = Math.max(ratioW, ratioH);
+
+                var vwScaled = ratioMax * vw;
+                var vhScaled = ratioMax * vh;
+
+                // Viewport, expressed in normalised canvas coordinates.
+                var left = ((cw - vwScaled) / 2.0);
+                var bottom = ((ch - vhScaled) / 2.0);
+                var w = vwScaled;
+                var h = vhScaled;
+
                 const sceneRoot = LS.GlobalScene.root;
      
                 //Add the AR-Camera to the scene
                 let arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
                 let arCamera = new LS.Camera();
+                arCamera.setViewportInPixels(left, bottom, w, h);
                 arCamera.background_color=[0, 0, 0, 0];
                 arCamera.clear_color = false; //Do not clear buffer from first camera.
                 arCameraNode.addComponent(arCamera);
@@ -159,24 +194,7 @@ ArControllerComponent.prototype.startAR = function() {
             }.bind(this);
         }.bind(this)
     });
-    var style = this._video.style;
-    style.position = 'absolute';
-    style.top = '50%';
-    style.left = '50%';
-    style.width = 'auto';
-    style.height = 'auto';
-    style.minWidth = '100%';
-    style.minHeight = '100%';
-    style.backgroundSize = 'cover';
-    style.overflow = 'hidden';
-    style.transform = 'translate(-50%, -50%)';
-    style.zIndex = '-1';
-    var canvas = $('canvas');
-    canvas.css("z-index",99);
-    canvas[0].parentElement.insertBefore(this._video, canvas[0]);
 
-
-    //(document.body.children[0])
 };
 
 ArControllerComponent.prototype.stopAR = function(){
