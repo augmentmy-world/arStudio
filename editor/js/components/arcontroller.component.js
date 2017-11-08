@@ -157,7 +157,7 @@ ArControllerComponent.prototype.startAR = function() {
                 let arCamera = new LS.Camera();
                 arCamera.setViewportInPixels(left, bottom, w, h);
                 arCamera.background_color=[0, 0, 0, 0];
-                arCamera.clear_color = false; //Do not clear buffer from first camera.
+                arCamera.clear_color = true; //Do not clear buffer from first camera.
                 arCameraNode.addComponent(arCamera);
                 sceneRoot.addChild(arCameraNode, 0);
 
@@ -180,7 +180,7 @@ ArControllerComponent.prototype.startAR = function() {
 
                     // If after the processing trackable2D.currentState is still undefined and the previous state wasn't undefined we assume that the marker was not visible within that frame
                     this._arTrackable2DList.forEach(arTrackable => {
-                        if( arTrackable._currentState === undefined && arTrackable._previousState !== undefined){
+                        if( arTrackable._currentState === undefined){
                             arTrackable.visible = false;
                         }
                     });
@@ -245,7 +245,7 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
     }
     
     if (trackableId !== -1) {
-        // console.log("saw a trackable with id", trackableId);
+        console.log("saw a trackable with id", trackableId);
 
         this._arTrackable2DList.forEach(arTrackable => {
             if(trackableId === arTrackable.trackableId) {

@@ -36,7 +36,8 @@
 <script type="text/javascript">
 	// LiteSCENE CODE *************************
 	var player = new LS.Player( {
-		alpha: false, //enables to have alpha in the canvas to blend with background
+        alpha: true, //enables to have alpha in the canvas to blend with background
+        premultipliedAlpha: false,
 		stencil: true,
 		redraw: true, //force to redraw
 		resources: "../liteserver/src/files/",

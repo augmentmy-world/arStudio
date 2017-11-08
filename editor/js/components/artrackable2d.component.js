@@ -172,6 +172,7 @@ Object.defineProperty(ArTrackable2D.prototype,'visible', {
                 LEvent.trigger(LS.GlobalScene, "onTrackableLost", this);  
             }
             this._root.childNodes[0].visible = false;
+            this._root.configureChildren({visible: false});
         }
     }
 });
