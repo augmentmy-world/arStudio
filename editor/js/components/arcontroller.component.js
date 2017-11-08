@@ -170,8 +170,12 @@ ArControllerComponent.prototype.startAR = function() {
     style.backgroundSize = 'cover';
     style.overflow = 'hidden';
     style.transform = 'translate(-50%, -50%)';
-    style.zIndex = '0';
-    document.body.insertBefore(this._video, document.body.children[0]);
+    style.zIndex = '-1';
+    var canvas = $('canvas');
+    canvas.css("z-index",99);
+    document.body.insertBefore(this._video, canvas[0]);
+
+    //(document.body.children[0])
 };
 
 ArControllerComponent.prototype.stopAR = function(){
