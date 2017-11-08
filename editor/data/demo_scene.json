@@ -53,7 +53,7 @@
               0,
               0,
               0,
-              1
+              0
             ],
             "frustum_size": 50,
             "viewport": [
@@ -101,7 +101,7 @@
             "uid": "@NODE-d5d40-10e8-1bb680a-e",
             "layers": 3,
             "flags": {
-              "visible": true,
+              "visible": false,
               "is_static": false,
               "selectable": true
             },
@@ -151,6 +151,7 @@
                 "GeometricPrimitive",
                 {
                   "enabled": true,
+                  "visible": false,
                   "geometry": 1,
                   "size": 80,
                   "subdivisions": 10,
@@ -234,7 +235,7 @@
             "uid": "@NODE-d5d40-10e9-131a3eb-14",
             "layers": 3,
             "flags": {
-              "visible": true,
+              "visible": false,
               "is_static": false,
               "selectable": true
             },
@@ -389,7 +390,7 @@
             0,
             0,
             0,
-            1
+            0
           ],
           "frustum_size": 50,
           "viewport": [
