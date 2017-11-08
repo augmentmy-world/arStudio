@@ -146,7 +146,11 @@ var RenderModule = {
 			<ul><li>Perspective</li><li>Orthographic</li><li>HeadTracking</li><li>MarkerTracking</li></ul></div>";
 
 		document.getElementById("mainmenubar").appendChild( viewmode );
-				
+		$('.litegui-maincontent').on('click', function(){
+			var vmodeList = $("#perspective > .select");
+			if(vmodeList.hasClass('is-open'))
+				vmodeList.removeClass('is-open');
+		});
 		$('.select').on('click', '.placeholder', function() {
 		    var parent = $(this).closest('.select');
 		    if (!parent.hasClass('is-open')) {
@@ -155,39 +159,35 @@ var RenderModule = {
 		    } else {
 		        parent.removeClass('is-open');
 		    }
+		    return false;
 		}).on('click', 'ul>li', function() {
 			var viewport = RenderModule.getActiveViewport();		
 		    var parent = $(this).closest('.select');
 		    parent.removeClass('is-open').find('.placeholder').text($(this).text());
-		    var v = $(this).text();
+            var v = $(this).text();
+			
+			// KB: had to change for headtracking secret feature
+			if (v !== 'HeadTracking')
+				HeadtrackingModule.Stop();
+			
 			switch( v )
 			{
 				case "Perspective": 
 					viewport.editor_camera.type = LS.Camera.PERSPECTIVE; 
 					viewport.name = "perspective";
-					// Kyle: switch OFF headtracking, switch OFF marker tracking mode.
-					HeadtrackingModule.Stop();
 					break;
 				case "Orthographic": 
 					viewport.editor_camera.type = LS.Camera.ORTHOGRAPHIC; 
 					viewport.name = "orthographic";
-					// Kyle: switch OFF headtracking, switch OFF marker tracking mode.
-					HeadtrackingModule.Stop();
 					break;
 				case "HeadTracking":
 					viewport.name = "headtracking";
 					HeadtrackingModule.Start();
-					// Kyle: switch on headtracking, switch OFF marker tracking mode.
 					break;
-
 				case "MarkerTracking":
 					viewport.name = "markertracking";
-					// Kyle: switch OFF headtracking, switch ON marker tracking mode.
-					HeadtrackingModule.Stop();
+                    JsARToolKitModule.createAR();
 					break;
-
-
-
 				default:
 					break;
 			}

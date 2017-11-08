@@ -716,7 +716,7 @@ EditorModule.showTextureSamplerInfo = function( sampler, options )
 	var channel = options.channel || "color";
 	var material = options.material;
 
-	var dialog = new LiteGUI.Dialog( { title:"Texture Sampler", close: true, minimize: true, width: 360, scroll: false, draggable: true });
+	var dialog = new LiteGUI.Dialog( {id:"dialog_texture_sampler", title:"Texture Sampler", close: true, minimize: true, scroll: false, draggable: true });
 	dialog.show('fade');
 
 	var tex = "";

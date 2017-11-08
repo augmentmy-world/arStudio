@@ -115,8 +115,8 @@ function ConsoleWidget( options )
 	}
 }
 
-ConsoleWidget.lsroot_doc = "http://webglstudio.org/doc/litescene/classes/";
-ConsoleWidget.lsdoc_json = "http://webglstudio.org/doc/litescene/data.json";
+ConsoleWidget.lsroot_doc = "https://webglstudio.org/doc/litescene/classes/";
+ConsoleWidget.lsdoc_json = "https://webglstudio.org/doc/litescene/data.json";
 ConsoleWidget.commands = {};
 ConsoleWidget.special_objects = new Map();
 

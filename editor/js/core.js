@@ -57,10 +57,10 @@ var CORE = {
 
 
 	//called from index.html
-	init: function( )
+	init: function()
 	{
 		this.root = document.body;
-		
+
 		//Load config file
 		LiteGUI.request({
 			url:"config.json?nocache=" + performance.now(),
@@ -265,10 +265,10 @@ var CORE = {
 		
 		//launch LiteGUI
 		LiteGUI.init(); 
-
-		//load local user preferences for every systemo module
+    
+		//load local user preferences for every system module
 		this.loadUserPreferences();
-
+	
 		//Init all system modules
 		this.initModules();
 
@@ -277,7 +277,7 @@ var CORE = {
 
 		this.addScene( LS.GlobalScene );
 		this.selectScene( LS.GlobalScene );
-
+		
 		LiteGUI.trigger( CORE, "system_ready" );
 	},
 
@@ -590,13 +590,6 @@ var CORE = {
 		cssNode.rel = 'stylesheet';
 		cssNode.media = 'screen';		
 		cssNode.href = 'skins/'+this.config.skin+'/css/style.css';
-		head.appendChild(cssNode);
-
-		cssNode = document.createElement('link');
-		cssNode.type = 'text/css';
-		cssNode.rel = 'stylesheet';
-		cssNode.media = 'screen';
-		cssNode.href = 'skins/'+this.config.skin+'/css/litegui.css';
 		head.appendChild(cssNode);
 	}
 }

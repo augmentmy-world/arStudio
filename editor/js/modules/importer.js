@@ -82,7 +82,17 @@ var ImporterModule  = {
 		var files = this.getFilesFromEvent( evt, options );
 		//console.log("Files found: ", files.length, "Items:",  evt.dataTransfer.items.length, " Files:",  evt.dataTransfer.files.length );
 		if(files && files.length)
-			this.processFileList( files, options );
+		{
+
+			//cw: assets can only come from "assets" in collab mode.
+			if (CollaborateModule.collaborating)
+			{
+				LiteGUI.alert("When in Collaboration mode, please drag and drop the file into Assets, then drag onto the object from there.");
+				return;
+			}
+			else
+				this.processFileList(files, options);
+		}
 
 		//drag something else on the canvas
 		//check if they are resources from other folder
@@ -229,6 +239,8 @@ var ImporterModule  = {
 				return;
 			}
 
+
+
 			try
 			{
 				if(callback)
@@ -247,6 +259,8 @@ var ImporterModule  = {
 		{
 			//console.log(e);
 		}
+
+
 
 		var extension = LS.ResourcesManager.getExtension( file.name ).toLowerCase();
 		var format_info = LS.Formats.supported[ extension ];
@@ -416,9 +430,8 @@ var ImporterModule  = {
 
 			inspector.addTitle("Destination" );
 			inspector.addFolder("Save to folder", folder || "", { callback: function(v){
-				folder = v;
+				folder = v;//path
 			}});
-
 			inspector.addInfo("You can also drag files here directly");
 
 			if(file)
@@ -436,6 +449,7 @@ var ImporterModule  = {
 				inspector.addCheckbox("Optimize data", import_options.optimize_data, { callback: function(v) { import_options.optimize_data = v; }});
 
 				var info = LS.Formats.getFileFormatInfo( file.name );
+
 				if(!info)
 				{
 					inspector.addTitle("Unknown resource");
@@ -485,14 +499,18 @@ var ImporterModule  = {
 		function inner_import( button, callback )
 		{
 			if(button == imp_and_insert)
-				insert_into = true;
-
+				insert_into = true;			
 			if(!file)
 				return LiteGUI.alert("No file imported");
 
 			filename = inspector.getValue("Filename");
-			filename = filename.replace(/ /g,"_"); //no spaces in names			
-
+			filefolder = inspector.getValue("Save to folder");
+		
+			filename = filename.replace(/ /g,"_"); //no spaces in names	
+			filefolder = filefolder.replace(/ /g,"_");
+				if(!filefolder){
+					return LiteGUI.alert("Please select the path to save");
+				}
 			for(var i in options)
 				import_options[i] = options[i];
 
@@ -527,11 +545,11 @@ var ImporterModule  = {
 				if(on_complete)
 					on_complete();
 			}
-
+			
 			//we do this afterwards because saving it could change the name
 			if(insert_into)
 			{
-				import_options.mesh_action = ImporterModule.preferences.mesh_action;
+				import_options.mesh_action = ImporterModule.preferences.mesh_action;//origin
 				import_options.texture_action = ImporterModule.preferences.texture_action;
 				DriveModule.onInsertResourceInScene( resource, import_options );
 			}

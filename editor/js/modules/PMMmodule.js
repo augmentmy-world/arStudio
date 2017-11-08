@@ -89,7 +89,8 @@ function plane() {
 	this.l = vec3.create();	// loc = vec3
 	this.m = 1.0;		// minimum size = float
 	this.v = false;	// visible = bool
-
+	this.d = -1;	// assosiated marker id
+	
 	// returns signed distance
 	this.sd = function(_l) {
 		return vec3.dot(mat3row(this.o, 1), vec3.subtract(vec3.create(), this.l, _l));
@@ -161,65 +162,63 @@ function plane() {
 		// should be CCW
 		return [a2, b2, c2, d2];
 	}
-
-	// writes to output and mtlfile in OBJ format
-	this.toObj = function(plnp, plnNum, faceIndOffset) {
-		var output = "";
-		// mesh name
-		var name = "pln" + plnNum.toString();
-		// object
-		output += "o " + name + "\n";
-		// output verts
-		output += "v " + plnp[0][0].toString() + " " + plnp[0][1].toString() + " " + plnp[0][2].toString() + "\n";
-		output += "v " + plnp[1][0].toString() + " " + plnp[1][1].toString() + " " + plnp[1][2].toString() + "\n";
-		output += "v " + plnp[2][0].toString() + " " + plnp[2][1].toString() + " " + plnp[2][2].toString() + "\n";
-		output += "v " + plnp[3][0].toString() + " " + plnp[3][1].toString() + " " + plnp[3][2].toString() + "\n";
-		// generate UV's
-		output += "vt 0.0 1.0\n";
-		output += "vt 1.0 1.0\n";
-		output += "vt 1.0 0.0\n";
-		output += "vt 0.0 0.0\n";
-		// normals are just plane normals
-		var o1 = mat3row(this.o, 1);
-		var nstr = "vn " + o1[0].toString() + " " + o1[1].toString() + " " + o1[2].toString() + "\n";
-		output += nstr + nstr + nstr + nstr;
-		// generate shading/texture stuff
-		output += "g " + name + "\n";
-		output += "usemtl " + name + "\n";
-		output += "s " + (plnNum + 1).toString() + "\n";
-		// generate faces
-		var f0 = faceIndOffset.toString(),
-		f1 = (faceIndOffset + 1).toString(),
-		f2 = (faceIndOffset + 2).toString(),
-		f3 = (faceIndOffset + 3).toString();
-		output += "f " + f0 + "/" + f0 + "/" + f0 + " " + f1 + "/" + f1 + "/" + f1 + " " + f2 + "/" + f2 + "/" + f2 + "\n";
-		output += "f " + f0 + "/" + f0 + "/" + f0 + " " + f2 + "/" + f2 + "/" + f2 + " " + f3 + "/" + f3 + "/" + f3 + "\n";
-		return output;
-	}
-	
-	this.toMtl = function(plnNum) {
-		var mtlfile = "";
-		// mesh name
-		var name = "pln" + plnNum.toString();
-		// generate mtl file
-		mtlfile += "newmtl " + name + "\n";
-		mtlfile += "Ns 10.0000\n";
-		mtlfile += "Ni 1.5000\n";
-		mtlfile += "d 1.0000\n";
-		mtlfile += "Tr 0.0000\n";
-		mtlfile += "Tf 1.0000 1.0000 1.0000\n";
-		mtlfile += "illum 2\n";
-		mtlfile += "Ka 0.0000 0.0000 0.0000\n";
-		mtlfile += "Kd 1.0000 1.0000 1.0000\n";
-		mtlfile += "Ks 0.0000 0.0000 0.0000\n";
-		mtlfile += "Ke 0.0000 0.0000 0.0000\n";
-		mtlfile += "map_Kd " + name + ".jpg\n";
-		return mtlfile;
-	}
 }
 
-var pmmwindow = null;
-var pmmvideo = null;
+var PMMinstance = null;
+
+// update from video
+var updateFrame = function(s, v, c) {
+	c.drawImage(v, 0, 0);
+	window.setTimeout(updateFrame, 20, s, v, c);
+}
+
+// stops video and tracking, fades out window
+var closeWindow = function(that) {
+	// stop tracking
+	JsARToolKitModule.stopAR();
+	//custom fade out
+	that.pmmwindow.fadeOut(500);
+	//wait for transition to finish
+	window.setTimeout(function() {
+		//stop the camera
+		that.stream.getTracks()[0].stop();
+		//close the window
+		that.pmmwindow.close();
+	}, 500);
+}
+
+// adds a pln to pmmgroup, usually plnp (corners) is already available so no need to recompute
+var addPlnToScene = function(pmmgroup, pln, plnp, tex) {
+	//add a new node
+	var newplane = new LS.SceneNode('plane' + pln.d.toString());
+	pmmgroup.addChild(newplane);
+
+	//put plane in scene
+	var geo = new LS.Components.GeometricPrimitive();
+	geo.geometry = LS.Components.GeometricPrimitive.PLANE;
+	newplane.addComponent(geo);
+	
+	//no subdivisions
+	geo.subdivisions = 0;
+	//set size
+	newplane.transform.scale(pln.s[0] + pln.s[2], 1.0, pln.s[1] + pln.s[3]);
+	//set location
+	var c = vec3.fromValues((plnp[0][0] + plnp[1][0] + plnp[2][0] + plnp[3][0]) * .25,
+							(plnp[0][1] + plnp[1][1] + plnp[2][1] + plnp[3][1]) * .25,
+							(plnp[0][2] + plnp[1][2] + plnp[2][2] + plnp[3][2]) * .25);
+	//newplane.transform.position = plncenter;
+	//set transform with matrix
+	var m = mat4.create();
+	m[0] = pln.o[0]; m[4] = pln.o[3]; m[8] =  pln.o[6]; m[12] = -c[0];
+	m[1] = pln.o[1]; m[5] = pln.o[4]; m[9] =  pln.o[7]; m[13] = -c[1];
+	m[2] = pln.o[2]; m[6] = pln.o[5]; m[10] = pln.o[8]; m[14] = -c[2];
+	m[3] = 0.0;      m[7] = 0.0;      m[11] = 0.0;      m[15] = 1.0;
+	newplane.transform.applyTransformMatrix(m);
+	//create material
+	
+	//set texture
+	
+}
 
 // take a poor mans mapping camera shot
 var PMMModule = {
@@ -231,61 +230,45 @@ var PMMModule = {
 
 	//needs camera frame and tracking input
 	pmm: function() {
-		console.log("pmm");
+		var that = PMMinstance;
 		
-		//canvas = document.createElement('canvas');
-		//canvas.width = 640;
-		//canvas.height = 480;
-		//canvas.setAttribute('id', 'pmmcanvas');
+		if (that.pose == null) return;
+		var poses = [ that.pose ];
 
-		var SNAP_DIST = 10.0;
-		var zFar = 100.0;
-		var canvas = pmmwindow.document.getElementById('pmmcanvas');
-		var ctx = canvas.getContext('2d');
-		var video = pmmvideo; //document.getElementById('video');
-		
-		// pose container for info	
-		var pose = {
-			// view matrix
-			view: mat4.create(),
-			// size of marker in cm
-			size: 10.0
-		}
-		//cheat and pre-bake a pose in here
-		pose.view[0] = 1.0; pose.view[1] = 0.0; pose.view[2] = 0.0; pose.view[3] = 0.0;
-		pose.view[4] = 0.0; pose.view[5] = 0.0; pose.view[6] = -1.0; pose.view[7] = 0.0; 
-		pose.view[8] = 0.0; pose.view[9] = 1.0; pose.view[10] = 0.0; pose.view[11] = 0.0;
-		pose.view[12] = 0.0; pose.view[13] = 0.0; pose.view[14] = 30.0; pose.view[15] = 0.0;
-		var poses = [ pose ];
-
-		var plnImgs = [];
 		var plns = [];
-		var outpImg;
-		var output = "", mtlfile = "";
 		var midpt = vec2.fromValues(320, 240);
 		var farthestZ = 0.0;
-		var indOffset = 1;
+		var zFar = 10000.0;
+		var ctx = that.ctx;
 
-		ctx.translate(640, 0);
-			ctx.scale(-1, 1);
-				ctx.drawImage(video, 0, 0);
-			ctx.scale(-1, 1);
-		ctx.translate(-640, 0);
-		
-		//save this capture
-		output = "# Scene mesh OBJ generated by kibbles\n";
-		output += "mtllib PMMcapture.mtl\n";
+		//Get the scene root
+        var sceneRoot = LS.GlobalScene.root;
+		//PMM group
+		var pmmgroup = new LS.SceneNode("PMM Reference");
+		sceneRoot.addChild(pmmgroup);
+
+		//get video image in buffer
+		ctx.drawImage(that.video, 0, 0);
+		//store image data in GL texture
+		var bgImg = new GL.Texture( 640, 480, {
+			minFilter: gl.LINEAR,
+			magFilter: gl.LINEAR,
+			format: gl.RGB, 
+			pixel_data: ctx.getImageData(0, 0, 640, 480)
+		});
+		var fsQuad = GL.mesh.plane({size:1.0});
 
 		//one plane for each pose
 		for (var i = 0; i < poses.length; i++) {
 			plns.push(new plane());
-			var loc = mat4row(poses[i].view, 3), //starting loc
+			var loc = mat4row(poses[i].view, 3), //starting loc (SIZE IN MM)
 				s = poses[i].size;				 //size
-			plns[i].l = vec3.fromValues(loc[0], loc[1], loc[2]);
+			plns[i].l = vec3.fromValues(loc[0] * .1, loc[1] * .1, loc[2] * .1);
 			plns[i].o = mat3.fromMat4(mat3.create(), poses[i].view);
 			plns[i].s = vec4.fromValues(s, s, s, s);
 			plns[i].m = poses[i].size;
 			plns[i].v = true;
+			plns[i].d = poses[i].id;
 		}
 
 		//check vs other planes
@@ -302,10 +285,11 @@ var PMMModule = {
 				traceResize(plnj, pln, zFar);
 			}
 	
-			//grab perspective corrected texture and geometry of plane
+			//world geometry of plane
 			var plnp = pln.plnPoints();
-			//calc plane points in screen space, perspective, used for perspective transform
+			//to screen space
 			var p = pln.toScreenspace(plnp);
+
 			//get farthest z
 			farthestZ = Math.max(farthestZ, plnp[0][2]);
 			farthestZ = Math.max(farthestZ, plnp[1][2]);
@@ -320,6 +304,7 @@ var PMMModule = {
 			size = Math.max(size, vec3.squaredDistance(p[3], p[0]));
 			//rcp of how many pixels per centimeter (20)
 			size = Math.sqrt(size) * 0.05;
+
 			//for perspective transform to take a snapshot of the plane (for texturing)
 			var ROI = [
 				0, 0, 
@@ -332,10 +317,27 @@ var PMMModule = {
 				[ ROI[2], ROI[3] ],
 				[ 0.0, ROI[3] ]
 			];
-			//warp perspective
+
+			//TODO: warp bgImg perspective RTT
+
+			//calculate perspective transform
 			var mat = getPerspective(p, p2);
-			//save image
-			plnImgs.push(null);
+			
+			//result texture
+			var plnrtt = new GL.Texture(ROI[2], ROI[3], {
+				minFilter: gl.LINEAR,
+				magFilter: gl.LINEAR,
+				format: gl.RGBA
+			});
+			//run perspective transform shader on canvas
+			var fbo = new GL.FBO([plnrtt]);
+			fbo.bind();
+				//you render code here
+				this.warpshade.uniforms({
+					m: mat,
+					tex: bgImg
+				}).draw(fsQuad);
+			fbo.unbind();
 			
 			//fill in poly where it was
 			ctx.fillStyle = '#000';
@@ -346,82 +348,110 @@ var PMMModule = {
 			ctx.lineTo(p[3][0], p[3][1]);
 			ctx.closePath();
 			ctx.fill();
+
+			//fix artk pose
+			var m = mat3.create();
+			m[4] = 0.0; m[5] = -1.0;
+			m[7] = -1.0; m[8] = 0.0;
+			mat3.mul(pln.o, pln.o, m);
+
+			addPlnToScene(pmmgroup, pln, plnp);
 			
-			//write to object and material files
-			output += pln.toObj(plnp, i, indOffset);
-			mtlfile += pln.toMtl(i)
-			
-			//offset next group of faces
-			indOffset += 4;
 		} //for each plane
 
-		if (farthestZ < 1.0) {
-			console.log("failed to save\n");
-			return;
-		} else {
-			console.log("farthestZ " + farthestZ.toString());
-		}
-
+		//final backdrop plane with rest of image
 		var backdrop = new plane();
 		var fz640 = farthestZ / 640.0;
-		//final backdrop plane with rest of image via inverse perspective transform
+		//calc size
+		backdrop.s[0] = midpt[0] * fz640;
+		backdrop.s[2] = backdrop.s[0];
+		backdrop.s[1] = midpt[1] * fz640;
+		backdrop.s[3] = backdrop.s[1];
+		//calc verts
 		var wp = [
-			[-midpt[0] * fz640, -midpt[1] * fz640, -farthestZ],
-			[ midpt[0] * fz640, -midpt[1] * fz640, -farthestZ],
-			[ midpt[0] * fz640,  midpt[1] * fz640, -farthestZ],
-			[-midpt[0] * fz640,  midpt[1] * fz640, -farthestZ]
+			[-backdrop.s[0], -backdrop.s[1], -farthestZ],
+			[ backdrop.s[0], -backdrop.s[1], -farthestZ],
+			[ backdrop.s[0],  backdrop.s[1], -farthestZ],
+			[-backdrop.s[0],  backdrop.s[1], -farthestZ]
 		];
-		//add backdrop plane to file, should probably be a sphere section (fovw x fovh) tho
-		output += backdrop.toObj(wp, plns.length, indOffset);
-		mtlfile += backdrop.toMtl(plns.length)
+		//rotate upright
+		var m = mat3.create();
+		m[4] = 0.0; m[5] = 1.0;
+		m[7] = 1.0; m[8] = 0.0;
+		backdrop.o = m;
+		backdrop.d = 'BG';
+		//store image data
+		var bgImg = new GL.Texture( ROI[2], ROI[3], {
+			minFilter: gl.LINEAR,
+			magFilter: gl.LINEAR,
+			format: gl.RGB, 
+			pixel_data: ctx.getImageData(0, 0, 640, 480)
+		});
+		//add to scene
+		addPlnToScene(pmmgroup, backdrop, wp, bgImg);
 
-		//save plane images to HDD
-		//for (int i = 0; i < plnImgs.length; i++)
-			//cv::imwrite("models\\pln" + std::to_string(i) + ".jpg", plnImgs[i]);
-
-		//save background to HDD
-		ctx.translate(640, 0);
-			ctx.scale(-1, 1);
-				ctx.drawImage(video, 0, 0);
-			ctx.scale(-1, 1);
-		ctx.translate(-640, 0);
-		
-		//cv::imwrite("models\\pln" + plns.length.toString() + ".jpg", outpImg);
-
-		//save mesh data to HDD
-		var filename = "models\\PMMcapture.obj",
-			mtlname = "models\\PMMcapture.mtl";
-		//saveTxt(filename, output);
-		console.log(output);
-		//saveTxt(mtlname, mtlfile);
-
-		//tell them it has happened
-		console.log("Saved " + filename + " with " + plns.length.toString() + " planes");
+		// fade out window
+		closeWindow(that);
 	},
 
-	startCamera: function() {
-		//canvas = document.createElement('canvas');
-		//canvas.width = 640;
-		//canvas.height = 480;
-		//canvas.setAttribute('id', 'pmmcanvas');
+	// maintain list of poses
+	markerTracking: function(ev) {
+		// if a marker is seen
+		if (ev.data.marker.id === -1) return;
+		var that = PMMinstance;
+		// record pose
+		that.pose = {
+			//view matrix
+			view: ev.data.matrix,
+			//size of marker in cm
+			size: ev.target.defaultMarkerWidth * .1,
+			//id of marker
+			id: ev.data.marker.id
+		}
+	},
 
-		pmmwindow = LiteGUI.newWindow('yeaD', 640, 480, '');
-		pmmwindow.document.body.innerHTML += '<canvas  width="640" height="480" id=\"pmmcanvas\"></canvas>';
-		var canvas = pmmwindow.document.getElementById('pmmcanvas');
-		canvas.width = 640;
-		canvas.height = 480;
-		var ctx = canvas.getContext('2d');
+	// open a window or dialog and start up the camera
+	startCamera: function() {
+		var that = PMMinstance;
+		
+		// start tracking first
+		if (typeof JsARToolKitModule !== 'undefined') {
+			// thanks Thor
+			JsARToolKitModule.createAR();
+			JsARToolKitModule.startAR();
+			// wait a bit for JSARTK to create video element and arController on window
+			window.setTimeout(function() {
+				window.arController.addEventListener('getMarker', that.markerTracking);
+			}, 1000);
+		}
+		
+		//liteGUI dialog
+		that.pmmwindow = new LiteGUI.Dialog("pmm_dialog", { width: 640, height: 530, closable: true });
+		//create a style
+		that.pmmwindow.content.innerHTML += '<style type="text/css"> pmmbuttonstyle { padding: 10px; background-color:#000; } </style>'
+		// capture and save obj and mtl
+		that.pmmwindow.addButton('<pmmbuttonstyle> <font size="3"> Capture </font> </pmmbuttonstyle>', { callback: that.pmm });
+		// gtfo button
+		that.pmmwindow.addButton('<pmmbuttonstyle> <font size="3"> Close </font> </pmmbuttonstyle>', { callback: function() {
+			closeWindow(that);
+		}});
+		that.pmmwindow.content.style = "height: 480px;";
+		that.pmmwindow.content.innerHTML += '<canvas  width="640" height="480" id=\"pmmcanvas\"></canvas>';
+		that.canvas = that.pmmwindow.content.getElementsByTagName('canvas')[0];
+		that.canvas.width = 640;
+		that.canvas.height = 480;
+		that.ctx = that.canvas.getContext('2d');
 		
 		// create a video element (probably a bad idea)
-		var video = document.createElement('video');
-		video.setAttribute('id', 'video');
+		that.video = document.createElement('video');
+		that.video.setAttribute('id', 'video');
 		
 		navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 		window.URL = window.URL || window.webkitURL || window.msURL || window.mozURL;
 		// check for camerasupport
 		if (navigator.getUserMedia) {
 			// chrome 19 shim
-			var videoSelector = {video : true};
+			var videoSelector = { video : true };
 			if (window.navigator.appVersion.match(/Chrome\/(.*?) /)) {
 				var chromeVersion = parseInt(window.navigator.appVersion.match(/Chrome\/(\d+)\./)[1], 10);
 				if (chromeVersion < 20) {
@@ -437,13 +467,13 @@ var PMMModule = {
 
 			// set up stream
 			navigator.getUserMedia(videoSelector, (function( stream ) {
-				this.stream = stream;
-				if (video.mozCaptureStream) {
-				  video.mozSrcObject = stream;
+				that.stream = stream;
+				if (that.video.mozCaptureStream) {
+				  that.video.mozSrcObject = stream;
 				} else {
-				  video.src = (window.URL && window.URL.createObjectURL(stream)) || stream;
+				  that.video.src = (window.URL && window.URL.createObjectURL(stream)) || stream;
 				}
-				video.play();
+				that.video.play();
 			}).bind(this), function() {
 				return false
 			});
@@ -452,32 +482,173 @@ var PMMModule = {
 		}
 
 		// when video is playing
-		video.addEventListener('playing', function() {
-			LiteGUI.menubar.remove("Game Object/Capture Reference/Start Camera");
-			LiteGUI.menubar.add("Game Object/Capture Reference/Take Snapshot", { callback: PMMModule.pmm });
-			video.width = 640;
-			video.height = 480;
-			pmmvideo = video;
-			window.setTimeout(PMMModule.updateFrame, 20, this, ctx);
+		that.video.addEventListener('playing', function() {
+			//LiteGUI.menubar.remove("Game Object/Capture Reference/Start Camera");
+			//LiteGUI.menubar.add("Game Object/Capture Reference/Take Snapshot", { callback: PMMModule.pmm });
+			that.video.width = 640;
+			that.video.height = 480;
+			that.pmmwindow.show();
+			that.pmmwindow.center();
+			that.pmmwindow.fadeIn(500);
+			window.setTimeout(updateFrame, 20, that, this, that.ctx);
 		}, false);
 	},
 	
-	updateFrame: function(v, c) {
-		c.drawImage(v, 0, 0);
-		//some kinda exit needs to be here
-		window.setTimeout(PMMModule.updateFrame, 20, v, c);
-	},
-	
-	//called when the plugin has been loaded
+	// called when the plugin has been loaded
 	init: function() {
-		LiteGUI.menubar.add("Game Object/Capture Reference/Start Camera", { callback: this.startCamera });
+		LiteGUI.menubar.add("Game Object/Capture Reference", { callback: this.startCamera });
+
+		PMMinstance = this;
+	
+		//the warp shader takes UV mapped geometry, matrix, and texture input
+		//this.warpshade = new GL.Shader('\
+		//	attribute vec3 a_vertex; \
+		//	attribute vec3 a_uv; \
+		//	uniform mat4 m;\
+		//	varying vec2 v_uv; \
+		//	void main() { \
+		//		v_uv = a_uv.xy; \
+		//		gl_Position = m * vec4(a_vertex, 1.); \
+		//	}','\
+		//	varying vec2 v_uv; \
+		//	uniform sampler2D tex; \
+		//	void main() { \
+		//		gl_FragColor = texture2d(tex, v_uv); \
+		//	}'
+		//);
 	},
 
-	//called when the plugin has been removed
+	/*
+	//create the rendering context
+	var gl = GL.create({width: window.innerWidth,height: window.innerHeight});
+	var container = document.body;
+	container.appendChild(gl.canvas);
+	gl.animate();
+
+	//build the mesh
+	var mesh = GL.Mesh.cube({size:10});
+	var sphere = GL.Mesh.sphere({size:100});
+	var texture = new GL.Texture(512,512, { magFilter: gl.LINEAR });
+	var fbo = new GL.FBO([texture]);
+
+	//create basic matrices for cameras and transformation
+	var persp = mat4.create();
+	var view = mat4.create();
+	var model = mat4.create();
+	var model2 = mat4.create();
+	var mvp = mat4.create();
+	var temp = mat4.create();
+	var identity = mat4.create();
+
+	//get mouse actions
+	gl.captureMouse();
+	gl.onmousemove = function(e)
+	{
+		if(e.dragging)
+			mat4.rotateY(model,model,e.deltax * 0.01);
+	}
+
+	//set the camera position
+	mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
+	mat4.lookAt(view, [0,20,20],[0,0,0], [0,1,0]);
+
+	//basic shader
+	var shader = new Shader('\
+			precision highp float;\
+			attribute vec3 a_vertex;\
+			attribute vec3 a_normal;\
+			attribute vec2 a_coord;\
+			varying vec3 v_normal;\
+			varying vec2 v_coord;\
+			uniform mat4 u_mvp;\
+			uniform mat4 u_model;\
+			void main() {\
+				v_coord = a_coord;\
+				v_normal = (u_model * vec4(a_normal,0.0)).xyz;\
+				gl_Position = u_mvp * vec4(a_vertex,1.0);\
+			}\
+			', '\
+			precision highp float;\
+			varying vec3 v_normal;\
+			varying vec2 v_coord;\
+			uniform vec4 u_color;\
+			uniform sampler2D u_texture;\
+			void main() {\
+			  vec3 N = normalize(v_normal);\
+			  gl_FragColor = u_color * texture2D( u_texture, v_coord);\
+			}\
+		');
+
+	var flat_shader = new Shader('\
+			precision highp float;\
+			attribute vec3 a_vertex;\
+			uniform mat4 u_mvp;\
+			void main() {\
+				gl_Position = u_mvp * vec4(a_vertex,1.0);\
+				gl_PointSize = 4.0;\
+			}\
+			', '\
+			precision highp float;\
+			uniform vec4 u_color;\
+			void main() {\
+			  gl_FragColor = u_color;\
+			}\
+		');
+
+	//generic gl flags and settings
+	gl.clearColor(0.1,0.1,0.1,1);
+	gl.enable( gl.DEPTH_TEST );
+
+	//rendering loop
+	gl.ondraw = function()
+	{
+
+		//render something in the texture
+		fbo.bind();
+			gl.clearColor(0.1,0.3,0.4,1);
+			//gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+
+			//create modelview and projection matrices
+			mat4.multiply(temp,view,model2);
+			mat4.multiply(mvp,persp,temp);
+
+			flat_shader.uniforms({
+				u_color: [Math.sin( GL.getTime() * 0.001 ),0.3,0.1,1],
+				u_model: model2,
+				u_mvp: mvp
+			}).draw(sphere, gl.POINTS);
+		fbo.unbind();
+
+		gl.clearColor(0.1,0.1,0.1,1);
+		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+		//create modelview and projection matrices
+		mat4.multiply(temp,view,model);
+		mat4.multiply(mvp,persp,temp);
+
+		//render mesh using the shader
+		shader.uniforms({
+			u_color: [1,1,1,1],
+			u_model: model,
+			u_texture: texture.bind(0),
+			u_mvp: mvp
+		}).draw(mesh);
+	};
+
+	//update loop
+	gl.onupdate = function(dt)
+	{
+		//rotate cube
+		mat4.rotateY(model,model,dt*0.2);
+		mat4.rotate(model2,model2,dt*0.1,[0,1, Math.sin( GL.getTime() * 0.001 ) ]);
+	};
+	*/
+	
+	// called when the plugin has been removed
 	deinit: function() {
-		LiteGUI.menubar.remove("Game Object/Capture Reference/Take Snapshot");
-		LiteGUI.menubar.remove("Game Object/Capture Reference/Start Camera");
+		closeWindow();
+		LiteGUI.menubar.remove("Game Object/Capture Reference");
 	}
 };
 
-CORE.registerModule( PMMModule );
+if (typeof CORE !== 'undefined')
+	CORE.registerModule( PMMModule );
