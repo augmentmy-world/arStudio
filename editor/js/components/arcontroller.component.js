@@ -173,7 +173,8 @@ ArControllerComponent.prototype.startAR = function() {
     style.zIndex = '-1';
     var canvas = $('canvas');
     canvas.css("z-index",99);
-    document.body.insertBefore(this._video, canvas[0]);
+    canvas[0].parentElement.insertBefore(this._video, canvas[0]);
+
 
     //(document.body.children[0])
 };
