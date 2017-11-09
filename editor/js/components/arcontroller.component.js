@@ -101,11 +101,6 @@ ArControllerComponent.prototype.startAR = function() {
                 // with the marker details.
                 this.arController.addEventListener('getMarker',this.onTrackableFound.bind(this));         
 
-                // Camera matrix is used to define the “perspective” that the camera would see.
-                // The camera matrix returned from arController.getCameraMatrix() is already the OpenGLProjectionMatrix
-                // LiteScene supports setting a custom projection matrix but an update of LiteScene is needed to do that.
-                //FIX ME: arCamera.setCustomProjectionMatrix(arController.getCameraMatrix());
-
                 this._arTrackable2DList.forEach(trackable2D => { 
                     if(trackable2D._trackableType === trackable2D.trackableTypes[1])
                     {
@@ -193,6 +188,27 @@ ArControllerComponent.prototype.startAR = function() {
                 arCamera.setViewportInPixels(left, bottom, w, h);
                 arCamera.background_color=[0, 0, 0, 0];
                 arCamera.clear_color = true; //Do not clear buffer from first camera.
+
+                // Camera matrix is used to define the “perspective” that the camera would see.
+                // The camera matrix returned from arController.getCameraMatrix() is already the OpenGLProjectionMatrix
+                // LiteScene supports setting a custom projection matrix but an update of LiteScene is needed to do that.
+
+                if( this.arController.orientation === 'portrait' ) {
+                    // TODO once we have proper handling of calibration file we use this
+                    // let cameraProjectionMatrix = this.arController.getCameraMatrix();
+                    // mat4.rotateX(cameraProjectionMatrix, cameraProjectionMatrix, 3.14159);  // Rotate around x by 180°                  
+
+                    let cameraProjectionMatrix = arCamera.getProjectionMatrix();                    
+                    mat4.rotateZ(cameraProjectionMatrix, cameraProjectionMatrix, 1.5708);       // Rotate around z by 90°               
+                    arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
+                }
+                else /* 'landscape' */ {
+                    // TODO: once we have proper handling of calibration file we use this
+                    // let cameraProjectionMatrix = this.arController.getCameraMatrix();
+                    // mat4.rotateX(cameraProjectionMatrix, cameraProjectionMatrix, 3.14159);                 
+                    // arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
+                }
+
                 arCameraNode.addComponent(arCamera);
                 sceneRoot.addChild(arCameraNode, 0);
                 LS.GlobalScene.root.getComponent(LS.Camera).background_color=[0, 0, 0, 0];
@@ -294,12 +310,19 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
                 var transform = ev.data.matrix;
                 // console.log(transform);
 
-                // Apply transform to marker root
-                scene_arCameraNode= LS.GlobalScene.getNodeByName( ArControllerComponent.arCameraName );
+                let scene_arCameraNode = LS.GlobalScene.getNodeByName( ArControllerComponent.arCameraName );
 
+                //Check if we are in landscape or portrait mode if we are in portrait mode apply a 90 degree rotation
+                if(this.arController.orientation === 'portrait'){
+                    console.log('Portrait mode trans: ' + transform);
+                    // mat4.rotateZ(transform,transform, 1.5708);
+                    console.log('Rotated trans: ' + transform);
+                }
+
+                // Apply transform to marker root
                 let cameraGlobalMatrix = scene_arCameraNode.transform.getGlobalMatrix();
                 let markerRootMatrix = mat4.create();
-                mat4.multiply(markerRootMatrix,cameraGlobalMatrix,transform);
+                mat4.multiply(markerRootMatrix, cameraGlobalMatrix, transform);
                 let outQuat = quat.create();
                 quat.fromMat4(outQuat,markerRootMatrix);
                 outQuat[0]*=-1;
