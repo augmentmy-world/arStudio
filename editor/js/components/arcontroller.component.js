@@ -127,9 +127,10 @@ ArControllerComponent.prototype.startAR = function() {
                 style.backgroundSize = 'cover';
                 style.overflow = 'hidden';
                 style.transform = 'translate(-50%, -50%)';
-                style.zIndex = '-1';
+                style.zIndex = '1';
                 var canvas = $('canvas');
                 canvas.css("z-index",99);
+                canvas.css("position","absolute");
                 canvas[0].parentElement.insertBefore(stream, canvas[0]);
             
                 var vw = stream.videoWidth;
@@ -160,7 +161,7 @@ ArControllerComponent.prototype.startAR = function() {
                 arCamera.clear_color = true; //Do not clear buffer from first camera.
                 arCameraNode.addComponent(arCamera);
                 sceneRoot.addChild(arCameraNode, 0);
-
+                LS.GlobalScene.root.getComponent(LS.Camera).background_color=[0, 0, 0, 0];
                 // On each frame, detect markers, update their positions and
                 // render the frame on the renderer.
                 var tick = function() {
