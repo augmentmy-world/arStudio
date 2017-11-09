@@ -73,9 +73,11 @@ var CodingModule = //do not change
 		this.coding_3D_area = left_area.getSection(0).content;
 		this.console_area = left_area.getSection(1).content;
 
-		//CONSOLE
-		this.console_widget = new ConsoleWidget();
-		this.console_area.appendChild( this.console_widget.root );
+		//assets
+		var lower_tabs_widget = this.lower_tabs_widget = new GenericTabsWidget();//add assets in coding_area
+		CodingModule.lower_tabs_widget.addWidgetTab( ResourcesPanelWidget );	
+		CodingModule.lower_tabs_widget.addWidgetTab( ConsoleWidget );//CONSOLE
+		this.console_area.appendChild( this.lower_tabs_widget.root );
 
 		//console._log = console.log;
 		//console.log = this.onConsoleLog.bind(this);
