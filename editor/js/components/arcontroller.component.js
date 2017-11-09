@@ -149,12 +149,12 @@ ArControllerComponent.prototype.startAR = function() {
                         //View page is the editor.
                         var gameTab = $("#ingametab");
                         gameTab.append(stream);
-                        cw = gameTab.width();
-                        ch = gameTab.height();
 
-                        var selectedCanvas = $('#ingametab canvas');
-                        if(selectedCanvas.length>0)
+                        var selectedCanvas = $(canvas[0]);
+                        if(selectedCanvas)
                         {
+                            cw = selectedCanvas.width();
+                            ch = selectedCanvas.height();
                             selectedCanvas.css("z-index",99);
                             selectedCanvas.css("position","absolute");
                         }
