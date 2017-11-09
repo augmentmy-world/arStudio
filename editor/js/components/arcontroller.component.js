@@ -116,41 +116,68 @@ ArControllerComponent.prototype.startAR = function() {
                     }
                 });
 
-                var style = stream.style;
-                style.position = 'absolute';
-                style.top = '50%';
-                style.left = '50%';
-                style.width = 'auto';
-                style.height = 'auto';
-                style.minWidth = '100%';
-                style.minHeight = '100%';
-                style.backgroundSize = 'cover';
-                style.overflow = 'hidden';
-                style.transform = 'translate(-50%, -50%)';
-                style.zIndex = '1';
-                var canvas = $('canvas');
-                canvas.css("z-index",99);
-                canvas.css("position","absolute");
-                canvas[0].parentElement.insertBefore(stream, canvas[0]);
-            
-                var vw = stream.videoWidth;
-                var vh = stream.videoHeight;
-                var cw = canvas.width();
-                var ch = canvas.height();
-            
-                var ratioW = cw/vw;
-                var ratioH = ch/vh;
-                var ratioMax = Math.max(ratioW, ratioH);
+                var left = 0;
+                var bottom = 0;
+                var w = 1;
+                var h = 1;
 
-                var vwScaled = ratioMax * vw;
-                var vhScaled = ratioMax * vh;
+                if(this.initVideo)
+                {
+                    var style = stream.style;
+                    style.position = 'absolute';
+                    style.top = '50%';
+                    style.left = '50%';
+                    style.width = 'auto';
+                    style.height = 'auto';
+                    style.minWidth = '100%';
+                    style.minHeight = '100%';
+                    style.backgroundSize = 'cover';
+                    style.overflow = 'hidden';
+                    style.transform = 'translate(-50%, -50%)';
+                    style.zIndex = '1';
 
-                // Viewport, expressed in normalised canvas coordinates.
-                var left = ((cw - vwScaled) / 2.0);
-                var bottom = ((ch - vhScaled) / 2.0);
-                var w = vwScaled;
-                var h = vhScaled;
+                    var canvas = $('canvas');
 
+                    var cw = 0;
+                    var ch = 0;
+                    if(canvas.length==1)
+                    {
+                        //View page is the player
+                        var selectedCanvas = canvas[0].parentElement.insertBefore(stream, canvas[0]);
+                        cw = selectedCanvas.width();
+                        ch = selectedCanvas.height();
+                        selectedCanvas.css("z-index",99);
+                        selectedCanvas.css("position","absolute");
+                    }
+                    else if(canvas.length>1)
+                    {
+                        //View page is the editor.
+                        var gameTab = $("#ingametab");
+                        gameTab.append(stream);
+                        cw = gameTab.width();
+                        ch = gameTab.height();
+                        //style.zIndex = '9';
+                    }
+
+                    var vw = stream.videoWidth;
+                    var vh = stream.videoHeight;
+
+                
+                    var ratioW = cw/vw;
+                    var ratioH = ch/vh;
+                    var ratioMax = Math.max(ratioW, ratioH);
+
+                    var vwScaled = ratioMax * vw;
+                    var vhScaled = ratioMax * vh;
+
+                    // Viewport, expressed in normalised canvas coordinates.
+                    left = ((cw - vwScaled) / 2.0);
+                    bottom = ((ch - vhScaled) / 2.0);
+                    w = vwScaled;
+                    h = vhScaled;
+
+                }
+                
                 const sceneRoot = LS.GlobalScene.root;
      
                 //Add the AR-Camera to the scene
@@ -205,6 +232,7 @@ ArControllerComponent.prototype.stopAR = function(){
         this.arController.dispose();
     if(this._video !== undefined){
         this._video.srcObject.getTracks()[0].stop();
+        this._video.remove();
     }
 
     var arCamera = LS.GlobalScene.getNode(ArControllerComponent.arCameraName);
