@@ -22,8 +22,24 @@ function ArControllerComponent( o )
     
     this.trackableDetectionMode = artoolkit.AR_TEMPLATE_MATCHING_COLOR_AND_MATRIX;
 
+    // Register orientation change listener to be informed on orientation change events
+    // https://stackoverflow.com/questions/1649086/detect-rotation-of-android-phone-in-the-browser-with-javascript
+    // Detect whether device supports orientationchange event, otherwise fall back to
+    // the resize event.
+    this.supportsOrientationChange = "onorientationchange" in window;
+    this.orientationEvent = this.supportsOrientationChange ? "orientationchange" : "resize";
+
+    window.addEventListener(this.orientationEvent, function() {
+        // Also window resize events are received here. Unfortunately if we don't have a running AR scene we don't have an arController and we see errors in the log
+        // because of that we check if there is an ARController object available
+        if(this.arController){
+            console.log("window.orientation " + window.orientation + " screen.orientation " + screen.orientation );
+            this._setupCameraForScreenOrientation(screen.orientation.type);
+        }
+    }.bind(this));
+
     if(o)
-    	this.configure(o);
+        this.configure(o);
 }
 
 ArControllerComponent.arCameraName = 'arcamera';
@@ -76,22 +92,9 @@ ArControllerComponent.prototype.startAR = function() {
 				}
                 
                 this.arController = new ARController(w, h, this.cameraPara);        
-				this.arController.image = stream;
-				if (stream.videoWidth < stream.videoHeight) {
-					this.arController.orientation = 'portrait';
-					this.arController.videoWidth = stream.videoHeight;
-					this.arController.videoHeight = stream.videoWidth;
-				} else {
-					this.arController.orientation = 'landscape';
-					this.arController.videoWidth = stream.videoWidth;
-					this.arController.videoHeight = stream.videoHeight;
-                }
+                this.arController.image = stream;
 
                 this.arController.setDefaultMarkerWidth(this.defaultMarkerWidth);
-                
-                //this.arController = new ARController(this._video.videoWidth, this._video.videoHeight, cameraPara);
-                //this.arController.setDefaultMarkerWidth(this.defaultMarkerWidth);
-                //console.log('ARController ready for use', this.arController);
                 
                 // FIXME: In Player-Mode the detection Mode is undefined 
                 this.arController.setPatternDetectionMode( (this.trackableDetectionMode || 3) );     
@@ -184,35 +187,17 @@ ArControllerComponent.prototype.startAR = function() {
                 const sceneRoot = LS.GlobalScene.root;
      
                 //Add the AR-Camera to the scene
-                let arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
-                let arCamera = new LS.Camera();
-                arCamera.setViewportInPixels(left, bottom, w, h);
-                arCamera.background_color=[0, 0, 0, 0];
-                arCamera.clear_color = true; //Do not clear buffer from first camera.
-
-                // Camera matrix is used to define the “perspective” that the camera would see.
-                // The camera matrix returned from arController.getCameraMatrix() is already the OpenGLProjectionMatrix
-                // LiteScene supports setting a custom projection matrix but an update of LiteScene is needed to do that.
-
-                if( this.arController.orientation === 'portrait' ) {
-                    // TODO once we have proper handling of calibration file we use this
-                    // let cameraProjectionMatrix = this.arController.getCameraMatrix();
-                    // mat4.rotateX(cameraProjectionMatrix, cameraProjectionMatrix, 3.14159);  // Rotate around x by 180°                  
-
-                    let cameraProjectionMatrix = arCamera.getProjectionMatrix();                    
-                    mat4.rotateZ(cameraProjectionMatrix, cameraProjectionMatrix, 1.5708);       // Rotate around z by 90°               
-                    arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
-                }
-                else /* 'landscape' */ {
-                    // TODO: once we have proper handling of calibration file we use this
-                    // let cameraProjectionMatrix = this.arController.getCameraMatrix();
-                    // mat4.rotateX(cameraProjectionMatrix, cameraProjectionMatrix, 3.14159);                 
-                    // arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
-                }
-
-                arCameraNode.addComponent(arCamera);
-                sceneRoot.addChild(arCameraNode, 0);
+                this.arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
+                this.arCamera = new LS.Camera();
+                this.arCamera.setViewportInPixels(left, bottom, w, h);
+                this.arCamera.background_color=[0, 0, 0, 0];
+                this.arCamera.clear_color = true; //Do not clear buffer from first camera.
+                this.arCameraNode.addComponent(this.arCamera);
+                sceneRoot.addChild(this.arCameraNode, 0);
                 LS.GlobalScene.root.getComponent(LS.Camera).background_color=[0, 0, 0, 0];
+                this._setupCameraForScreenOrientation(screen.orientation.type);
+                
+
                 // On each frame, detect markers, update their positions and
                 // render the frame on the renderer.
                 var tick = function() {
@@ -259,9 +244,8 @@ ArControllerComponent.prototype.stopAR = function(){
         this._video.remove();
     }
 
-    var arCamera = LS.GlobalScene.getNode(ArControllerComponent.arCameraName);
-    if(arCamera)
-        LS.GlobalScene.root.removeChild(arCamera);
+    if(this.arCamera)
+        LS.GlobalScene.root.removeChild(this.arCamera);
     
     var arBackgroundCamera = LS.GlobalScene.getNode(ArControllerComponent.arBackgroundCamera);
     if(arBackgroundCamera)
@@ -311,17 +295,8 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
                 var transform = ev.data.matrix;
                 // console.log(transform);
 
-                let scene_arCameraNode = LS.GlobalScene.getNodeByName( ArControllerComponent.arCameraName );
-
-                //Check if we are in landscape or portrait mode if we are in portrait mode apply a 90 degree rotation
-                if(this.arController.orientation === 'portrait'){
-                    console.log('Portrait mode trans: ' + transform);
-                    // mat4.rotateZ(transform,transform, 1.5708);
-                    console.log('Rotated trans: ' + transform);
-                }
-
                 // Apply transform to marker root
-                let cameraGlobalMatrix = scene_arCameraNode.transform.getGlobalMatrix();
+                let cameraGlobalMatrix = this.arCameraNode.transform.getGlobalMatrix();
                 let markerRootMatrix = mat4.create();
                 mat4.multiply(markerRootMatrix, cameraGlobalMatrix, transform);
                 let outQuat = quat.create();
@@ -333,3 +308,41 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
         });
     }
 };
+
+ArControllerComponent.prototype._setupCameraForScreenOrientation = function (orientation) {
+    
+    // Camera matrix is used to define the “perspective” that the camera would see.
+    // The camera matrix returned from arController.getCameraMatrix() is already the OpenGLProjectionMatrix
+    // LiteScene supports setting a custom projection matrix but an update of LiteScene is needed to do that.
+
+    //Save the original projection matrix so that there is a reference
+    if(this.originalProjectionMatrix === undefined) {
+        this.originalProjectionMatrix = this.arCamera.getProjectionMatrix();
+    }
+
+    if ( orientation.includes('portrait') ) {
+        this.arController.orientation = 'portrait';
+        this.arController.videoWidth = this._video.videoHeight;
+        this.arController.videoHeight = this._video.videoWidth;
+
+        // TODO once we have proper handling of calibration file we use this
+        // let cameraProjectionMatrix = this.arController.getCameraMatrix();
+        // mat4.rotateX(cameraProjectionMatrix, cameraProjectionMatrix, 3.14159);  // Rotate around x by 180°                  
+
+        let cameraProjectionMatrix = mat4.create();
+        mat4.copy(cameraProjectionMatrix, this.originalProjectionMatrix);                 
+        mat4.rotateZ(cameraProjectionMatrix, cameraProjectionMatrix, 1.5708);       // Rotate around z by 90°               
+        this.arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
+    } else {
+        this.arController.orientation = 'landscape';
+        this.arController.videoWidth = this._video.videoWidth;
+        this.arController.videoHeight = this._video.videoHeight;
+        // TODO: once we have proper handling of calibration file we use this
+        // let cameraProjectionMatrix = this.arController.getCameraMatrix();
+        // mat4.rotateX(cameraProjectionMatrix, cameraProjectionMatrix, 3.14159);                 
+        // arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
+
+        this.arCamera.setCustomProjectionMatrix(this.originalProjectionMatrix);
+    }
+}
+
