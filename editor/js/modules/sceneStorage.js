@@ -108,11 +108,14 @@ var SceneStorageModule = {
 			notif.style.display="none";
 
 			//save it to local
-			scene.extra.name = prj_name;
+			scene.extra.name = scene.extra.filename = prj_name;
 			SceneStorageModule.saveLocalScene(prj_name, {}, scene);
 			console.log(i18n.gettext("Project created locally"));
 			//LiteGUI.alert("Scene saved locally");
 			dialog.close();
+
+			//update scene name
+			InterfaceModule.setTabTitle('Scene(' + scene.extra.name + ')', 'Scene');
 		}
 
 		function close_this(){
@@ -389,6 +392,8 @@ var SceneStorageModule = {
 			scene.extra.fullpath = fullpath;
 			that.onSceneReady( scene );
 			InterfaceModule.setStatusBar(i18n.gettext("Scene loaded"));
+			if(scene.extra.name != undefined)
+				InterfaceModule.setTabTitle('Scene('+ scene.extra.name +')', 'Scene');
 			if(on_complete)
 				on_complete();
 		}

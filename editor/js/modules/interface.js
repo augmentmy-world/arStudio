@@ -175,6 +175,13 @@ var InterfaceModule = {
 		this.splitHierarchyPanel();
 	},
 
+	setTabTitle: function(text, tabid)
+	{
+		text = text || "";
+		var tab = document.querySelector('#mainarea .wtab-' + tabid);
+		tab.innerText = text;
+	},
+
 	setStatusBar: function(text, classname)
 	{
 		text = text || "";
