@@ -138,7 +138,8 @@ ArControllerComponent.prototype.startAR = function() {
                     if(canvas.length==1)
                     {
                         //View page is the player
-                        var selectedCanvas = canvas[0].parentElement.insertBefore(stream, canvas[0]);
+                        var selectedCanvas = $(canvas[0]);
+                        selectedCanvas.before(stream);
                         cw = selectedCanvas.width();
                         ch = selectedCanvas.height();
                         selectedCanvas.css("z-index",99);
