@@ -274,12 +274,35 @@ var ImporterModule  = {
 			reader.readAsArrayBuffer(file);
 	},
 
+
+	//cw: comes here when you drag something into the ASSETS panel.
+	// imports it (and subresources).. I assume so it can make the preview.
+	// Then it uploads the file and the preview.
 	importFile: function( file, on_complete, options )
 	{
 		this.loadFileToMemory( file, function(file,options){
-			var res = ImporterModule.processResource( file.name, file, options, on_complete );
-			if(res && on_complete)
+			//cw: set the base path for loading subresources to the  destination directory for the upload
+			//cw: we also need to make sure that subresources are uploaded FIRST, and so we sort them when doing a multi-upload
+			//cw: alternately we will have to remove the assets we just loaded
+			//cw: the reason is that it FAILS loading the subresources on the initial import, then when DND into the scene
+			//cw: it IGNORES those resources because they have already failed.
+			//cw: soln#2 is to clear all resources that have failed so they get re-tried...
+
+
+		//	var thisfullpath = file.name;
+			
+		//	var thispath = thisfullpath.lastIndexOf("/");
+		//	if (thispath!=-1)
+		//	{
+		//		resource_base_path = thisfullpath.substr(0,thispath)+"/";
+		//	}
+
+
+
+			var res = ImporterModule.processResource( file.name, file, options, on_complete ); 
+			if(res && on_complete) 	
 				on_complete(res);
+			
 		},options);
 	},
 

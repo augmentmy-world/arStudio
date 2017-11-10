@@ -418,7 +418,13 @@ var LFSBridge = {
 			{
 				var file = files[i];
 
-				if( this.direct_upload )
+				//cw: if it's a DAE then we just direct upload it instead of loading and saving resources.
+				//cw: this means we might not get a thumbnail for the DAE 
+				var direct_upload=null;
+				if (file.name.indexOf("DAE")!=-1)
+					direct_upload=1;
+
+				if( /*this.*/direct_upload==1 )
 				{
 					var path = folder_fullpath + "/" + file.name;
 					DriveModule.showStartUploadingFile( path );

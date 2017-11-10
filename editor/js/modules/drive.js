@@ -1098,11 +1098,31 @@ var DriveModule = {
 		var restype = null;
 		var resource = null;
 
-		//cw: save the base path of this resource, so we can use it when looking for sub-resources (eg textures)
-		var respath = resource_item.resource.unit + "/" +resource_item.resource.folder+"/"
-		resource_base_path = respath;
-		//cw: end of 
 
+		// comes here if drag+drop from assets into scene.
+		if (resource_item.dataset)
+		{
+			var thisfullpath = resource_item.dataset.fullpath || resource_item.dataset.filename;
+			
+			var thispath = thisfullpath.lastIndexOf("/");
+			if (thispath!=-1)
+			{
+				resource_base_path = thisfullpath.substr(0,thispath)+"/";
+			}
+		}
+		else
+		{
+			// comes here if double clicked on the file in assets
+
+			//cw: save the base path of this resource, so we can use it when looking for sub-resources (eg textures)
+			var respath = resource_item.resource.unit + "/" +resource_item.resource.folder+"/"
+			//cw: find the path
+			resource_base_path = respath;
+			//cw: end of 
+			//resource_base_path = ""; 
+			//resource_base_path = ""; 
+			
+		}
 
 		if( resource_item.dataset ) //item from the drive
 		{
