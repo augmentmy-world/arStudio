@@ -15,16 +15,12 @@ var SceneStorageModule = {
 		
 		menubar.add("Project/New Project", {callback: this.onNewProject.bind(this) });
 
-		menubar.add("Project/Load Project/From Server", { callback: this.showLoadSceneFromServerDialog.bind(this) });
-		menubar.add("Project/Load Project/Local", { callback: this.showLoadLocalSceneDialog.bind(this) });
-		menubar.add("Project/Save Project/In Server", { callback: this.showSaveSceneInServerDialog.bind(this,null) });
-
+		menubar.add("Project/Load Project", { callback: this.showLoadSceneFromServerDialog.bind(this) });
+		menubar.add("Project/Save Project", { callback: this.showSaveSceneInServerDialog.bind(this,null) });
 
 		menubar.add("Project/Collaborate", { callback: this.showLoadCollabScene.bind(this) });
 		this.menu_CollaborateLoad = menubar.findMenu("Project/Collaborate");	// So we can sw on/off later
 
-
-		menubar.add("Project/Save Project/Local", { callback: this.showSaveSceneInLocalDialog.bind(this) });
 		menubar.add("Project/Publish", { callback: this.showPublishDialog.bind(this) });
 
 		//LiteGUI.mainmenu.separator();
