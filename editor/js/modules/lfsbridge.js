@@ -420,17 +420,22 @@ var LFSBridge = {
 
 				//cw: if it's a DAE then we just direct upload it instead of loading and saving resources.
 				//cw: this means we might not get a thumbnail for the DAE 
-				var direct_upload=null;
+				var direct_upload=1; //null;
 				if (file.name.indexOf("DAE")!=-1)
 					direct_upload=1;
 
 				if( /*this.*/direct_upload==1 )
 				{
+//cw: this is broken and will only work for ONE file.
+//cw: also is assuming direct up is a global that never changes, not allowed per file!
+
+
 					var path = folder_fullpath + "/" + file.name;
 					DriveModule.showStartUploadingFile( path );
 					that.processDroppedFile( file );
 					LFSBridge.uploadFile( path, file, function( path ){
 						//refresh
+						LiteGUI.alert("Resources uploaded");
 						DriveModule.showEndUploadingFile( path );
 						DriveModule.refreshContent();
 					}, function( path, err){

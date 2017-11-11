@@ -1162,10 +1162,7 @@ var DriveModule = {
 
 				found = true;
 
-				//cw: force a collab update here...
-				if (CollaborateModule.collaborating)
-					CollaborateModule.onUserAction([]);	// Send changed scene
-
+				
 				return;
 			}
 		}
@@ -1665,8 +1662,47 @@ var old_name = new_name;
 		return missing;
 	},
 
-	//Shows a warning dialog if you have resources in memory that are not stored in the server
-	checkResourcesSaved: function( only_in_scene, on_complete )
+	//======================================================================================
+	// cw: Called after importing a resource, flushes all unsaved memory resources to disk.
+	// This assumes we have an open project and so know the directory to save to.
+	// If we don't have a project open we just don't save. Later we can assume we ALWAYS have a project open.
+	//======================================================================================
+	autoSaveMissingResources: function( on_complete )
+	{
+
+		// Check what to save
+		var missing = this.getResourcesNotSaved(true);
+		if(!missing)
+		{
+			// Nothing to save
+		//	if(on_complete)
+		//		on_complete();
+			return true;
+		}
+
+		if (LS.GlobalScene.extra && LS.GlobalScene.extra.folder)
+		{
+			var memResourceSaveFolder = LS.GlobalScene.extra.folder;
+			// Save the resources to project folder...
+			this.checkResourcesSaved( true /*only scene*/, on_complete /*call when done*/, true /*silently*/, memResourceSaveFolder /*where to save*/ );
+		}
+		else
+		{
+			LiteGUI.alert("couldn't autosave resources, you need to have a scene loaded");
+		//	if(on_complete)
+		//		on_complete();
+		
+		}
+
+	},
+
+	//==============================================================================================
+	// Shows a warning dialog if you have resources in memory that are not stored in the server
+	// cw: Pass save_silently=true to not show any dialogs but instead just save all assets to the 
+	// cw: last loaded project folder. save_silently is used after eg importng DAE's to save out materials/animations etc.
+	// cw: silentl save of assets needed for collaboration (so other clients have access to the materials/anims you import)...
+	//==============================================================================================
+	checkResourcesSaved: function( only_in_scene, on_complete, save_silently, save_silently_path )
 	{
 		var that = this;
 		var missing = this.getResourcesNotSaved(true);
@@ -1677,22 +1713,50 @@ var old_name = new_name;
 			return true;
 		}
 
-		//extra from scene
-		var pack_folder = "";
-		if( LS.GlobalScene.extra.folder )
-			pack_folder = LS.GlobalScene.extra.folder;
-		var pack_filename = LS.generateUId("").substr(1) + ".PACK";
-		if( LS.GlobalScene.extra.filename )
-			pack_filename = LS.RM.getBasename( LS.GlobalScene.extra.filename ) + ".PACK";
-		var files_folder = pack_folder;
+		if (!save_silently)
+		{
+			// cw: NOT saving silently, bring up the dialog (later we will remove all save dialogs)
 
-		var dialog = new LiteGUI.Dialog( { title:"Resources not saved", closable: true, draggable: true, width: 400 });
-		var widgets = new LiteGUI.Inspector();
-		widgets.on_refresh = inner_refresh;
-		dialog.add( widgets );
-		widgets.refresh();
-		dialog.show();
+			//extra from scene
+			var pack_folder = "";
+			if( LS.GlobalScene.extra.folder )
+				pack_folder = LS.GlobalScene.extra.folder;
 
+			var pack_filename = LS.generateUId("").substr(1) + ".PACK";
+
+			if( LS.GlobalScene.extra.filename )
+				pack_filename = LS.RM.getBasename( LS.GlobalScene.extra.filename ) + ".PACK";
+
+			var files_folder = pack_folder;
+
+			var dialog = new LiteGUI.Dialog( { title:"Resources not saved", closable: true, draggable: true, width: 400 });
+			var widgets = new LiteGUI.Inspector();
+			widgets.on_refresh = inner_refresh;
+			dialog.add( widgets );
+			widgets.refresh();
+
+			// cw: This dialog has callbacks triggered by user button presses.
+			dialog.show();
+		}
+		else
+		{
+			//cw: saving silently, just get a list of missing files, set the folder to save to and kick off the saving...
+			missing = that.getResourcesNotSaved(true);
+			if(!missing)
+			{
+				if (on_complete) on_complete();
+				return;	//cw: no resources missing, done.
+			}
+			var resFolder = LS.GlobalScene.extra.folder;	// cw: This should be the project folder.
+
+			// set the resource folder.
+			inner_save_individually( resFolder );
+
+		}
+
+		//--------------------------------------------------------------
+		//cw:
+		//--------------------------------------------------------------
 		function inner_refresh()
 		{
 			missing = that.getResourcesNotSaved(true);
@@ -1770,6 +1834,9 @@ var old_name = new_name;
 			});
 		}
 
+		//--------------------------------------------------------------
+		//cw:
+		//--------------------------------------------------------------
 		function inner_save_modified()
 		{
 			var alert_dialog = LiteGUI.alert("Saving...");
@@ -1795,11 +1862,21 @@ var old_name = new_name;
 			});
 		}
 
-		function inner_save_individually()
+
+		//--------------------------------------------------------------------------------------
+		// User clicked on "save files individually" to save modified/created memory resources
+		// (usually animations, materials etc from an import, or other stuff created in editor)
+		// (This is called with force_folder set to a folder for silent saving, after importing assets).
+		//--------------------------------------------------------------------------------------
+		function inner_save_individually(force_folder)
 		{
 			var alert_dialog = LiteGUI.alert("Saving...");
-			DriveModule.saveResourcesToFolder( missing, files_folder, function(){
-				widgets.refresh();
+			var use_folder = files_folder;
+
+			if (force_folder) use_folder = force_folder;
+			DriveModule.saveResourcesToFolder( missing, use_folder, function(){
+				if (widgets)
+					widgets.refresh();
 				alert_dialog.close();
 				LiteGUI.alert("All resources saved");
 				if(on_complete)
@@ -1809,9 +1886,14 @@ var old_name = new_name;
 			}, function(v){
 				alert_dialog.content.innerHTML = "Saving..." + (Math.floor(v * 100)) + "%";
 			});
-			widgets.refresh();
+
+			if (widgets)
+				widgets.refresh();
 		}
 
+		//--------------------------------------------------------------
+		//cw:
+		//--------------------------------------------------------------
 		function inner_save_to_pack()
 		{
 			var alert_dialog = LiteGUI.alert("Saving...");
@@ -1840,6 +1922,9 @@ var old_name = new_name;
 			}
 		}
 
+		//--------------------------------------------------------------
+		//cw:
+		//--------------------------------------------------------------
 		function inner_complete( res )
 		{
 			if(res)
@@ -1860,7 +1945,10 @@ var old_name = new_name;
 		return false;
 	},
 
+
+	//==============================================================================================
 	//called after the server gets a file info
+	//==============================================================================================
 	processServerResource: function(data)
 	{
 		var resource = data;
@@ -1882,6 +1970,9 @@ var old_name = new_name;
 		return resource;
 	},
 
+	//==============================================================================================
+	//
+	//==============================================================================================
 	convertToTree: function( data, fullpath )
 	{
 		fullpath = fullpath || "";
@@ -1920,6 +2011,10 @@ var old_name = new_name;
 		return o;
 	},
 
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	onShowPreferencesPanel: function(name,widgets)
 	{
 		if(name != "drive")
@@ -1981,6 +2076,11 @@ var old_name = new_name;
 		}});
 	},
 
+
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	retrieveNoCacheFiles: function()
 	{
 		console.log("load");
@@ -2002,6 +2102,10 @@ var old_name = new_name;
 	},
 
 
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	onUnload: function()
 	{
 		//this helps avoiding cached version of files recently saved
@@ -2017,6 +2121,10 @@ var old_name = new_name;
 	},
 
 	//**** LFS SERVER CALLS **************
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	serverGetFolders: function(on_complete)
 	{
 		var that = this;
@@ -2034,6 +2142,10 @@ var old_name = new_name;
 		});
 	},
 
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	serverGetFiles: function(folder, on_complete)
 	{
 		var that = this;
@@ -2046,6 +2158,10 @@ var old_name = new_name;
 		});
 	},
 
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	serverSearchFiles: function( filter, on_complete, on_error )
 	{
 		var that = this;
@@ -2071,16 +2187,28 @@ var old_name = new_name;
 		}
 	},
 
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	serverCopyFile: function( fullpath, new_fullpath, on_complete )
 	{
 		LoginModule.session.copyFile( fullpath, new_fullpath, on_complete );
 	},
 
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	serverMoveFile: function( fullpath, new_fullpath, on_complete )
 	{
 		LoginModule.session.moveFile( fullpath, new_fullpath, on_complete );
 	},
 
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	serverDeleteFile: function(fullpath, on_complete)
 	{
 		LoginModule.session.deleteFile( fullpath, on_complete );
@@ -2088,6 +2216,10 @@ var old_name = new_name;
 
 	//Takes into account if the file is already uploaded
 	//TODO: this functions goes directly to LiteFileSystem, make it more generic
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	serverUploadResource: function( resource, fullpath, on_complete, on_error, on_progress )
 	{
 		var filename = resource.filename;
@@ -2210,12 +2342,22 @@ var old_name = new_name;
 
 	//QUARANTINE: move them to the bridge?
 
+
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	serverUpdatePreview: function( fullpath, preview, on_complete, on_error)
 	{
 		console.warn("Quarantine method");
 		LoginModule.session.updateFilePreview( fullpath, preview, on_complete, on_error);
 	},
 
+
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	serverCreateFolder: function( name, on_complete, on_error )
 	{
 		console.warn("Quarantine method");
@@ -2224,6 +2366,11 @@ var old_name = new_name;
 		LoginModule.session.createFolder( name, on_complete, on_error );
 	},
 
+
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	serverDeleteFolder: function(name, on_complete)
 	{
 		console.warn("Quarantine method");
@@ -2235,6 +2382,10 @@ var old_name = new_name;
 		});
 	},
 
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	beautifyPath: function ( path, extra )
 	{
 		var str = "";
@@ -2252,6 +2403,11 @@ var old_name = new_name;
 		return "<span class='path "+extra_class+"' "+str+"><span class='foldername'>" + path.split("/").join("<span class='foldername-slash'>/</span>") + "</span></span>"
 	},
 
+
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	beautifySize: function ( bytes )
 	{
 		bytes = parseInt( bytes );
@@ -2264,6 +2420,11 @@ var old_name = new_name;
 		return bytes;
 	},
 
+
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	showCreateNewFileMenu: function( folder, e, prev_menu, on_complete )
 	{
 		var that = this;
@@ -2293,6 +2454,11 @@ var old_name = new_name;
 		}
 	},
 
+
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	showResourceMaterialDialog: function( options )
 	{
 		var that = this;
@@ -2368,6 +2534,11 @@ var old_name = new_name;
 		return dialog;
 	},
 
+
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	showCreateFileDialog: function( options )
 	{
 		var that = this;
@@ -2412,6 +2583,11 @@ var old_name = new_name;
 		return dialog;
 	},
 
+
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	showCreateScriptDialog: function( options, on_complete )
 	{
 		var that = this;
@@ -2475,6 +2651,11 @@ var old_name = new_name;
 		return dialog;
 	},
 
+
+
+	//==============================================================================================
+	//
+	//==============================================================================================
 	showCreateShaderDialog: function( options )
 	{
 		var that = this;
@@ -2536,6 +2717,10 @@ DriveModule.getResourceAsFile = DriveModule.getResourceAsBlob;
 CORE.registerModule( DriveModule );
 
 
+//==============================================================================================
+//
+//==============================================================================================
+
 //Resource Insert button ***********************************
 DriveModule.registerAssignResourceCallback( "Mesh", function( fullpath, restype, options ) {
 
@@ -2592,6 +2777,10 @@ DriveModule.registerAssignResourceCallback( "Mesh", function( fullpath, restype,
 	SelectionModule.setSelection( node );
 });
 
+
+//==============================================================================================
+//
+//==============================================================================================
 DriveModule.registerAssignResourceCallback(["Texture","image/jpg","image/png"], function( fullpath, restype, options ) {
 
 	var node = LS.GlobalScene.selected_node;
@@ -2657,7 +2846,11 @@ DriveModule.registerAssignResourceCallback(["Texture","image/jpg","image/png"], 
 	EditorModule.inspect( node );
 });
 
+
 //Materials
+//==============================================================================================
+//
+//==============================================================================================
 DriveModule.onInsertMaterial = function( fullpath, restype, options ) 
 {
 	var node = LS.GlobalScene.selected_node;
@@ -2684,8 +2877,18 @@ DriveModule.onInsertMaterial = function( fullpath, restype, options )
 	}
 };
 
+
+
+//==============================================================================================
+//
+//==============================================================================================
 DriveModule.registerAssignResourceCallback( null, DriveModule.onInsertMaterial );
 
+
+//==============================================================================================
+// cw: This is the callback when assigning a "scenenode" resource.
+// Due to the complete fn lack of comments, I am assuming this is called after a LOAD that is assigning the scenenode resource.
+//==============================================================================================
 DriveModule.registerAssignResourceCallback( "SceneNode", function( fullpath, restype, options ) {
 	var root = SelectionModule.getSelectedNode() || LS.GlobalScene.root;
 	var res = LS.RM.resources[ fullpath ];
@@ -2701,7 +2904,12 @@ DriveModule.registerAssignResourceCallback( "SceneNode", function( fullpath, res
 			if(res && res.constructor === LS.SceneNode )
 			{
 				CORE.userAction( "node_created", res );
+				//LiteGUI.dialog("autosaving resources");
+				
 				root.addChild( res );
+
+				
+			
 			}
 		});
 		/*
@@ -2713,6 +2921,11 @@ DriveModule.registerAssignResourceCallback( "SceneNode", function( fullpath, res
 	}
 });
 
+
+
+//==============================================================================================
+//
+//==============================================================================================
 DriveModule.registerAssignResourceCallback("component", function( fullpath, restype, options ) {
 	DriveModule.loadResource( fullpath, function(resource){
 		if(!resource)
@@ -2736,6 +2949,11 @@ DriveModule.registerAssignResourceCallback("component", function( fullpath, rest
 	});
 });
 
+
+
+//==============================================================================================
+//
+//==============================================================================================
 DriveModule.registerAssignResourceCallback( "SceneTree", function( fullpath, restype, options ) {
 
 	LiteGUI.confirm("Are you sure? you will loose the current scene", function(v) {
@@ -2758,6 +2976,11 @@ DriveModule.registerAssignResourceCallback( "SceneTree", function( fullpath, res
 
 });
 
+
+
+//==============================================================================================
+//
+//==============================================================================================
 DriveModule.registerAssignResourceCallback("Pack", function( fullpath, restype, options ) {
 	DriveModule.loadResource( fullpath, function(pack){
 		if(!pack)
@@ -2778,6 +3001,11 @@ DriveModule.registerAssignResourceCallback("Pack", function( fullpath, restype, 
 	});
 });
 
+
+
+//==============================================================================================
+//
+//==============================================================================================
 DriveModule.registerAssignResourceCallback("Prefab", function( fullpath, restype, options ) {
 
 	var position = null;
@@ -2811,8 +3039,13 @@ DriveModule.registerAssignResourceCallback("Prefab", function( fullpath, restype
 	});
 });
 
+
+
 //textual resource
 
+//==============================================================================================
+//
+//==============================================================================================
 DriveModule._textResourceCallback = function( fullpath, restype, options ) {
 
 	var resource = LS.RM.getResource( fullpath );
@@ -2842,9 +3075,24 @@ DriveModule._textResourceCallback = function( fullpath, restype, options ) {
 		LiteGUI.alert("No data found in resource");
 }
 
+
+
+//==============================================================================================
+//
+//==============================================================================================
 DriveModule.registerAssignResourceCallback(["Data","Resource","application/javascript","text/plain","text/html","text/css","text/csv","TEXT"], DriveModule._textResourceCallback );
+
+
+//==============================================================================================
+//
+//==============================================================================================
 DriveModule.registerAssignResourceCallback(["ShaderCode","Script"], DriveModule._textResourceCallback );
 
+
+
+//==============================================================================================
+//
+//==============================================================================================
 LiteGUI.Inspector.prototype.addFolder = function( name,value, options )
 {
 	options = this.processOptions(options);
@@ -2865,6 +3113,11 @@ LiteGUI.Inspector.prototype.addFolder = function( name,value, options )
 	return w;
 }
 
+
+
+//==============================================================================================
+//
+//==============================================================================================
 LiteGUI.Inspector.widget_constructors["folder"] = "addFolder";
 
 

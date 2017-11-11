@@ -61,7 +61,11 @@ var ImporterModule  = {
 			ImporterModule.loadFileToMemory( file, ImporterModule.showImportResourceDialog.bind( ImporterModule ) );
 	},
 
-	// Launched when something is drag&drop inside the canvas (could be files, links, or elements of the interface) 
+
+
+	//================================================================================================================
+	// Launched when something is drag&dropped inside the canvas (could be files, links, or elements of the interface) 
+	//================================================================================================================
 	onItemDrop: function (evt, options)
 	{
 		var that = this;
@@ -81,6 +85,18 @@ var ImporterModule  = {
 		//var files = evt.dataTransfer.files;
 		var files = this.getFilesFromEvent( evt, options );
 		//console.log("Files found: ", files.length, "Items:",  evt.dataTransfer.items.length, " Files:",  evt.dataTransfer.files.length );
+
+		// cw: if trying to drag anything into the scene, they must first have a scene created or loaded...
+		// cw: this means (for now) people have to also SAVE their newly created scene.
+		// cw: later we can alsways assume people have a 'current scene'
+		if (!LS.GlobalScene.extra || !LS.GlobalScene.extra.folder)
+		{
+			LiteGUI.alert("Please load a scene first!");
+			return;
+		}
+
+
+		//cw: if there WERE files, this means they came from outside the browser, ie files from the machine itself.
 		if(files && files.length)
 		{
 
@@ -300,6 +316,8 @@ var ImporterModule  = {
 
 
 			var res = ImporterModule.processResource( file.name, file, options, on_complete ); 
+
+			
 			if(res && on_complete) 	
 				on_complete(res);
 			

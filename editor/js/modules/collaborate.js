@@ -51,6 +51,10 @@ var CollaborateModule = {
 	//======================================================================
 	startCollaborating: function(filename)
 	{
+		// Remember the folder so we know where to store memory-assets from dragging stuff into the scene...
+		if (!LS.GlobalScene.extra) LS.GlobalScene.extra = {};
+		LS.GlobalScene.extra.folder = LS.ResourcesManager.getFolder( filename );
+
 		CollaborateModule.collaborating=true;
 		CollaborateModule.room_name = filename;
 		CollaborateModule.connect(CollaborateModule.room_name);	// First thing server will do is push the scene JSON to us.
@@ -90,7 +94,7 @@ var CollaborateModule = {
 				continue;
 
 			var pos = camera.project( info.camera.eye );
-			ctx.fillRect( pos[0], gl.viewport_data[3] - pos[1], 10,10 );
+		//cwx	ctx.fillRect( pos[0], gl.viewport_data[3] - pos[1], 10,10 );
 
 			/*
 			LS.Draw.push();
@@ -318,7 +322,9 @@ var CollaborateModule = {
 	setSceneFromJSON: function( json )
 	{
 		CollaborateModule.loading_scene=true;	// DONT send any change events to others while loading!
+		var old_folder = LS.GlobalScene.extra.folder;	// so it doesn't get cleared by the load...
 		LS.GlobalScene.setFromJSON( JSON.parse( json ) );
+		LS.GlobalScene.extra.folder = old_folder;
 		CollaborateModule.loading_scene=false;	// Can now send any change events to others.
 	},
 
@@ -557,11 +563,12 @@ var CollaborateModule = {
 
 
 				CollaborateModule.loading_scene=true;	// DONT send any 'changed' events to others while loading a scene!
-
+var oldfold = LS.GlobalScene.extra.folder;
 					LS.GlobalScene.clear();	// cw: get rid of everything and load from this data...
 					action.data.extra=null;	// cw: not viewpoint, user camera etc
 					LS.GlobalScene.configure( action.data );
 					LS.GlobalScene.loadResources(function () { console.log("loaded resources collab");});
+LS.GlobalScene.extra.folder = oldfold;
 				CollaborateModule.loading_scene=false;	// Can now send 'changed' events to others.
 
 				//@todo check if the thing we were looking at has GONE
