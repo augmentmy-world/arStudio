@@ -1683,7 +1683,7 @@ var EditorModule = {
 		var compos = [];
 		for(var i in LS.Components)
 			compos.push( { icon: EditorModule.icons_path + LS.Components[i].icon, ctor: LS.Components[i], name: LS.getClassName( LS.Components[i] ) });
-
+		
 		var filter = "";
 		var widgets = new LiteGUI.Inspector();
 		var filter_widget = widgets.addString("Filter", filter, { focus:true, immediate:true, callback: function(v) {
