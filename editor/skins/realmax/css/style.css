@@ -98,7 +98,6 @@
 
 .inspector .icon {
 	margin-right: 4px;
-	display: none;
 }
 
 .inspector .wcontent .icon {
@@ -424,6 +423,10 @@ width: 100%;
 #dialog_components.litedialog .content button.litebutton.single{
 	background: #702cad;
 } 
+#dialog_components .inspector .icon{
+	width: 12px;
+	margin-right: 4px;
+}
 .inspector .widget.big button, .litepanel button.big {
 	font-size: 2em;
 	/*
@@ -2489,7 +2492,7 @@ button.wcombobutton.selected {
 
 .editor{
 	font-family: "Microsoft Yahei", sans-serif;
-    min-width: 1200px;
+    min-width: 1300px;
     overflow: auto;
 }
 .icon { font-family: Lucida Sans Unicode }
@@ -2880,6 +2883,12 @@ textarea.code {
 #side_panel .panel-header{
 	display: block;
 	border-bottom: 1px solid #666;
+}
+#side_panel .inspector .icon img{
+	width: 14px;
+	margin-top: 2px;
+	margin-left: 2px;
+	vertical-align: middle;
 }
 .wsection.error .wsectiontitle {
 	background-color: #A33 !important;
