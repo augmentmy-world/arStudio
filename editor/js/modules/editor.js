@@ -1681,8 +1681,14 @@ var EditorModule = {
 		var list_widget = null;
 
 		var compos = [];
-		for(var i in LS.Components)
-			compos.push( { icon: EditorModule.icons_path + LS.Components[i].icon, ctor: LS.Components[i], name: LS.getClassName( LS.Components[i] ) });
+		for(var i in LS.Components){
+			if(LS.Components[i].icon == undefined){
+				LS.Components[i].icon = "mini-icon-question.png";
+				compos.push( { icon: EditorModule.icons_path + "mini-icon-question.png", ctor: LS.Components[i], name: LS.getClassName( LS.Components[i] ) });
+			}else{
+				compos.push( { icon: EditorModule.icons_path + LS.Components[i].icon, ctor: LS.Components[i], name: LS.getClassName( LS.Components[i] ) });
+			}
+		}
 
 		var filter = "";
 		var widgets = new LiteGUI.Inspector();
@@ -1713,9 +1719,9 @@ var EditorModule = {
 
 		widgets.widgets_per_row = 1;
 
-		var icons = list_widget.querySelectorAll(".icon");
+		/*var icons = list_widget.querySelectorAll(".icon");
 		for(var i = 0; i < icons.length; i++)
-			icons[i].onerror = function() { this.src = "imgs/mini-icon-question.png"; }
+			icons[i].onerror = function() { this.src = "imgs/mini-icon-question.png"; }*/
 
 
 		widgets.addButton(null,"Add", { className:"big", callback: inner_add });

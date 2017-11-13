@@ -5,7 +5,7 @@
 var HeadtrackingModule = {
 	name: "Headtracking Plugin",
 	description: "Enhanced immersion",
-	icon: "imgs/mini-icon-headtracking.png",
+	icon: "mini-icon-headtracking.png",
 
 	// gets camera and suggested location
 	updateCam: function(mid, ledge) {
