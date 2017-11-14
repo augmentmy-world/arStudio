@@ -914,7 +914,13 @@ div {
     font-size: 18px;
     background: #702cad;
 }
-
+#ResourceNotSaved{
+	max-height: 650px;
+	overflow: auto;
+}
+#ResourceNotSaved.litedialog .content button.litebutton{
+	background: #702cad;
+}
 #undo-history.litedialog .content button.litebutton{
 	background:#702cad; 
 }
