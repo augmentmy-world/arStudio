@@ -42,7 +42,7 @@ var InterfaceModule = {
 		var side_panel_width = this.preferences.side_panel_width || 300;
 
 		//create a main container and split it into three (workarea: leftbar, mainwork, sidebar)
-		var mainarea = new LiteGUI.Area3({ id: "mainarea", content_id:"workarea", height: "calc(100% - 30px)", autoresize: true, inmediateResize: true, minSplitSize: 200 });
+		var mainarea = new LiteGUI.Area3({ id: "mainarea", content_id:"workarea", height: "calc(100% - 100px)", autoresize: true, inmediateResize: true, minSplitSize: 200 });
 		mainarea.split("horizontal",["20%", "calc(60% - 10px)", "20%"], true);
 		this.mainarea = mainarea;
 		//globalarea.getSection(1).add( mainarea );
