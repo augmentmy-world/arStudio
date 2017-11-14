@@ -3365,10 +3365,10 @@ button.exit.litebutton {
     background-image: url(../imgs/close_29.png);
     color: white;
 }
-#visortab {
+#visortab, #ingametab {
     overflow: hidden;
     width: 100%;
-    height: calc(100% - 120px) !important;
+    height: calc(100% - 100px) !important;
     outline: none;
     /*border: 1px solid rgba(150, 144, 154, 0.7);*/
 }
