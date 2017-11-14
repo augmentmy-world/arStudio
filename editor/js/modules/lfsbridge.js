@@ -431,6 +431,13 @@ var LFSBridge = {
 
 
 					var path = folder_fullpath + "/" + file.name;
+
+
+					//cw: force lowercase
+					path = path.toLowerCase();
+					file.name = file.name.toLowerCase();
+
+
 					DriveModule.showStartUploadingFile( path );
 					that.processDroppedFile( file );
 					LFSBridge.uploadFile( path, file, function( path ){
