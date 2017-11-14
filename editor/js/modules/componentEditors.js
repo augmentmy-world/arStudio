@@ -165,26 +165,26 @@ LS.Components.Camera["@inspector"] = function (camera, inspector) {
     // 		inner_view_from_here();
     // }});
 
-    // inspector.addTitle("Viewport");
-    // inspector.addVector2("Offset", camera._viewport.subarray(0,2), { pretitle: AnimationModule.getKeyframeCode( camera, "viewport_offset" ),  name_width: 100,min:0, max:1, step: 0.001, callback: function(v) { 
-    // 	camera._viewport.subarray(0,2).set(v);
-    // }});
-    // inspector.addVector2("Size", camera._viewport.subarray(2,4), { pretitle: AnimationModule.getKeyframeCode( camera, "viewport_size" ), name_width: 100, min:0, max:1, step: 0.001, callback: function(v) { 
-    // 	camera._viewport.subarray(2,4).set(v);
-    // }});
+    inspector.addTitle("Viewport");
+    inspector.addVector2("Offset", camera._viewport.subarray(0,2), { pretitle: AnimationModule.getKeyframeCode( camera, "viewport_offset" ),  name_width: 100,min:0, max:1, step: 0.001, callback: function(v) { 
+    	camera._viewport.subarray(0,2).set(v);
+    }});
+    inspector.addVector2("Size", camera._viewport.subarray(2,4), { pretitle: AnimationModule.getKeyframeCode( camera, "viewport_size" ), name_width: 100, min:0, max:1, step: 0.001, callback: function(v) { 
+    	camera._viewport.subarray(2,4).set(v);
+    }});
 
-    // inspector.addColor("Background Color", camera.background_color , { pretitle: AnimationModule.getKeyframeCode( camera, "background_color" ), callback: function (v) { 
-    // 	camera.background_color = v; 
-    // 	if(RenderModule.cameras)
-    // 		for(var i in RenderModule.cameras)
-    // 			RenderModule.cameras[i].background_color = v;
-    // }});
+    inspector.addColor("Background Color", camera.background_color , { pretitle: AnimationModule.getKeyframeCode( camera, "background_color" ), callback: function (v) { 
+    	camera.background_color = v; 
+    	if(RenderModule.cameras)
+    		for(var i in RenderModule.cameras)
+    			RenderModule.cameras[i].background_color = v;
+    }});
 
-    // inspector.widgets_per_row = 3;
-    // inspector.addCheckbox("clear color", camera.clear_color , { name_width: "65%", callback: function (v) { camera.clear_color = v; } });
-    // inspector.addCheckbox("clear depth", camera.clear_depth , { name_width: "65%", callback: function (v) { camera.clear_depth = v; } });
-    // inspector.addCheckbox("bg. alpha", camera.background_color[3] == 0 , { name_width: "65%", callback: function (v) { camera.background_color[3] = v ? 0 : 1; } });
-    // inspector.widgets_per_row = 1;
+    inspector.widgets_per_row = 3;
+    inspector.addCheckbox("clear color", camera.clear_color , { name_width: "65%", callback: function (v) { camera.clear_color = v; } });
+    inspector.addCheckbox("clear depth", camera.clear_depth , { name_width: "65%", callback: function (v) { camera.clear_depth = v; } });
+    inspector.addCheckbox("bg. alpha", camera.background_color[3] == 0 , { name_width: "65%", callback: function (v) { camera.background_color[3] = v ? 0 : 1; } });
+    inspector.widgets_per_row = 1;
 
     // inspector.addTitle("Render to Texture");
     // inspector.addCheckbox("Enable", camera.render_to_texture , { callback: function (v) { camera.render_to_texture = v; inspector.refresh(); } });
