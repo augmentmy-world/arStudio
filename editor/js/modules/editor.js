@@ -1613,8 +1613,10 @@ var EditorModule = {
 		var list_widget = null;
 
 		var mats = [];
-		for(var i in LS.MaterialClasses)
+		for(var i in LS.MaterialClasses){
 			mats.push( { icon: EditorModule.icons_path + LS.MaterialClasses[i].icon, ctor: LS.MaterialClasses[i], name: LS.getClassName( LS.MaterialClasses[i] ) });
+			console.log(LS.MaterialClasses[i].icon);
+		}
 
 		var filter = "";
 		var widgets = new LiteGUI.Inspector();
@@ -1683,11 +1685,9 @@ var EditorModule = {
 		var compos = [];
 		for(var i in LS.Components){
 			if(LS.Components[i].icon == undefined){
-				LS.Components[i].icon = "mini-icon-question.png";
-				compos.push( { icon: EditorModule.icons_path + "mini-icon-question.png", ctor: LS.Components[i], name: LS.getClassName( LS.Components[i] ) });
-			}else{
-				compos.push( { icon: EditorModule.icons_path + LS.Components[i].icon, ctor: LS.Components[i], name: LS.getClassName( LS.Components[i] ) });
+				LS.Components[i].icon = "mini-icon-question.png";	
 			}
+				compos.push( { icon: EditorModule.icons_path + LS.Components[i].icon, ctor: LS.Components[i], name: LS.getClassName( LS.Components[i] ) });
 		}
 
 		var filter = "";
