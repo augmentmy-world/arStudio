@@ -70,6 +70,8 @@ ArControllerComponent.prototype.onRemovedFromScene = function( scene ) {
 
 ArControllerComponent.prototype.startAR = function() {
     console.log("Start AR");
+    var self = null;
+
     this.running = true;
     let scene = LS.GlobalScene;
     var maxARVideoSize = 320;
@@ -118,6 +120,10 @@ ArControllerComponent.prototype.startAR = function() {
                 var bottom = 0;
                 var w = 1;
                 var h = 1;
+                var cw = 0;
+                var ch = 0;                
+                var vw = 0;
+                var vh = 0;
 
                 if(this.initVideo)
                 {
@@ -136,8 +142,9 @@ ArControllerComponent.prototype.startAR = function() {
 
                     var canvas = $('canvas');
 
-                    var cw = 0;
-                    var ch = 0;
+                    vw = stream.videoWidth;
+                    vh = stream.videoHeight;
+
                     if(canvas.length==1)
                     {
                         //View page is the player
@@ -165,9 +172,6 @@ ArControllerComponent.prototype.startAR = function() {
                         //style.zIndex = '9';
                     }
 
-                    var vw = stream.videoWidth;
-                    var vh = stream.videoHeight;
-
                 
                     var ratioW = cw/vw;
                     var ratioH = ch/vh;
@@ -189,20 +193,42 @@ ArControllerComponent.prototype.startAR = function() {
                 //Add the AR-Camera to the scene
                 this.arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
                 this.arCamera = new LS.Camera();
-                this.arCamera.setViewportInPixels(left, bottom, w, h);
+                this.arCamera.setViewportInPixels(0, 0, cw, ch);
                 this.arCamera.background_color=[0, 0, 0, 0];
-                this.arCamera.clear_color = true; //Do not clear buffer from first camera.
+                this.arCamera.clear_color = false; //Do not clear buffer from first camera.
                 this.arCameraNode.addComponent(this.arCamera);
+                LS.Renderer.enableCamera(this.arCamera);                
+                if(vw && vh)
+                    this.resize(cw, ch, vw, vh);
+                self = this;
+                window.addEventListener('resize', function() {
+                    var selectedCanvas = $(canvas[0]);
+                    if(selectedCanvas)
+                    {
+                        //todo: handle window/canvas resize
+                        self.arCamera.clear_color = true;
+
+                        cw = selectedCanvas.width();
+                        ch = selectedCanvas.height();
+                        //gl.clearColor( 0.0,0.0,0.0,0.0 );
+                        self.arCamera.setViewportInPixels(0, 0, cw, ch);
+
+                        LS.Renderer.enableCamera(self.arCamera);                  
+                        self.resize(cw, ch, vw, vh);                  
+                    }
+
+                }, false);                
+
                 sceneRoot.addChild(this.arCameraNode, 0);
                 LS.GlobalScene.root.getComponent(LS.Camera).background_color=[0, 0, 0, 0];
-                this._setupCameraForScreenOrientation(screen.orientation.type);
-                
+                this._setupCameraForScreenOrientation(screen.orientation.type);                
 
                 // On each frame, detect markers, update their positions and
                 // render the frame on the renderer.
                 var tick = function() {
                     if(!this.running)
                         return;
+
                     requestAnimationFrame(tick);
                     
                     // Hide the marker, as we don't know if it's visible in this frame.
@@ -233,6 +259,30 @@ ArControllerComponent.prototype.startAR = function() {
     });
 
 };
+
+ArControllerComponent.prototype.resize = function(cw, ch, vw, vh) {
+    console.log('window resized');
+
+    if (!this.arController) return;
+    this.arController.orientation = (vw < vh) ? 'portrait' : 'landscape';
+
+    // Resize the 3D camera frustum (via the fov)
+    var camMatrix = this.arController.getCameraMatrix();
+    var fovy = 2 * Math.atan(1 / camMatrix[5]) * 180 / Math.PI;
+
+
+    if (vw < vh) {
+        this.arCamera.fov = Math.abs(fovy) * (vh / vw);
+    } else {
+        if (cw / ch > vw / vh) {
+            // Video Y FOV is limited so we must limit 3D camera FOV to match
+            this.arCamera.fov = Math.abs(fovy) * (vw / vh) / (cw / ch);
+        } else {
+            // Video Y FOV is limited so we must limit 3D camera FOV to match
+            this.arCamera.fov = Math.abs(fovy);
+        }
+    }
+}
 
 ArControllerComponent.prototype.stopAR = function(){
     console.log("Stop AR");    

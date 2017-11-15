@@ -356,7 +356,7 @@ var RenderModule = {
 		gl.viewport(0,0,gl.canvas.width, gl.canvas.height);
 
 		LEvent.trigger(this,"pre_scene_render");
-		gl.clear( gl.DEPTH_BUFFER_BIT ); //�?
+		gl.clear( gl.DEPTH_BUFFER_BIT );
 
 		//render frame
 		if( this.special_pass ) 
