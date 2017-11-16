@@ -1671,7 +1671,7 @@ var old_name = new_name;
 	{
 
 		// Check what to save
-		var missing = this.getResourcesNotSaved(true);
+		var missing = this.getResourcesNotSaved(false);
 		if(!missing)
 		{
 			// Nothing to save

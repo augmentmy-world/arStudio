@@ -89,11 +89,11 @@ var ImporterModule  = {
 		// cw: if trying to drag anything into the scene, they must first have a scene created or loaded...
 		// cw: this means (for now) people have to also SAVE their newly created scene.
 		// cw: later we can alsways assume people have a 'current scene'
-		if (!LS.GlobalScene.extra || !LS.GlobalScene.extra.folder)
-		{
-			LiteGUI.alert("Please load a scene first!");
-			return;
-		}
+		//if (!LS.GlobalScene.extra || !LS.GlobalScene.extra.folder)
+		//{
+		//	LiteGUI.alert("Please load a scene first!");
+		//	return;
+		//}
 
 
 		//cw: if there WERE files, this means they came from outside the browser, ie files from the machine itself.

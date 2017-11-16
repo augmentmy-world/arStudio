@@ -1092,9 +1092,18 @@ var SceneStorageModule = {
 		localStorage.setItem(SceneStorageModule.localscene_prefix + "list", local_scenes);
 	},
 
+
+	//==========================================================================================
+	// cw: user did project->save, and was logged in -> save mem resources to server, then save scene JSON to server
+	//==========================================================================================
 	saveSceneInServer: function(on_complete, on_error, skip_alerts)
 	{
-		DriveModule.checkResourcesSaved( true, inner_save );
+		//cwx DriveModule.checkResourcesSaved( true, inner_save );
+		//DriveModule.autoSaveMissingResources();
+
+		//cw: at this point we know the folder the scene will be saved to - save the mem resources here first, then the scene.
+		DriveModule.checkResourcesSaved( true /*only scene*/, inner_save /*call when done*/, true /*silently*/, LS.RM.getFolder(LS.GlobalScene.fullpath) /*where to save*/ );
+		//inner_save();
 
 		function inner_save(){
 			//grab the scene info here 
