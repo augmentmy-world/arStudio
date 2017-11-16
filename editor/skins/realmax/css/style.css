@@ -914,7 +914,13 @@ div {
     font-size: 18px;
     background: #702cad;
 }
-
+#ResourceNotSaved{
+	max-height: 650px;
+	overflow: auto;
+}
+#ResourceNotSaved.litedialog .content button.litebutton{
+	background: #702cad;
+}
 #undo-history.litedialog .content button.litebutton{
 	background:#702cad; 
 }
@@ -2916,7 +2922,9 @@ textarea.code {
 #visorarea .litesplitbar {
 	background-color: #111;
 }
-
+#visorarea >.litearea:nth-child(1){
+	min-height: 200px;
+}
 #lowerpaneltabs .wtabcontent {
 	padding: 0;
 }
@@ -3408,11 +3416,7 @@ button.exit.litebutton {
     color: white;
 }
 #visortab {
-    overflow: hidden;
-    width: 100%;
-    height: calc(100% - 120px) !important;
     outline: none;
-    /*border: 1px solid rgba(150, 144, 154, 0.7);*/
 }
 #dialog_login {
 	width: 568px;
