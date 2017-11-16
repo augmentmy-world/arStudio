@@ -2922,7 +2922,9 @@ textarea.code {
 #visorarea .litesplitbar {
 	background-color: #111;
 }
-
+#visorarea >.litearea:nth-child(1){
+	min-height: 200px;
+}
 #lowerpaneltabs .wtabcontent {
 	padding: 0;
 }
