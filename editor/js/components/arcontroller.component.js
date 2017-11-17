@@ -346,6 +346,15 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
                 // console.log(transform);
 
                 // Apply transform to marker root
+                if(this.arController.orientation=="portrait")
+                {
+                    let rotMat = mat4.create();  
+                    mat4.identity(rotMat);  
+                    mat4.rotateZ(rotMat, rotMat, -1.5708);       // Rotate around z by 90°   
+                    mat4.multiply(transform, rotMat, transform);
+
+                }
+
                 let cameraGlobalMatrix = this.arCameraNode.transform.getGlobalMatrix();
                 let markerRootMatrix = mat4.create();
                 mat4.multiply(markerRootMatrix, cameraGlobalMatrix, transform);
@@ -379,10 +388,10 @@ ArControllerComponent.prototype._setupCameraForScreenOrientation = function (ori
         // let cameraProjectionMatrix = this.arController.getCameraMatrix();
         // mat4.rotateX(cameraProjectionMatrix, cameraProjectionMatrix, 3.14159);  // Rotate around x by 180°                  
 
-        let cameraProjectionMatrix = mat4.create();
-        mat4.copy(cameraProjectionMatrix, this.originalProjectionMatrix);                 
-        mat4.rotateZ(cameraProjectionMatrix, cameraProjectionMatrix, 1.5708);       // Rotate around z by 90°               
-        this.arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
+        //let cameraProjectionMatrix = mat4.create();
+        //mat4.copy(cameraProjectionMatrix, this.originalProjectionMatrix);                 
+        //mat4.rotateZ(cameraProjectionMatrix, cameraProjectionMatrix, 1.5708);       // Rotate around z by 90°               
+        //this.arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
     } else {
         this.arController.orientation = 'landscape';
         this.arController.videoWidth = this._video.videoWidth;
@@ -392,7 +401,7 @@ ArControllerComponent.prototype._setupCameraForScreenOrientation = function (ori
         // mat4.rotateX(cameraProjectionMatrix, cameraProjectionMatrix, 3.14159);                 
         // arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
 
-        this.arCamera.setCustomProjectionMatrix(this.originalProjectionMatrix);
+        //this.arCamera.setCustomProjectionMatrix(this.originalProjectionMatrix);
     }
 }
 
