@@ -172,20 +172,6 @@ ArControllerComponent.prototype.startAR = function() {
                         //style.zIndex = '9';
                     }
 
-                
-                    var ratioW = cw/vw;
-                    var ratioH = ch/vh;
-                    var ratioMax = Math.max(ratioW, ratioH);
-
-                    var vwScaled = ratioMax * vw;
-                    var vhScaled = ratioMax * vh;
-
-                    // Viewport, expressed in normalised canvas coordinates.
-                    left = ((cw - vwScaled) / 2.0);
-                    bottom = ((ch - vhScaled) / 2.0);
-                    w = vwScaled;
-                    h = vhScaled;
-
                 }
                 
                 const sceneRoot = LS.GlobalScene.root;
@@ -200,21 +186,20 @@ ArControllerComponent.prototype.startAR = function() {
                 LS.Renderer.enableCamera(this.arCamera);                
                 if(vw && vh)
                     this.resize(cw, ch, vw, vh);
+                
                 self = this;
                 window.addEventListener('resize', function() {
-                    var selectedCanvas = $(canvas[0]);
-                    if(selectedCanvas)
+                    var cvs = $(canvas[0]);
+                    var video = $('video');
+                    if(cvs)
                     {
-                        //todo: handle window/canvas resize
-                        self.arCamera.clear_color = true;
+                        //handle window/canvas resize
+                        var cw = cvs.width();
+                        var ch = cvs.height();
+                        var vw = video.width();                        
+                        var vh = video.height();
+                        self.resize(cw, ch, vw, vh);
 
-                        cw = selectedCanvas.width();
-                        ch = selectedCanvas.height();
-                        //gl.clearColor( 0.0,0.0,0.0,0.0 );
-                        self.arCamera.setViewportInPixels(0, 0, cw, ch);
-
-                        LS.Renderer.enableCamera(self.arCamera);                  
-                        self.resize(cw, ch, vw, vh);                  
                     }
 
                 }, false);                
@@ -259,6 +244,23 @@ ArControllerComponent.prototype.startAR = function() {
     });
 
 };
+
+ArControllerComponent.prototype.recalculateViewPort = function(cw,ch,vw,vh)
+{
+    var ratioW = cw/vw;
+    var ratioH = ch/vh;
+    var ratioMax = Math.max(ratioW, ratioH);
+
+    var vwScaled = ratioMax * vw;
+    var vhScaled = ratioMax * vh;
+
+    // Viewport, expressed in normalised canvas coordinates.
+    var left = ((cw - vwScaled) / 2.0);
+    var bottom = ((ch - vhScaled) / 2.0);
+    var w = vwScaled;
+    var h = vhScaled;
+    this.arCamera.setViewportInPixels(left, bottom, w, h);
+}
 
 ArControllerComponent.prototype.resize = function(cw, ch, vw, vh) {
     console.log('window resized');
