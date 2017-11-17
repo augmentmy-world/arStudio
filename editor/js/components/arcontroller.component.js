@@ -186,7 +186,7 @@ ArControllerComponent.prototype.startAR = function() {
                 LS.Renderer.enableCamera(this.arCamera);                
                 if(vw && vh)
                     this.resize(cw, ch, vw, vh);
-                
+
                 self = this;
                 window.addEventListener('resize', function() {
                     var cvs = $(canvas[0]);
@@ -390,10 +390,10 @@ ArControllerComponent.prototype._setupCameraForScreenOrientation = function (ori
         // let cameraProjectionMatrix = this.arController.getCameraMatrix();
         // mat4.rotateX(cameraProjectionMatrix, cameraProjectionMatrix, 3.14159);  // Rotate around x by 180°                  
 
-        //let cameraProjectionMatrix = mat4.create();
-        //mat4.copy(cameraProjectionMatrix, this.originalProjectionMatrix);                 
-        //mat4.rotateZ(cameraProjectionMatrix, cameraProjectionMatrix, 1.5708);       // Rotate around z by 90°               
-        //this.arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
+        let cameraProjectionMatrix = mat4.create();
+        mat4.copy(cameraProjectionMatrix, this.originalProjectionMatrix);                 
+        mat4.rotateZ(cameraProjectionMatrix, cameraProjectionMatrix, 1.5708);       // Rotate around z by 90°               
+        this.arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
     } else {
         this.arController.orientation = 'landscape';
         this.arController.videoWidth = this._video.videoWidth;
@@ -403,7 +403,7 @@ ArControllerComponent.prototype._setupCameraForScreenOrientation = function (ori
         // mat4.rotateX(cameraProjectionMatrix, cameraProjectionMatrix, 3.14159);                 
         // arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
 
-        //this.arCamera.setCustomProjectionMatrix(this.originalProjectionMatrix);
+        this.arCamera.setCustomProjectionMatrix(this.originalProjectionMatrix);
     }
 }
 
