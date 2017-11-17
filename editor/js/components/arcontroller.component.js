@@ -199,7 +199,6 @@ ArControllerComponent.prototype.startAR = function() {
                         var vw = video.width();                        
                         var vh = video.height();
                         self.resize(cw, ch, vw, vh);
-
                     }
 
                 }, false);                
@@ -245,27 +244,11 @@ ArControllerComponent.prototype.startAR = function() {
 
 };
 
-ArControllerComponent.prototype.recalculateViewPort = function(cw,ch,vw,vh)
-{
-    var ratioW = cw/vw;
-    var ratioH = ch/vh;
-    var ratioMax = Math.max(ratioW, ratioH);
-
-    var vwScaled = ratioMax * vw;
-    var vhScaled = ratioMax * vh;
-
-    // Viewport, expressed in normalised canvas coordinates.
-    var left = ((cw - vwScaled) / 2.0);
-    var bottom = ((ch - vhScaled) / 2.0);
-    var w = vwScaled;
-    var h = vhScaled;
-    this.arCamera.setViewportInPixels(left, bottom, w, h);
-}
-
 ArControllerComponent.prototype.resize = function(cw, ch, vw, vh) {
-    console.log('window resized');
+    console.log('window resized: cw:' + cw + ', ch:' + ch + ', vw:' + vw + ', vh:' + vh);
 
     if (!this.arController) return;
+
     this.arController.orientation = (vw < vh) ? 'portrait' : 'landscape';
 
     // Resize the 3D camera frustum (via the fov)
