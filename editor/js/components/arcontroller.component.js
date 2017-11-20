@@ -180,7 +180,7 @@ ArControllerComponent.prototype.startAR = function() {
                 this.arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
                 this.arCamera = new LS.Camera();
                 this.arCamera.setViewportInPixels(0, 0, cw, ch);
-                this.arCamera.background_color=[0, 0, 0, 1];
+                this.arCamera.background_color=[0, 0, 0, 0];
                 this.arCamera.clear_color = true; //We must clear buffer from first camera.
                 this.arCameraNode.addComponent(this.arCamera);
                 LS.Renderer.enableCamera(this.arCamera);                
