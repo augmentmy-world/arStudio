@@ -3407,8 +3407,9 @@ button.exit.litebutton {
     background-image: url(../imgs/close_29.png);
     color: white;
 }
-#visortab {
+#visortab, #ingametab {
     outline: none;
+    /*border: 1px solid rgba(150, 144, 154, 0.7);*/
 }
 #dialog_login {
 	width: 568px;

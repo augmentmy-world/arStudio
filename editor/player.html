@@ -30,13 +30,14 @@
 <script type="text/javascript" src="js/modules/collaborate.js"></script>
 <script type="text/javascript" src="js/components/arcontroller.component.js"></script>
 <script type="text/javascript" src="js/components/artrackable2d.component.js"></script>
-<script async src="js/modules/artoolkit.debug.js"></script>
-<script async src="js/modules/artoolkit.api.js"></script>
+<script src="js/modules/artoolkit.min.js"></script>
+<script src="js/modules/artoolkit.api.js"></script>
 
 <script type="text/javascript">
 	// LiteSCENE CODE *************************
 	var player = new LS.Player( {
-		alpha: false, //enables to have alpha in the canvas to blend with background
+        alpha: true, //enables to have alpha in the canvas to blend with background
+        premultipliedAlpha: false,
 		stencil: true,
 		redraw: true, //force to redraw
 		resources: "../liteserver/src/files/",

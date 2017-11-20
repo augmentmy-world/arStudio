@@ -1087,7 +1087,10 @@
 		var onError = configuration.onError || function(err) { console.error("ARController.getUserMedia", err); };
 
 		var video = document.createElement('video');
-
+		
+		// This is critical for iOS or the video initially goes fullscreen
+		video.setAttribute('playsinline', '');
+		
 		var initProgress = function() {
 			if (this.videoWidth !== 0) {
 				onSuccess(video);

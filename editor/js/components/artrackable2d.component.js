@@ -164,14 +164,18 @@ Object.defineProperty(ArTrackable2D.prototype,'visible', {
             else {
                 LEvent.trigger(LS.GlobalScene, "onTrackableTracking", this);                    
             }
-            this._root.childNodes[0].visible = true;        
+            this._root.getDescendants().forEach( (child) => {
+                child.visible = true;
+            }, this);
         }
         else{
             // Sanity: Make sure to only send the trackable lost event if trackable was visible inside the previous frame
             if( this._previousState !== undefined ) {
                 LEvent.trigger(LS.GlobalScene, "onTrackableLost", this);  
             }
-            this._root.childNodes[0].visible = false;
+            this._root.getDescendants().forEach( (child) => {
+                child.visible = false;
+            }, this);
         }
     }
 });

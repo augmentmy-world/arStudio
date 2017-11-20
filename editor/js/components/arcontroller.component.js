@@ -22,8 +22,24 @@ function ArControllerComponent( o )
     
     this.trackableDetectionMode = artoolkit.AR_TEMPLATE_MATCHING_COLOR_AND_MATRIX;
 
+    // Register orientation change listener to be informed on orientation change events
+    // https://stackoverflow.com/questions/1649086/detect-rotation-of-android-phone-in-the-browser-with-javascript
+    // Detect whether device supports orientationchange event, otherwise fall back to
+    // the resize event.
+    this.supportsOrientationChange = "onorientationchange" in window;
+    this.orientationEvent = this.supportsOrientationChange ? "orientationchange" : "resize";
+
+    window.addEventListener(this.orientationEvent, function() {
+        // Also window resize events are received here. Unfortunately if we don't have a running AR scene we don't have an arController and we see errors in the log
+        // because of that we check if there is an ARController object available
+        if(this.arController){
+            console.log("window.orientation " + window.orientation + " screen.orientation " + screen.orientation );
+            this._setupCameraForScreenOrientation(screen.orientation.type);
+        }
+    }.bind(this));
+
     if(o)
-    	this.configure(o);
+        this.configure(o);
 }
 
 ArControllerComponent.arCameraName = 'arcamera';
@@ -54,22 +70,33 @@ ArControllerComponent.prototype.onRemovedFromScene = function( scene ) {
 
 ArControllerComponent.prototype.startAR = function() {
     console.log("Start AR");
+    var self = null;
+
     this.running = true;
     let scene = LS.GlobalScene;
-
+    var maxARVideoSize = 320;
     // Read the marker-root from the LiteScene
 
     this._video = ARController.getUserMedia({
-        maxARVideoSize: 320, // do AR processing on scaled down video of this size
         facing: "environment",
         onSuccess: function(stream) {
             console.log('got video', stream);
-            var cameraPara = new ARCameraParam(this.cameraCalibrationFile);
-            cameraPara.onload = function() {
+            this.cameraPara = new ARCameraParam(this.cameraCalibrationFile);
+            this.cameraPara.onload = function(param) {
+                var maxSize = maxARVideoSize || Math.max(stream.videoWidth, stream.videoHeight);
+				var f = maxSize / Math.max(stream.videoWidth, stream.videoHeight);
+				var w = f * stream.videoWidth;
+				var h = f * stream.videoHeight;
+				if (stream.videoWidth < stream.videoHeight) {
+					var tmp = w;
+					w = h;
+					h = tmp;
+				}
                 
-                this.arController = new ARController(this._video.videoWidth, this._video.videoHeight, cameraPara);
+                this.arController = new ARController(w, h, this.cameraPara);        
+                this.arController.image = stream;
+
                 this.arController.setDefaultMarkerWidth(this.defaultMarkerWidth);
-                console.log('ARController ready for use', this.arController);
                 
                 // FIXME: In Player-Mode the detection Mode is undefined 
                 this.arController.setPatternDetectionMode( (this.trackableDetectionMode || 3) );     
@@ -78,11 +105,6 @@ ArControllerComponent.prototype.startAR = function() {
                 // Whenever ARController#process detects a marker, it fires a getMarker event
                 // with the marker details.
                 this.arController.addEventListener('getMarker',this.onTrackableFound.bind(this));         
-
-                // Camera matrix is used to define the “perspective” that the camera would see.
-                // The camera matrix returned from arController.getCameraMatrix() is already the OpenGLProjectionMatrix
-                // LiteScene supports setting a custom projection matrix but an update of LiteScene is needed to do that.
-                //FIX ME: arCamera.setCustomProjectionMatrix(arController.getCameraMatrix());
 
                 this._arTrackable2DList.forEach(trackable2D => { 
                     if(trackable2D._trackableType === trackable2D.trackableTypes[1])
@@ -94,115 +116,103 @@ ArControllerComponent.prototype.startAR = function() {
                     }
                 });
 
-                if(this.initVideo)
-                {
-                    if((this._video.videoWidth>0)&&(this._video.videoHeight>0))
-                    {
-                        const sceneRoot = LS.GlobalScene.root;
-
-                        let arBackgroundCameraNode = new LS.SceneNode(ArControllerComponent.arBackgroundCamera);
-                        let arBackgroundCamera = new LS.Camera();
-                        arBackgroundCamera.type = 2; //Apply orthographic projection to this camera.
-                        arBackgroundCameraNode.transform.rotate(180, [0,1,0]);
-                        arBackgroundCameraNode.addComponent(arBackgroundCamera);
-                        sceneRoot.addChild(arBackgroundCameraNode);
-
-                        let arBackgroundNode = new LS.SceneNode(ArControllerComponent.arBackground);
-                        sceneRoot.addChild(arBackgroundNode, 0);
-
-                        //Attached ARControllerComponent to scene root
-                        const arControllerComponent = new ArControllerComponent();
-                        sceneRoot.addComponent(arControllerComponent, 0);
-
-                        //texture = initTexture(gl);
-                        //let textureVideo = GL.Texture.fromVideo(video);
-                        var background  = new LS.Components.GeometricPrimitive();
-                        background.geometry = LS.Components.GeometricPrimitive.PLANE;
-                        //background.size = 100;
-                        //Translate node so that it is positioned on the first background camera.
-                        arBackgroundNode.material = new LS.StandardMaterial({flags:{ignore_lights:true}});
-                        arBackgroundNode.addComponent(background);
-                        arBackgroundNode.setPropertyValue("translate.Z", 100);
-                        arBackgroundNode.setPropertyValue("xrotation", -90);
-                        arBackgroundNode.setPropertyValue("yrotation", 180);
-                        arBackgroundNode.transform.scale(6.25, 1, 5);
-
-
-                        var videoPlayer = new LS.Components.VideoPlayer();
-                        videoPlayer.video = this._video;
-                        videoPlayer.render_mode = LS.Components.VideoPlayer.TO_MATERIAL;
-                        //videoPlayer.src = "http://localhost:8080/big_buck_bunny.mp4";
-                        arBackgroundNode.addComponent(videoPlayer);
-
-                        //Add the AR-Camera to the scene
-                        let arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
-                        let arCamera = new LS.Camera();
-                        arCamera.background_color=[0, 0, 0, 0];
-                        arCamera.clear_color = false; //Do not clear buffer from first camera.
-                        arCameraNode.addComponent(arCamera);
-                        sceneRoot.addChild(arCameraNode, 0);
-
-                        this.initVideo= false;
-                    }
-                }
+                var left = 0;
+                var bottom = 0;
+                var w = 1;
+                var h = 1;
+                var cw = 0;
+                var ch = 0;                
+                var vw = 0;
+                var vh = 0;
 
                 if(this.initVideo)
                 {
-                    if((this._video.videoWidth>0)&&(this._video.videoHeight>0))
+                    var style = stream.style;
+                    style.position = 'absolute';
+                    style.top = '50%';
+                    style.left = '50%';
+                    style.width = 'auto';
+                    style.height = 'auto';
+                    style.minWidth = '100%';
+                    style.minHeight = '100%';
+                    style.backgroundSize = 'cover';
+                    style.overflow = 'hidden';
+                    style.transform = 'translate(-50%, -50%)';
+                    style.zIndex = '1';
+
+                    var canvas = $('canvas');
+
+                    vw = stream.videoWidth;
+                    vh = stream.videoHeight;
+
+                    if(canvas.length==1)
                     {
-                        const sceneRoot = LS.GlobalScene.root;
-
-                        let arBackgroundCameraNode = new LS.SceneNode(ArControllerComponent.arBackgroundCamera);
-                        let arBackgroundCamera = new LS.Camera();
-                        arBackgroundCamera.type = 2; //Apply orthographic projection to this camera.
-                        arBackgroundCameraNode.transform.rotate(180, [0,1,0]);
-                        arBackgroundCameraNode.addComponent(arBackgroundCamera);
-                        sceneRoot.addChild(arBackgroundCameraNode);
-
-                        let arBackgroundNode = new LS.SceneNode(ArControllerComponent.arBackground);
-                        sceneRoot.addChild(arBackgroundNode, 0);
-
-                        //Attached ARControllerComponent to scene root
-                        const arControllerComponent = new ArControllerComponent();
-                        sceneRoot.addComponent(arControllerComponent, 0);
-
-                        //texture = initTexture(gl);
-                        //let textureVideo = GL.Texture.fromVideo(video);
-                        var background  = new LS.Components.GeometricPrimitive();
-                        background.geometry = LS.Components.GeometricPrimitive.PLANE;
-                        //background.size = 100;
-                        //Translate node so that it is positioned on the first background camera.
-                        arBackgroundNode.material = new LS.StandardMaterial({flags:{ignore_lights:true}});
-                        arBackgroundNode.addComponent(background);
-                        arBackgroundNode.setPropertyValue("translate.Z", 100);
-                        arBackgroundNode.setPropertyValue("xrotation", -90);
-                        arBackgroundNode.setPropertyValue("yrotation", 180);
-                        arBackgroundNode.transform.scale(6.25, 1, 5);
-
-
-                        var videoPlayer = new LS.Components.VideoPlayer();
-                        videoPlayer.video = this._video;
-                        videoPlayer.render_mode = LS.Components.VideoPlayer.TO_MATERIAL;
-                        //videoPlayer.src = "http://localhost:8080/big_buck_bunny.mp4";
-                        arBackgroundNode.addComponent(videoPlayer);
-
-                        //Add the AR-Camera to the scene
-                        let arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
-                        let arCamera = new LS.Camera();
-                        arCamera.background_color=[0, 0, 0, 0];
-                        arCamera.clear_color = false; //Do not clear buffer from first camera.
-                        arCameraNode.addComponent(arCamera);
-                        sceneRoot.addChild(arCameraNode, 0);
-
-                        this.initVideo= false;
+                        //View page is the player
+                        var selectedCanvas = $(canvas[0]);
+                        selectedCanvas.before(stream);
+                        cw = selectedCanvas.width();
+                        ch = selectedCanvas.height();
+                        selectedCanvas.css("z-index",99);
+                        selectedCanvas.css("position","absolute");
                     }
+                    else if(canvas.length>1)
+                    {
+                        //View page is the editor.
+                        var gameTab = $("#ingametab");
+                        gameTab.append(stream);
+
+                        var selectedCanvas = $(canvas[0]);
+                        if(selectedCanvas)
+                        {
+                            cw = selectedCanvas.width();
+                            ch = selectedCanvas.height();
+                            selectedCanvas.css("z-index",99);
+                            selectedCanvas.css("position","absolute");
+                        }
+                        //style.zIndex = '9';
+                    }
+
                 }
+                
+                const sceneRoot = LS.GlobalScene.root;
+     
+                //Add the AR-Camera to the scene
+                this.arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
+                this.arCamera = new LS.Camera();
+                this.arCamera.setViewportInPixels(0, 0, cw, ch);
+                this.arCamera.background_color=[0, 0, 0, 0];
+                this.arCamera.clear_color = false; //Do not clear buffer from first camera.
+                this.arCameraNode.addComponent(this.arCamera);
+                LS.Renderer.enableCamera(this.arCamera);                
+                if(vw && vh)
+                    this.resize(cw, ch, vw, vh);
+
+                self = this;
+                window.addEventListener('resize', function() {
+                    var cvs = $(canvas[0]);
+                    var video = $('video');
+                    if(cvs)
+                    {
+                        //handle window/canvas resize
+                        var cw = cvs.width();
+                        var ch = cvs.height();
+                        var vw = video.width();                        
+                        var vh = video.height();
+                        self.resize(cw, ch, vw, vh);
+                    }
+
+                }, false);                
+
+                sceneRoot.addChild(this.arCameraNode, 0);
+                LS.GlobalScene.root.getComponent(LS.Camera).background_color=[0, 0, 0, 0];
+                this._setupCameraForScreenOrientation(screen.orientation.type);                
 
                 // On each frame, detect markers, update their positions and
                 // render the frame on the renderer.
                 var tick = function() {
                     if(!this.running)
                         return;
+
                     requestAnimationFrame(tick);
                     
                     // Hide the marker, as we don't know if it's visible in this frame.
@@ -217,7 +227,7 @@ ArControllerComponent.prototype.startAR = function() {
 
                     // If after the processing trackable2D.currentState is still undefined and the previous state wasn't undefined we assume that the marker was not visible within that frame
                     this._arTrackable2DList.forEach(arTrackable => {
-                        if( arTrackable._currentState === undefined && arTrackable._previousState !== undefined){
+                        if( arTrackable._currentState === undefined){
                             arTrackable.visible = false;
                         }
                     });
@@ -231,7 +241,33 @@ ArControllerComponent.prototype.startAR = function() {
             }.bind(this);
         }.bind(this)
     });
+
 };
+
+ArControllerComponent.prototype.resize = function(cw, ch, vw, vh) {
+    console.log('window resized: cw:' + cw + ', ch:' + ch + ', vw:' + vw + ', vh:' + vh);
+
+    if (!this.arController) return;
+
+    this.arController.orientation = (vw < vh) ? 'portrait' : 'landscape';
+
+    // Resize the 3D camera frustum (via the fov)
+    var camMatrix = this.arController.getCameraMatrix();
+    var fovy = 2 * Math.atan(1 / camMatrix[5]) * 180 / Math.PI;
+
+
+    if (vw < vh) {
+        this.arCamera.fov = Math.abs(fovy) * (vh / vw);
+    } else {
+        if (cw / ch > vw / vh) {
+            // Video Y FOV is limited so we must limit 3D camera FOV to match
+            this.arCamera.fov = Math.abs(fovy) * (vw / vh) / (cw / ch);
+        } else {
+            // Video Y FOV is limited so we must limit 3D camera FOV to match
+            this.arCamera.fov = Math.abs(fovy);
+        }
+    }
+}
 
 ArControllerComponent.prototype.stopAR = function(){
     console.log("Stop AR");    
@@ -240,11 +276,11 @@ ArControllerComponent.prototype.stopAR = function(){
         this.arController.dispose();
     if(this._video !== undefined){
         this._video.srcObject.getTracks()[0].stop();
+        this._video.remove();
     }
 
-    var arCamera = LS.GlobalScene.getNode(ArControllerComponent.arCameraName);
-    if(arCamera)
-        LS.GlobalScene.root.removeChild(arCamera);
+    if(this.arCamera)
+        LS.GlobalScene.root.removeChild(this.arCamera);
     
     var arBackgroundCamera = LS.GlobalScene.getNode(ArControllerComponent.arBackgroundCamera);
     if(arBackgroundCamera)
@@ -281,7 +317,7 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
     }
     
     if (trackableId !== -1) {
-        // console.log("saw a trackable with id", trackableId);
+        console.log("saw a trackable with id", trackableId);
 
         this._arTrackable2DList.forEach(arTrackable => {
             if(trackableId === arTrackable.trackableId) {
@@ -295,11 +331,18 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
                 // console.log(transform);
 
                 // Apply transform to marker root
-                scene_arCameraNode= LS.GlobalScene.getNodeByName( ArControllerComponent.arCameraName );
+                if(this.arController.orientation=="portrait")
+                {
+                    let rotMat = mat4.create();  
+                    mat4.identity(rotMat);  
+                    mat4.rotateZ(rotMat, rotMat, -1.5708);       // Rotate around z by 90°   
+                    mat4.multiply(transform, rotMat, transform);
 
-                let cameraGlobalMatrix = scene_arCameraNode.transform.getGlobalMatrix();
+                }
+
+                let cameraGlobalMatrix = this.arCameraNode.transform.getGlobalMatrix();
                 let markerRootMatrix = mat4.create();
-                mat4.multiply(markerRootMatrix,cameraGlobalMatrix,transform);
+                mat4.multiply(markerRootMatrix, cameraGlobalMatrix, transform);
                 let outQuat = quat.create();
                 quat.fromMat4(outQuat,markerRootMatrix);
                 outQuat[0]*=-1;
@@ -309,3 +352,41 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
         });
     }
 };
+
+ArControllerComponent.prototype._setupCameraForScreenOrientation = function (orientation) {
+    
+    // Camera matrix is used to define the “perspective” that the camera would see.
+    // The camera matrix returned from arController.getCameraMatrix() is already the OpenGLProjectionMatrix
+    // LiteScene supports setting a custom projection matrix but an update of LiteScene is needed to do that.
+
+    //Save the original projection matrix so that there is a reference
+    if(this.originalProjectionMatrix === undefined) {
+        this.originalProjectionMatrix = this.arCamera.getProjectionMatrix();
+    }
+
+    if ( orientation.includes('portrait') ) {
+        this.arController.orientation = 'portrait';
+        this.arController.videoWidth = this._video.videoHeight;
+        this.arController.videoHeight = this._video.videoWidth;
+
+        // TODO once we have proper handling of calibration file we use this
+        // let cameraProjectionMatrix = this.arController.getCameraMatrix();
+        // mat4.rotateX(cameraProjectionMatrix, cameraProjectionMatrix, 3.14159);  // Rotate around x by 180°                  
+
+        //let cameraProjectionMatrix = mat4.create();
+        //mat4.copy(cameraProjectionMatrix, this.originalProjectionMatrix);                 
+        //mat4.rotateZ(cameraProjectionMatrix, cameraProjectionMatrix, 1.5708);       // Rotate around z by 90°               
+        //this.arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
+    } else {
+        this.arController.orientation = 'landscape';
+        this.arController.videoWidth = this._video.videoWidth;
+        this.arController.videoHeight = this._video.videoHeight;
+        // TODO: once we have proper handling of calibration file we use this
+        // let cameraProjectionMatrix = this.arController.getCameraMatrix();
+        // mat4.rotateX(cameraProjectionMatrix, cameraProjectionMatrix, 3.14159);                 
+        // arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
+
+        //this.arCamera.setCustomProjectionMatrix(this.originalProjectionMatrix);
+    }
+}
+

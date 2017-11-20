@@ -103,6 +103,10 @@ var SceneStorageModule = {
 				LS.GlobalScene.clear();
 				LS.Renderer.reset();
 			} else {
+                LS.ResourcesManager.reset();
+				LS.GlobalScene.clear();
+				LS.Renderer.reset();
+                LS.GlobalScene.load('data/arTemplate.scene.json');
 				//load ar project template
 			}
 			notif.style.display="none";
