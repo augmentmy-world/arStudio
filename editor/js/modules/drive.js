@@ -961,7 +961,7 @@ var DriveModule = {
 			if(options.extension)
 			{
 				var ext = LS.RM.getExtension( filename );
-				if(ext != options.extension)
+				if(ext == "")
 					filename += "." + options.extension;
 			}
 

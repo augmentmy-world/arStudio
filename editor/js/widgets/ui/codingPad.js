@@ -254,7 +254,7 @@ CodingPadWidget.prototype.assignCurrentCode = function( skip_events )
     var text_content = this.editor.getValue();
     if( info.lang === "typescript"){
         let result = ts.transpileModule(text_content, { compilerOptions: { module: ts.ModuleKind.CommonJS } });
-        text_content = result.outputText;
+        //text_content = result.outputText;
     }
 
 	info.pos = this.editor.getCursor();
