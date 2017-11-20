@@ -169,7 +169,6 @@ ArControllerComponent.prototype.startAR = function() {
                             selectedCanvas.css("z-index",99);
                             selectedCanvas.css("position","absolute");
                         }
-                        //style.zIndex = '9';
                     }
 
                 }
