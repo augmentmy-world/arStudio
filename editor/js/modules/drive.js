@@ -1671,7 +1671,7 @@ var old_name = new_name;
 	{
 
 		// Check what to save
-		var missing = this.getResourcesNotSaved(true);
+		var missing = this.getResourcesNotSaved(false);
 		if(!missing)
 		{
 			// Nothing to save
@@ -1729,7 +1729,7 @@ var old_name = new_name;
 
 			var files_folder = pack_folder;
 
-			var dialog = new LiteGUI.Dialog( { title:"Resources not saved", closable: true, draggable: true, width: 400 });
+			var dialog = new LiteGUI.Dialog( {id:"ResourceNotSaved", title:"Resources not saved", closable: true, draggable: true, width: 400 });
 			var widgets = new LiteGUI.Inspector();
 			widgets.on_refresh = inner_refresh;
 			dialog.add( widgets );
