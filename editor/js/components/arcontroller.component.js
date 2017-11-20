@@ -251,6 +251,7 @@ ArControllerComponent.prototype.resize = function(cw, ch, vw, vh) {
     this.arController.orientation = (vw < vh) ? 'portrait' : 'landscape';
 
     // Resize the 3D camera frustum (via the fov)
+    if(this.arController.camera_mat == null) return;
     var camMatrix = this.arController.getCameraMatrix();
     var fovy = 2 * Math.atan(1 / camMatrix[5]) * 180 / Math.PI;
 
