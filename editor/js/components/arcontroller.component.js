@@ -152,7 +152,7 @@ ArControllerComponent.prototype.startAR = function() {
                         selectedCanvas.before(stream);
                         cw = selectedCanvas.width();
                         ch = selectedCanvas.height();
-                        selectedCanvas.css("z-index",99);
+                        selectedCanvas.css("z-index", 2);
                         selectedCanvas.css("position","absolute");
                     }
                     else if(canvas.length>1)
@@ -166,7 +166,7 @@ ArControllerComponent.prototype.startAR = function() {
                         {
                             cw = selectedCanvas.width();
                             ch = selectedCanvas.height();
-                            selectedCanvas.css("z-index",99);
+                            selectedCanvas.css("z-index", 2);
                             selectedCanvas.css("position","absolute");
                         }
                     }
@@ -180,7 +180,7 @@ ArControllerComponent.prototype.startAR = function() {
                 this.arCamera = new LS.Camera();
                 this.arCamera.setViewportInPixels(0, 0, cw, ch);
                 this.arCamera.background_color=[0, 0, 0, 0];
-                this.arCamera.clear_color = false; //Do not clear buffer from first camera.
+                this.arCamera.clear_color = true; //Do not clear buffer from first camera.
                 this.arCameraNode.addComponent(this.arCamera);
                 LS.Renderer.enableCamera(this.arCamera);                
                 if(vw && vh)
