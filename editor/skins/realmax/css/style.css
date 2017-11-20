@@ -410,9 +410,15 @@
 #files-tree{
 	margin-bottom: 10px;
 }
-#paneltabs{
-	padding-bottom: 30px;
+#paneltabs .wtabcontent.wtabcontent-Inspector{
+	height: 100% !important;
 }
+#paneltabs .inspector_widget .inspector{
+	height: 100% !important;
+}
+/* #paneltabs{
+	padding-bottom: 30px;
+} */
 #paneltabs .inspector_widget .wsection.notitle .widget button.litebutton{
 width: 100%;
 }
@@ -827,7 +833,7 @@ div {
 
 .litepanel .content {
 	/*overflow: auto; */
-	height: calc( 100% - 20px );
+	height: calc( 100% - 41px );
 }
 
 
@@ -3192,44 +3198,6 @@ textarea.code {
 	opacity: 0.5;
 }
 
-
-/*  PLAYING */
-.playing #worktabs {
-	background-color: #101010;
-}
-
-.playing .litepanel, .playing .litedialog {
-	background: #111;
-}
-
-.playing .inspector {
-	color: #545454;
-}
-
-.playing .inspector .wtitle, .playing .inspector .wsectiontitle
-{
-	color: #545454;
-	background-color: #252525;
-}
-
-.playing .inspector .wsectioncontent  {
-	 background-color: #111;
-}
-
-.playing .inspector .separator  {
-	 border-top-color: #151515;
-	 border-bottom-color: #151515;
-}
-
-.playing .keyframe_icon, .playing .inspector button, .playing .inspector .inputfield, .playing .inspector .color {
-	opacity: 0.5;
-}
-
-.playing .inspector:not(.one_line) .widget.even {
-    background-color: transparent;
-}
-
-
 .code-footer.error {
 	background-color: #621111 !important;
     color: #FAA;
@@ -3415,9 +3383,8 @@ button.exit.litebutton {
     background-image: url(../imgs/close_29.png);
     color: white;
 }
-#visortab, #ingametab {
+#visortab {
     outline: none;
-    /*border: 1px solid rgba(150, 144, 154, 0.7);*/
 }
 #dialog_login {
 	width: 568px;
