@@ -61,7 +61,11 @@ var ImporterModule  = {
 			ImporterModule.loadFileToMemory( file, ImporterModule.showImportResourceDialog.bind( ImporterModule ) );
 	},
 
-	// Launched when something is drag&drop inside the canvas (could be files, links, or elements of the interface) 
+
+
+	//================================================================================================================
+	// Launched when something is drag&dropped inside the canvas (could be files, links, or elements of the interface) 
+	//================================================================================================================
 	onItemDrop: function (evt, options)
 	{
 		var that = this;
@@ -81,6 +85,18 @@ var ImporterModule  = {
 		//var files = evt.dataTransfer.files;
 		var files = this.getFilesFromEvent( evt, options );
 		//console.log("Files found: ", files.length, "Items:",  evt.dataTransfer.items.length, " Files:",  evt.dataTransfer.files.length );
+
+		// cw: if trying to drag anything into the scene, they must first have a scene created or loaded...
+		// cw: this means (for now) people have to also SAVE their newly created scene.
+		// cw: later we can alsways assume people have a 'current scene'
+		//if (!LS.GlobalScene.extra || !LS.GlobalScene.extra.folder)
+		//{
+		//	LiteGUI.alert("Please load a scene first!");
+		//	return;
+		//}
+
+
+		//cw: if there WERE files, this means they came from outside the browser, ie files from the machine itself.
 		if(files && files.length)
 		{
 
@@ -274,12 +290,37 @@ var ImporterModule  = {
 			reader.readAsArrayBuffer(file);
 	},
 
+
+	//cw: comes here when you drag something into the ASSETS panel.
+	// imports it (and subresources).. I assume so it can make the preview.
+	// Then it uploads the file and the preview.
 	importFile: function( file, on_complete, options )
 	{
 		this.loadFileToMemory( file, function(file,options){
-			var res = ImporterModule.processResource( file.name, file, options, on_complete );
-			if(res && on_complete)
+			//cw: set the base path for loading subresources to the  destination directory for the upload
+			//cw: we also need to make sure that subresources are uploaded FIRST, and so we sort them when doing a multi-upload
+			//cw: alternately we will have to remove the assets we just loaded
+			//cw: the reason is that it FAILS loading the subresources on the initial import, then when DND into the scene
+			//cw: it IGNORES those resources because they have already failed.
+			//cw: soln#2 is to clear all resources that have failed so they get re-tried...
+
+
+		//	var thisfullpath = file.name;
+			
+		//	var thispath = thisfullpath.lastIndexOf("/");
+		//	if (thispath!=-1)
+		//	{
+		//		resource_base_path = thisfullpath.substr(0,thispath)+"/";
+		//	}
+
+
+
+			var res = ImporterModule.processResource( file.name, file, options, on_complete ); 
+
+			
+			if(res && on_complete) 	
 				on_complete(res);
+			
 		},options);
 	},
 
@@ -430,9 +471,8 @@ var ImporterModule  = {
 
 			inspector.addTitle("Destination" );
 			inspector.addFolder("Save to folder", folder || "", { callback: function(v){
-				folder = v;
+				folder = v;//path
 			}});
-
 			inspector.addInfo("You can also drag files here directly");
 
 			if(file)
@@ -450,6 +490,7 @@ var ImporterModule  = {
 				inspector.addCheckbox("Optimize data", import_options.optimize_data, { callback: function(v) { import_options.optimize_data = v; }});
 
 				var info = LS.Formats.getFileFormatInfo( file.name );
+
 				if(!info)
 				{
 					inspector.addTitle("Unknown resource");
@@ -499,14 +540,18 @@ var ImporterModule  = {
 		function inner_import( button, callback )
 		{
 			if(button == imp_and_insert)
-				insert_into = true;
-
+				insert_into = true;			
 			if(!file)
 				return LiteGUI.alert("No file imported");
 
 			filename = inspector.getValue("Filename");
-			filename = filename.replace(/ /g,"_"); //no spaces in names			
-
+			filefolder = inspector.getValue("Save to folder");
+		
+			filename = filename.replace(/ /g,"_"); //no spaces in names	
+			filefolder = filefolder.replace(/ /g,"_");
+				if(!filefolder){
+					return LiteGUI.alert("Please select the path to save");
+				}
 			for(var i in options)
 				import_options[i] = options[i];
 
@@ -541,11 +586,11 @@ var ImporterModule  = {
 				if(on_complete)
 					on_complete();
 			}
-
+			
 			//we do this afterwards because saving it could change the name
 			if(insert_into)
 			{
-				import_options.mesh_action = ImporterModule.preferences.mesh_action;
+				import_options.mesh_action = ImporterModule.preferences.mesh_action;//origin
 				import_options.texture_action = ImporterModule.preferences.texture_action;
 				DriveModule.onInsertResourceInScene( resource, import_options );
 			}
@@ -573,6 +618,9 @@ var ImporterModule  = {
 	processResource: function ( name, file, options, on_complete )
 	{ 
 		options = options || {};
+
+		//var respath = resource_item.resource.unit + "/" +resource_item.resource.folder+"/"
+		if (typeof resource_base_path == "undefined") resource_base_path=""; // cw:added
 
 		if(!file.data)
 			return console.error("File data missing, use FileReader");

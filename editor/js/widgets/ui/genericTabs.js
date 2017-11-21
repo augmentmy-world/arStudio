@@ -1,7 +1,7 @@
 function GenericTabsWidget( options )
 {
 	this.root = null;
-	this.supported_widgets = [{title:"Assets",class:ResourcesPanelWidget}, {title:"Coding", class:CodingTabsWidget}, {title:"Graph", class:GraphWidget}];
+	this.supported_widgets = [{title:"Assets",class:ResourcesPanelWidget}, {title:"Coding", class:CodingTabsWidget}, {title:"Graph", class:GraphWidget}, {title:"Console", class:ConsoleWidget}];
 	this.init(options);
 
 	//helful

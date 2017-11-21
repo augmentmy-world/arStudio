@@ -98,7 +98,6 @@
 
 .inspector .icon {
 	margin-right: 4px;
-	display: none;
 }
 
 .inspector .wcontent .icon {
@@ -399,8 +398,41 @@
 }
 
 .inspector .wcontent button {
+ 	
 }
-
+#areatext{
+	border-top: 1px solid white;
+}
+#select-folder-dialog.litedialog .panel-footer button{
+	width: 100%;
+	background: #702cad;
+}
+#files-tree{
+	margin-bottom: 10px;
+}
+#paneltabs .wtabcontent.wtabcontent-Inspector{
+	height: 100% !important;
+}
+#paneltabs .inspector_widget .inspector{
+	height: 100% !important;
+}
+/* #paneltabs{
+	padding-bottom: 30px;
+} */
+#paneltabs .inspector_widget .wsection.notitle .widget button.litebutton{
+width: 100%;
+}
+#paneltabs .inspector_widget .widget button.litebutton img{
+	width: 10px;
+	height: 12px;
+}
+#dialog_components.litedialog .content button.litebutton.single{
+	background: #702cad;
+} 
+#dialog_components .inspector .icon{
+	width: 12px;
+	margin-right: 4px;
+}
 .inspector .widget.big button, .litepanel button.big {
 	font-size: 2em;
 	/*
@@ -631,6 +663,11 @@ div {
 #dialog_texture_sampler.litedialog .inspector .widget .wname{
 	display: block;
 }
+#dialog_texture_sampler.litedialog .panel-footer button{
+	width: 45%;
+	font-size: 18px;
+	background: #702cad;
+}
 .litepanel, .litedialog {
 	background-color: #423d47;
 	box-sizing: border-box;
@@ -657,6 +694,7 @@ div {
 	text-align: left;
 	padding-left: 16px;
 	background-color: #2c2531;
+	border-bottom: 1px solid #222;
     /*background-image: linear-gradient(right , #555, #333);
     background-image: -moz-linear-gradient(right , #555, #333);
     background-image: -webkit-linear-gradient(right , #555, #333);*/
@@ -795,7 +833,7 @@ div {
 
 .litepanel .content {
 	/*overflow: auto; */
-	height: calc( 100% - 20px );
+	height: calc( 100% - 41px );
 }
 
 
@@ -844,7 +882,7 @@ div {
 .litedialog .content .inspector.one_line .widget{padding: 0;}
 
 .litedialog .inspector .widget .wname {
-	min-width: 230px;
+	min-width: 130px;
 	margin-bottom: 10px;
 }
 #select-resource-dialog .inspector .widget .wname {
@@ -879,10 +917,18 @@ div {
 .litedialog .content button.litebutton.single {
     width: 100%;
     text-align: center;
-    font-size: 12px;
+    font-size: 18px;
+    background: #702cad;
 }
-#dialog_materials.litedialog .content button.litebutton.single{
-	background:#96909a;
+#ResourceNotSaved{
+	max-height: 650px;
+	overflow: auto;
+}
+#ResourceNotSaved.litedialog .content button.litebutton{
+	background: #702cad;
+}
+#undo-history.litedialog .content button.litebutton{
+	background:#702cad; 
 }
 .litemodalbg {
 	position: absolute;
@@ -1333,7 +1379,7 @@ a:hover {
 	width: 265px;
 	background-color: #423d47;
 	box-shadow: 0 0 3px black;
-	z-index: 10;
+	z-index: 100;
 }
 
 .litemenu-entry, .litemenu-title {
@@ -1413,6 +1459,8 @@ a:hover {
 	margin-top: 2px;
 	margin-left: 2px;
 	margin-right: 4px;
+	width: 20px;
+	vertical-align: middle;
 }
 
 .litecontextmenu .litemenu-entry {
@@ -2456,7 +2504,7 @@ button.wcombobutton.selected {
 
 .editor{
 	font-family: "Microsoft Yahei", sans-serif;
-    min-width: 1200px;
+    min-width: 1300px;
     overflow: auto;
 }
 .icon { font-family: Lucida Sans Unicode }
@@ -2723,7 +2771,10 @@ li.ltreeitem:nth-child(even) {
 #settings-widgets-area .content {
 	padding-left: 20px;
 }
-
+#codearea .liteareacontent canvas{
+	width:100%;
+	height: 100%;
+}
 /* Tools inside the work area */
 
 #canvas-tools {
@@ -2848,6 +2899,12 @@ textarea.code {
 	display: block;
 	border-bottom: 1px solid #666;
 }
+#side_panel .inspector .icon img{
+	width: 14px;
+	margin-top: 2px;
+	margin-left: 2px;
+	vertical-align: middle;
+}
 .wsection.error .wsectiontitle {
 	background-color: #A33 !important;
 }
@@ -2874,7 +2931,9 @@ textarea.code {
 #visorarea .litesplitbar {
 	background-color: #111;
 }
-
+#visorarea >.litearea:nth-child(1){
+	min-height: 200px;
+}
 #lowerpaneltabs .wtabcontent {
 	padding: 0;
 }
@@ -3142,44 +3201,6 @@ textarea.code {
 	opacity: 0.5;
 }
 
-
-/*  PLAYING */
-.playing #worktabs {
-	background-color: #101010;
-}
-
-.playing .litepanel, .playing .litedialog {
-	background: #111;
-}
-
-.playing .inspector {
-	color: #545454;
-}
-
-.playing .inspector .wtitle, .playing .inspector .wsectiontitle
-{
-	color: #545454;
-	background-color: #252525;
-}
-
-.playing .inspector .wsectioncontent  {
-	 background-color: #111;
-}
-
-.playing .inspector .separator  {
-	 border-top-color: #151515;
-	 border-bottom-color: #151515;
-}
-
-.playing .keyframe_icon, .playing .inspector button, .playing .inspector .inputfield, .playing .inspector .color {
-	opacity: 0.5;
-}
-
-.playing .inspector:not(.one_line) .widget.even {
-    background-color: transparent;
-}
-
-
 .code-footer.error {
 	background-color: #621111 !important;
     color: #FAA;
@@ -3365,9 +3386,8 @@ button.exit.litebutton {
     background-image: url(../imgs/close_29.png);
     color: white;
 }
-#visortab, #ingametab {
+#visortab {
     outline: none;
-    /*border: 1px solid rgba(150, 144, 154, 0.7);*/
 }
 #dialog_login {
 	width: 568px;
@@ -3448,6 +3468,7 @@ button.exit.litebutton {
 #dialog_save_scene .info_content.wcontent  .litebutton,#dialog_save_scene .content .widget button.litebutton.single{
 	background: #999;
 	outline:none;
+	font-size: 18px;
 }
 
 #dialog_save_scene #snapshot {
@@ -3463,7 +3484,12 @@ button.exit.litebutton {
     background: #423d47;
     line-height: 15px;
 }
-
+#dialog_save_scene.litedialog .inspector .widget .wname{
+	width: 220px;
+}
+#dialog_load_scene.litedialog .content button.litebutton{
+	 background: #999;
+}
 #select-resource-dialog {
 	width: 800px;
 	height: 541px;
@@ -3611,8 +3637,8 @@ button.exit.litebutton {
 
 /* import file dialog */
 #dialog_import_resource {
-    max-height: 600px;
-    overflow-y: scroll;
+    height: 435px;
+    overflow-y: auto;
     width: 580px;
 }
 #dialog_import_resource .wtitle .text{

@@ -15,16 +15,12 @@ var SceneStorageModule = {
 		
 		menubar.add("Project/New Project", {callback: this.onNewProject.bind(this) });
 
-		menubar.add("Project/Load Project/From Server", { callback: this.showLoadSceneFromServerDialog.bind(this) });
-		menubar.add("Project/Load Project/Local", { callback: this.showLoadLocalSceneDialog.bind(this) });
-		menubar.add("Project/Save Project/In Server", { callback: this.showSaveSceneInServerDialog.bind(this,null) });
-
+		menubar.add("Project/Load Project", { callback: this.showLoadSceneFromServerDialog.bind(this) });
+		menubar.add("Project/Save Project", { callback: this.showSaveSceneInServerDialog.bind(this,null) });
 
 		menubar.add("Project/Collaborate", { callback: this.showLoadCollabScene.bind(this) });
 		this.menu_CollaborateLoad = menubar.findMenu("Project/Collaborate");	// So we can sw on/off later
 
-
-		menubar.add("Project/Save Project/Local", { callback: this.showSaveSceneInLocalDialog.bind(this) });
 		menubar.add("Project/Publish", { callback: this.showPublishDialog.bind(this) });
 
 		//LiteGUI.mainmenu.separator();
@@ -116,11 +112,14 @@ var SceneStorageModule = {
 			notif.style.display="none";
 
 			//save it to local
-			scene.extra.name = prj_name;
+			scene.extra.name = scene.extra.filename = prj_name;
 			SceneStorageModule.saveLocalScene(prj_name, {}, scene);
 			console.log(i18n.gettext("Project created locally"));
 			//LiteGUI.alert("Scene saved locally");
 			dialog.close();
+
+			//update scene name
+			InterfaceModule.setTabTitle('Scene(' + scene.extra.name + ')', 'Scene');
 		}
 
 		function close_this(){
@@ -397,6 +396,8 @@ var SceneStorageModule = {
 			scene.extra.fullpath = fullpath;
 			that.onSceneReady( scene );
 			InterfaceModule.setStatusBar(i18n.gettext("Scene loaded"));
+			if(scene.extra.name != undefined)
+				InterfaceModule.setTabTitle('Scene('+ scene.extra.name +')', 'Scene');
 			if(on_complete)
 				on_complete();
 		}
@@ -1095,9 +1096,18 @@ var SceneStorageModule = {
 		localStorage.setItem(SceneStorageModule.localscene_prefix + "list", local_scenes);
 	},
 
+
+	//==========================================================================================
+	// cw: user did project->save, and was logged in -> save mem resources to server, then save scene JSON to server
+	//==========================================================================================
 	saveSceneInServer: function(on_complete, on_error, skip_alerts)
 	{
-		DriveModule.checkResourcesSaved( true, inner_save );
+		//cwx DriveModule.checkResourcesSaved( true, inner_save );
+		//DriveModule.autoSaveMissingResources();
+
+		//cw: at this point we know the folder the scene will be saved to - save the mem resources here first, then the scene.
+		DriveModule.checkResourcesSaved( true /*only scene*/, inner_save /*call when done*/, true /*silently*/, LS.RM.getFolder(LS.GlobalScene.fullpath) /*where to save*/ );
+		//inner_save();
 
 		function inner_save(){
 			//grab the scene info here 

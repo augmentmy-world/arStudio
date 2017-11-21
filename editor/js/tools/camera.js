@@ -308,8 +308,8 @@ var cameraTool = {
 					destination_center: vec3.create()
 				};
 
-			camera._editor.destination_eye.set( new_eye );
-			camera._editor.destination_center.set( center );
+			camera._editor.destination_eye = new_eye;
+			camera._editor.destination_center = center;
 		}
 	},
 
@@ -358,6 +358,7 @@ var cameraTool = {
 			}
 			else
 			{
+				// fix issue #85
 				camera.eye = new_eye;
 				camera.center = new_center;
 			}
