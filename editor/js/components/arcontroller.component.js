@@ -179,26 +179,28 @@ ArControllerComponent.prototype.startAR = function() {
                 //Add the AR-Camera to the scene
                 this.arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
                 this.arCamera = new LS.Camera();
-                this.arCamera.setViewportInPixels(0, 0, cw, ch);
                 this.arCamera.background_color=[0, 0, 0, 0];
                 this.arCamera.clear_color = true; //We must clear buffer from first camera.
                 this.arCameraNode.addComponent(this.arCamera);
-                LS.Renderer.enableCamera(this.arCamera);                
-                if(vw && vh)
-                    this.resize(cw, ch, vw, vh);
+                this.recalculateViewPort(cw, ch, vw, vh);         
 
                 self = this;
                 window.addEventListener('resize', function() {
-                    var cvs = $(canvas[0]);
-                    var video = $('video');
-                    if(cvs)
+                    var selectedCanvas = $(canvas[0]);
+                    var selectedVideo = $('video');
+                    if((selectedCanvas) && (selectedVideo))
                     {
-                        //handle window/canvas resize
-                        var cw = cvs.width();
-                        var ch = cvs.height();
-                        var vw = video.width();                        
-                        var vh = video.height();
-                        self.resize(cw, ch, vw, vh);
+                        //todo: handle window/canvas resize
+                        self.arCamera.clear_color = true;
+
+                        cw = selectedCanvas.width();
+                        ch = selectedCanvas.height();
+                        vw = selectedVideo[0].clientWidth;
+                        vh = selectedVideo[0].clientHeight;
+
+                        self.recalculateViewPort(cw, ch, vw, vh); 
+                        //this.resize(cw, ch, vw, vh);                 
+    
                     }
 
                 }, false);                
@@ -243,6 +245,27 @@ ArControllerComponent.prototype.startAR = function() {
     });
 
 };
+
+ArControllerComponent.prototype.recalculateViewPort = function(cw,ch,vw,vh)
+{
+    if (!this.arController) return;
+    this.arController.orientation = (vw < vh) ? 'portrait' : 'landscape';
+
+    var ratioW = cw/vw;
+    var ratioH = ch/vh;
+    var ratioMax = Math.max(ratioW, ratioH);
+
+    var vwScaled = ratioMax * vw;
+    var vhScaled = ratioMax * vh;
+
+    // Viewport, expressed in normalised canvas coordinates.
+    var left = ((cw - vwScaled) / 2.0);
+    var bottom = ((ch - vhScaled) / 2.0);
+    var w = vwScaled;
+    var h = vhScaled;
+    this.arCamera.setViewportInPixels(left, bottom, w, h);
+    LS.Renderer.enableCamera(this.arCamera);
+}
 
 ArControllerComponent.prototype.resize = function(cw, ch, vw, vh) {
     console.log('window resized: cw:' + cw + ', ch:' + ch + ', vw:' + vw + ', vh:' + vh);
