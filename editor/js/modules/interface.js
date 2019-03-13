@@ -34,12 +34,16 @@ var InterfaceModule = {
 		LiteGUI.menubar.add("Node");
 		LiteGUI.menubar.add("Scene");
 		LiteGUI.menubar.add("Actions");
+		LiteGUI.menubar.add("Components",{ callback: function() { EditorModule.showAddComponentToNode(null, function(){ EditorModule.refreshAttributes(); } ); }} );
 
 		var side_panel_width = this.preferences.side_panel_width || 360;
 
 		//create a main container and split it in two (workarea: leftwork, sidebar)
 		var mainarea = new LiteGUI.Area({ id: "mainarea", content_id:"workarea", height: "calc(100% - 30px)", autoresize: true, inmediateResize: true, minSplitSize: 200 });
 		mainarea.split("horizontal",[null, side_panel_width], true);
+		//create a main container and split it into three (workarea: leftbar, mainwork, sidebar)
+		//var mainarea = new LiteGUI.Area3({ id: "mainarea", content_id:"workarea", height: "calc(100% - 100px)", autoresize: true, inmediateResize: true, minSplitSize: 200 });
+		//mainarea.split("horizontal",["20%", "calc(60% - 10px)", "20%"], true);
 		this.mainarea = mainarea;
 		//globalarea.getSection(1).add( mainarea );
 		LiteGUI.add( mainarea );
@@ -863,6 +867,13 @@ LiteGUI.Inspector.prototype.addMesh = function(name,value, options)
 }
 
 LiteGUI.Inspector.widget_constructors["mesh"] = "addMesh";
+
+//to select a 2d marker
+LiteGUI.Inspector.prototype.addMarker2D = function( name, value, options )
+{
+	return addGenericResource.call(this, name, value, options, "2DMarker" );
+}
+LiteGUI.Inspector.widget_constructors["marker2d"] = "addMarker2D";
 
 //to select a material
 LiteGUI.Inspector.prototype.addMaterial = function( name,value, options)

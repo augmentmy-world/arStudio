@@ -7,7 +7,7 @@ var centerInObjectButton = {
 	name: "center-in-object",
 	description: "Center in selected object",
 	section: "node-actions",
-	icon: "imgs/mini-icon-center.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-center.png",
 	callback: function()
 	{
 		EditorModule.centerCameraInSelection();
@@ -22,7 +22,7 @@ var worldSpaceButton = {
 	description: "Change to world space mode",
 	section: "coords",
 	combo: true,
-	icon: "imgs/mini-icon-world-coords.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-world-coords.png",
 	callback: function()
 	{
 		ToolsModule.coordinates_system = 'world';
@@ -37,7 +37,7 @@ var objectSpaceButton = {
 	section: "coords",
 	enabled: true,
 	combo: true,
-	icon: "imgs/mini-icon-local-coords.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-local-coords.png",
 	callback: function()
 	{
 		ToolsModule.coordinates_system = 'object';
@@ -51,7 +51,7 @@ var fxEnabledButton = {
 	name: "fx",
 	description: "Show Postprocessing fx in editor",
 	section: "visibility",
-	icon: "imgs/mini-icon-fx.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-fx.png",
 	enabled: true,
 	callback: function()
 	{
@@ -69,7 +69,7 @@ var lightsEnabledButton = {
 	name: "lights",
 	description: "Show lights in editor",
 	section: "visibility",
-	icon: "imgs/mini-icon-light.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-light.png",
 	enabled: true,
 	callback: function()
 	{
@@ -83,7 +83,7 @@ var guiEnabledButton = {
 	name: "gui",
 	description: "Show GUI in editor",
 	section: "visibility",
-	icon: "imgs/mini-icon-gui.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-gui.png",
 	enabled: true,
 	callback: function()
 	{
@@ -97,7 +97,7 @@ var helpersEnabledButton = {
 	name: "helpers",
 	description: "Show helpers in editor",
 	section: "visibility",
-	icon: "imgs/mini-icon-grid.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-grid.png",
 	enabled: true,
 	callback: function()
 	{
@@ -111,7 +111,7 @@ var autorenderEnabledButton = {
 	name: "autorender",
 	description: "Force to render all frames",
 	section: "visibility",
-	icon: "imgs/mini-icon-film.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-film.png",
 	enabled: false,
 	callback: function()
 	{
@@ -126,7 +126,7 @@ var showStencilButton = {
 	name: "show_stencil",
 	description: "Show stencil buffer",
 	section: "view-modes",
-	icon: "imgs/mini-icon-mask.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-mask.png",
 	enabled: false,
 	callback: function()
 	{
@@ -147,7 +147,7 @@ var showDepthButton = {
 	name: "show_depth",
 	description: "Show Depth Buffer",
 	section: "view-modes",
-	icon: "imgs/mini-icon-depth.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-depth.png",
 	enabled: false,
 	callback: function()
 	{
@@ -161,7 +161,7 @@ var viewSceneCameraButton = {
 	name: "view_scene_camera",
 	description: "View from Scene Camera",
 	section: "view-modes",
-	icon: "imgs/mini-icon-camera.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-camera.png",
 	enabled: false,
 	callback: function(e)
 	{

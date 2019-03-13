@@ -2,6 +2,7 @@ function CodingTabsWidget( options )
 {
 	this.root = null;
 	this.is_master_editor = false; //used in the CodingModule
+		
 	this.init( options );
 }
 
@@ -481,10 +482,14 @@ CodingTabsWidget.prototype.createCodingWindow = function()
 //creates the area containing the buttons and the codemirror
 CodingTabsWidget.prototype.createCodingPad = function( container )
 {
-	container = container || this.root;
-	var that = this;
-	var pad = new CodingPadWidget();
-	container.appendChild( pad.root );
+    container = container || this.root;
+    // Remove the vertical scroll bar in the tab container
+    container.style.overflow = "hidden";
+    var that = this;
+    // Initialize CodingPadWidget with the desired editor either {editor: 'codemirror'} or {editor: 'monaco'}
+    const codeEditorOptions = {editor: 'monaco'};
+    var pad = new CodingPadWidget(codeEditorOptions);
+    container.appendChild( pad.root );
 
 	LiteGUI.bind( pad, "modified", function(e){ that.onContentModified(e, pad.getCurrentCodeInstance() ); });
 	LiteGUI.bind( pad, "stored", function(e){ that.onContentStored(e, pad.getCurrentCodeInstance() ); });

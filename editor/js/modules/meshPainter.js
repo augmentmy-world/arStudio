@@ -32,9 +32,9 @@ var MeshPainter = {
 
 	init: function()
 	{
-		LiteGUI.menubar.add("Actions/Paint mesh", { callback: function() { 
+		/*LiteGUI.menubar.add("Actions/Paint mesh", { callback: function() { 
 			MeshPainter.showPaintingDialog();
-		}});
+		}});*/
 
 		this.uniforms = {
 			u_model: mat4.create(),

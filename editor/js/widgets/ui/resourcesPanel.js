@@ -452,8 +452,12 @@ ResourcesPanelWidget.prototype.addItemToBrowser = function( resource )
 		for(var i = 0; i < items.length; ++i)
 			items[i].classList.remove("selected");
 		element.classList.add("selected");
-		LiteGUI.trigger( that, "item_selected", element );
-		LiteGUI.trigger( that, "resource_selected", path );
+        LiteGUI.trigger( that, "item_selected", element );
+        //for 2d marker just pass all dataset
+        if(element.dataset && element.dataset.category =="2DMarker")
+            LiteGUI.trigger( that, "resource_selected", element.dataset );
+        else
+		    LiteGUI.trigger( that, "resource_selected", path );
 		that.selected_item = element;
 		window.RESOURCE = LS.RM.getResource( path );
 	}

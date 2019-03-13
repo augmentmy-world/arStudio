@@ -237,4 +237,4 @@ CollaborateWidget.prototype.onDataUpdated = function(e)
 		this.updateWidgets();
 }
 
-CORE.registerWidget( CollaborateWidget );
+//CORE.registerWidget( CollaborateWidget );

@@ -194,6 +194,8 @@ var EditorModule = {
 		mainmenu.add("View/Render Mode/Texture", { value: "texture", isChecked: inner_is_renderMode, callback: inner_change_renderMode });
 		mainmenu.add("View/Render Mode/Full", { value: "full", isChecked: inner_is_renderMode, callback: inner_change_renderMode });
 		//mainmenu.add("View/Render Mode/Stencil", { value: "stencil", isChecked: inner_is_renderMode, callback: inner_change_renderMode });
+		
+	        mainmenu.add("Game Object/AR Trackable 2D", { callback: function() { EditorModule.create2DMarker(); }}); 
 
 		/*
 		mainmenu.add("Edit/Coordinates/Object", { value: "object", isChecked: inner_is_systemMode, callback: function() { EditorModule.coordinates_system = 'object'; RenderModule.requestFrame(); }});
@@ -1253,6 +1255,26 @@ var EditorModule = {
 		SelectionModule.setSelection(node);
 		return node;
 	},
+
+
+	create2DMarker: function( parent )
+	{
+        
+		var node = EditorModule.createPrimitive( { geometry: LS.Components.GeometricPrimitive.PLANE, size: 10, subdivisions: 10 });
+		node.material = null;
+        parent = parent || EditorModule.getAddRootNode();
+        
+        parent.addChild( node );
+        var component = new ArTrackable2D();
+        node.addComponent( component );
+
+		EditorModule.updateCreatedNodePosition( node );
+		CORE.userAction( "node_created", node );
+		SelectionModule.setSelection(node);
+		return node;
+	},
+
+
 
 	addMaterialToNode: function()
 	{
