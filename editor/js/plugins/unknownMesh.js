@@ -4,7 +4,7 @@ var UnknownMeshTool = {
 
 	init: function()
 	{
-		LiteGUI.menubar.add("Window/unknown Mesh", { callback: function() { UnknownMeshTool.showDialog(); }});
+		//LiteGUI.menubar.add("Window/unknown Mesh", { callback: function() { UnknownMeshTool.showDialog(); }});
 	},
 
 	deinit: function()

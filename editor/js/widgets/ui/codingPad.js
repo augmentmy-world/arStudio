@@ -23,12 +23,28 @@ CodingPadWidget.prototype.init = function( options )
 
 	//create area
 	this.root = LiteGUI.createElement("div",null,null,{ width:"100%", height:"100%" });
-	
-	//load codemirror
-	if(typeof(CodeMirror) === undefined)
-		console.warn("CodeMirror missing");
-	else
-		this.createCodingArea(); 
+    
+    const coding_area = this.createCodingArea();     
+
+    //create the corresponding code editor in the coding area
+    if (options.editor === 'codemirror'){
+        if(typeof(CodeMirror) === "undefined") {
+            console.warn("CodeMirror missing");
+            return;
+        }
+        else 
+            this.createCodeMirrorEditor(coding_area); 
+    }
+    else if(options.editor === 'monaco'){
+        if(typeof(monaco) === "undefined") {
+            console.warn("Monaco-Editor library missing");
+            return;
+        }
+        else
+            this.createMonacoEditor(coding_area);
+        // We don't do anything when the monaco editor is required because the editor itself needs to be added after the pad is added to the container
+        // see codingTabsWidget.js L:481
+    }
 
 	var that = this;
 
@@ -115,6 +131,7 @@ CodingPadWidget.prototype.editInstanceCode = function( instance, options )
 
 	//adapt interface
 	this.compile_button.style.display = (lang != "javascript") ? "none" : null;
+	// TODO: check if save button is still there
 	this.save_button.style.display = instance.fullpath ? null : "none";
 	var filename = "";
 	if(instance)
@@ -151,11 +168,13 @@ CodingPadWidget.prototype.setLang = function( lang )
 	if(lang && lang.constructor === String)
 		lang = lang.toLowerCase();
 
-	if(lang == "javascript")
-		this.editor.setOption( "mode", "javascript" );
-	else if(lang == "glsl")
+	if(lang === "javascript")
+    		this.editor.setOption( "mode", "text/javascript" );
+    	else if(lang === "typescript")
+        	this.editor.setOption( "mode", "text/typescript" );
+	else if(lang === "glsl")
 		this.editor.setOption( "mode", "x-shader/x-fragment" );
-	else if(lang == "html")
+        else if(lang === "html")
 		this.editor.setOption( "mode", "xml" );
 	else if(lang)
 		this.editor.setOption( "mode", lang );
@@ -234,7 +253,11 @@ CodingPadWidget.prototype.assignCurrentCode = function( skip_events, reset_state
 		}
 	}
 
-	var text_content = this.editor.getValue();
+    var text_content = this.editor.getValue();
+    if( info.lang === "typescript"){
+        let result = ts.transpileModule(text_content, { compilerOptions: { module: ts.ModuleKind.CommonJS } });
+    }
+
 	info.pos = this.editor.getCursor();
 
 	var old_text_content = this.getCodeFromInfo( info );
@@ -379,12 +402,26 @@ CodingPadWidget.prototype.evalueCode = function()
 	if(info.options && info.options.lang)
 		lang = info.options.lang;
 
+    // There are two different parameters to store the script language:
+    // info.options.lang and info.lang
+    // When we enable typescript from the drop-down menu it is stored in info.lang but info.options.lang stays on javascript
+    // Because of that I assume when info.lang is set to typescript we will find typescript code in the codePad
+    lang = info.lang;
+
 	//non javascript? put the code inside the component and go
-	if( lang != "javascript")
+	if( (lang === "javascript" || lang === "typescript") !== true )
 	{
 		this.assignCurrentCode();
 		return;
 	}
+
+
+    var code = this.editor.getValue();
+    // If typescript transpile the code and then continue the same as with javascript code
+    if( lang === "typescript"){
+        let result = ts.transpileModule(code, { compilerOptions: { module: ts.ModuleKind.CommonJS } });
+        code = result.outputText;
+    }
 
 	//Is JS, then try to evaluate it
 	//create a foo class and try to compile the code inside to check that the sintax is correct
@@ -427,9 +464,13 @@ CodingPadWidget.prototype.markError = function( line, message )
 
 CodingPadWidget.prototype.scrollTo = function(line)
 {
-	var t = this.editor.charCoords({line: line, ch: 0}, "local").top; 
-    var middleHeight = this.editor.getScrollerElement().offsetHeight / 2; 
-    this.editor.scrollTo(null, t - middleHeight - 5); 
+    if(this.editor.name === "Monaco"){
+        this.editor.revealLine(line);
+    }else{
+        var t = this.editor.charCoords({line: line, ch: 0}, "local").top; 
+        var middleHeight = this.editor.getScrollerElement().offsetHeight / 2; 
+        this.editor.scrollTo(null, t - middleHeight - 5); 
+    }
 }
 
 //When the user does Control + S
@@ -512,6 +553,7 @@ CodingPadWidget.prototype.saveInstance = function()
 	}
 }
 
+// thor: Not used at the moment
 CodingPadWidget.prototype.addBreakPoint = function()
 {
 	var info = this.getCurrentCodeInfo();
@@ -528,15 +570,21 @@ CodingPadWidget.prototype.addBreakPoint = function()
 
 CodingPadWidget.prototype.changeFontSize = function(num)
 {
-	var code_container = this.code_container;
-	var root = code_container.querySelector(".CodeMirror");
-	var size = root.style.fontSize;
-	if(!size)
-		size = 14;
-	else
-		size = parseInt(size);
-	size += num;
-	root.style.fontSize = size + "px";
+    if(this.editor.name !== "Monaco"){
+        var code_container = this.code_container;
+        var root = code_container.querySelector(".CodeMirror");
+        var size = root.style.fontSize;
+        if(!size)
+            size = 14;
+        else
+            size = parseInt(size);
+        size += num;
+        root.style.fontSize = size + "px";
+    }
+    else {
+        const currentSize = this.editor.getConfiguration().fontInfo.fontSize;
+        this.editor.updateOptions({fontSize: currentSize + num});
+    }
 }
 
 //update all the ScriptFromFile if we are editing a js file
@@ -575,15 +623,17 @@ CodingPadWidget.prototype.markLine = function(num)
 {
 	var cm = this.editor;
 
-	if(typeof(num) == "undefined" && this.last_error_line != null)
-	{
-		var lines = cm.lineCount();
-		for(var i = 0; i < lines; i++)
-			cm.removeLineClass( i, "background", "error-line");
-		//cm.removeLineClass( this.last_error_line, "background", "error-line");
-		this.last_error_line = null;
-		return;
-	}
+    // Monaco editor already marks lines with syntax errors 
+    if(cm.name !== "Monaco"){
+        if(typeof(num) == "undefined" && this.last_error_line != null)
+        {
+            var lines = cm.lineCount();
+            for(var i = 0; i < lines; i++)
+                cm.removeLineClass( i, "background", "error-line");
+            //cm.removeLineClass( this.last_error_line, "background", "error-line");
+            this.last_error_line = null;
+            return;
+        }
 
 	if(typeof(num) != "undefined")
 	{
@@ -751,7 +801,7 @@ CodingPadWidget.prototype.onEditorContentChange = function( editor )
 
 	//let the tab know this code has been changed
 	var code = this.getCodeFromInfo( this.current_code_info );
-	var value = editor.getValue();
+	var value = this.editor.getValue();
 	if(code != value)
 		LiteGUI.trigger( this, "modified", value );
 	else
@@ -1011,9 +1061,8 @@ CodingPadWidget.prototype.createCodingArea = function( container )
 	container = container || this.root;
 	var that = this;
 
-	if(typeof(CodeMirror) == "undefined")
+	if( (typeof(CodeMirror) === "undefined") && (typeof(monaco) === "undefined") )
 	{
-		//console.warn("CodeMirror missing");
 		setTimeout( function(){ that.createCodingArea( container ); }, 1000 );
 		return;
 	}
@@ -1064,7 +1113,7 @@ CodingPadWidget.prototype.createCodingArea = function( container )
 		that.changeFontSize(+1);
 	}});
 
-	this.lang_widget = top_widgets.addCombo("Highlight", "javascript",{ width: 170, values: ["javascript","glsl","html","text"], callback: function(v) { 
+    this.lang_widget = top_widgets.addCombo("Highlight", "javascript",{ values: ["javascript","glsl","html","text","typescript"], callback: function(v) { 
 		that.setLang( v );
 	}});
 
@@ -1083,36 +1132,7 @@ CodingPadWidget.prototype.createCodingArea = function( container )
 	//$(coding_workarea.content).append("<div class='code-container' style='height: calc(100% - 54px); height: -moz-calc(100% - 54px); height: -webkit-calc(100% - 54px); overflow: auto'></div><div class='code-footer' style='height:18px; padding: 4px 0 0 4px; background-color: #222;'></div>");
 	var code_container = this.code_container = coding_workarea.query(".code-container");
 
-	this.editor = CodeMirror( code_container, {
-		value: "",
-		mode:  "javascript",
-		theme: "blackboard",
-		lineWrapping: this.wrap_lines,
-		gutter: true,
-		tabSize: 2,
-		lineNumbers: true,
-		matchBrackets: true,
-		styleActiveLine: true,
-		extraKeys: {
-			"Ctrl-Enter": "compile",
-			"Ctrl-S": "save",
-			"Ctrl-Space": "autocomplete",
-			"Cmd-Space": "autocomplete",
-			//"Ctrl-F": "insert_function",
-			"Cmd-F": "insert_function",
-			"Ctrl-P": "playstop_scene",
-			},
-		onCursorActivity: function(e) { //key pressed
-			that.editor.matchHighlight("CodeMirror-matchhighlight");
-		}
-	  });
-
-	this.editor.coding_area = this;
-	this.editor.on("change", this.onEditorContentChange.bind( this ) );
-	this.editor.on("drop", this.onItemDrop.bind( this ) );
-
-	//var wrapper = this.editor.display.wrapper;
-	//LiteGUI.createDropArea( wrapper, this.onItemDrop.bind(this) );
+    return code_container;
 }
 
 CodingPadWidget.prototype.addMasterButtons = function()
@@ -1206,25 +1226,28 @@ CodingPadWidget.codemirror_css = ["js/extra/codemirror/codemirror.css",
 
 CodingPadWidget.loadCodeMirror = function()
 {
-	//load codemirror
-	if(typeof(CodeMirror) === "undefined")
-	{
-		//console.log("Loading CodeMirror...");
-		LiteGUI.requireScript( CodingPadWidget.codemirror_scripts,
-								function() {
-									//console.log("CodeMirror loaded");
-									CodingPadWidget.prepareCodeMirror();
-								});
-		LiteGUI.requireCSS( CodingPadWidget.codemirror_css );
-		LiteGUI.addCSS(".error-line { background-color: #511; }\n\
-						.CodeMirror div.CodeMirror-cursor, .CodeMirror pre { z-index: 0 !important; }\n\
-						.CodeMirror-selected { background-color: rgba(100,100,100,0.5) !important; outline: 1px dashed rgba(255,255,255,0.8); }\n\
-					   ");
-	}
-	else
-	{
-		//console.log("CodeMirror found");
-	}
+    // Only load CodeMirror if the monaco-editor library was not loaded
+    if(typeof(monaco) === 'undefined'){
+	    //load codemirror
+        if(typeof(CodeMirror) === "undefined")
+        {
+            //console.log("Loading CodeMirror...");
+            LiteGUI.requireScript( CodingPadWidget.codemirror_scripts,
+                                    function() {
+                                        //console.log("CodeMirror loaded");
+                                        CodingPadWidget.prepareCodeMirror();
+                                    });
+            LiteGUI.requireCSS( CodingPadWidget.codemirror_css );
+            LiteGUI.addCSS(".error-line { background-color: #511; }\n\
+                            .CodeMirror div.CodeMirror-cursor, .CodeMirror pre { z-index: 0 !important; }\n\
+                            .CodeMirror-selected { background-color: rgba(100,100,100,0.5) !important; outline: 1px dashed rgba(255,255,255,0.8); }\n\
+                        ");
+        }
+        else
+        {
+            //console.log("CodeMirror found");
+        }
+}
 }
 
 CodingPadWidget.prepareCodeMirror = function()
@@ -1321,5 +1344,157 @@ CodingPadWidget.prepareCodeMirror = function()
 	}
 }
 
+CodingPadWidget.prototype.createCodeMirrorEditor = function(code_container) {
+	this.editor = new Proxy( CodeMirror( code_container, {
+		value: "",
+		mode:  "javascript",
+		theme: "blackboard",
+		lineWrapping: this.wrap_lines,
+		gutter: true,
+		tabSize: 2,
+		lineNumbers: true,
+		matchBrackets: true,
+		styleActiveLine: true,
+		extraKeys: {
+			"Ctrl-Enter": "compile",
+			"Ctrl-S": "save",
+			"Ctrl-Space": "autocomplete",
+			"Cmd-Space": "autocomplete",
+			//"Ctrl-F": "insert_function",
+			"Cmd-F": "insert_function",
+			"Ctrl-P": "playstop_scene",
+			},
+		onCursorActivity: function(e) { //key pressed
+			that.editor.matchHighlight("CodeMirror-matchhighlight");
+		}
+      }), {}/* No handler as CodeMirror is the default and we have no need for traps*/ );
+
+	this.editor.coding_area = this;
+	this.editor.on("change", this.onEditorContentChange.bind( this ) );
+	this.editor.on("drop", this.onItemDrop.bind( this ) );
+}
+
+CodingPadWidget.prototype.createMonacoEditor = function(code_container) {
+    const monacoEditor = monaco.editor.create(code_container, {
+        value: [
+            'function x() {',
+            '\tconsole.log("Hello world!");',
+            '}'
+        ].join('\n'),
+        language: 'typescript',
+        theme: 'vs-dark',
+        automaticLayout: true
+    });
+    this.editor = new Proxy (monacoEditor, monacoEditorProxy);
+
+    this.editor.coding_area = this;
+	this.editor.onDidChangeModelContent(
+        this.onEditorContentChange.bind( this )
+     );
+    
+    // TODO: Add once Monaco supports drag n drop of files
+    //this.editor.on("drop", this.onItemDrop.bind( this ) );
+
+    $.get('js/litescene.d.ts', function(result) {
+        console.log(result);
+        monaco.languages.typescript.javascriptDefaults.addExtraLib(result);
+        monaco.languages.typescript.typescriptDefaults.addExtraLib(result);
+    }, "text");
+}
+
+var monacoEditorProxy = {
+    apply: function(target, that, args){
+        console.log("Trap" + target + that + args + " not implemented yet.");
+    },
+    get: (target, propKey, receiver) => {
+        const origMethod = target[propKey];        
+        //The monaco editor knows that property/function because of that we can simply forward the call.
+		if (typeof origMethod === "function") {
+            return function (...args) {
+                let result = origMethod.apply(this, args);
+                return result;
+            }
+        }
+        if( typeof origMethod === "undefined") {
+        //Monaco editor does not know the property/function we have to intercept it and adopt to the monaco API
+            switch (propKey) {
+                case 'setOption':
+                    return function (...args) {
+                        //Monaco does not understand the language 'glsl (x-shader/x-fragment' so we need to map it
+                        if(args[1]==='x-shader/x-fragment'){
+                            args[1] = 'c';
+                        }
+                        monaco.editor.setModelLanguage(target.getModel(),args[1]);                    
+                    }
+                    break;
+                case 'getCursor':
+                    return function (...args) {
+                        return target.getPosition();
+                    }
+                    break;
+                case 'clearHistory':
+                    return function() {
+                        //There is no equivalent to CodeMirror's clearHistory function
+                        return;
+                    }
+                    break;
+                case 'refresh':
+                    return function() {
+                        target.layout();
+                    }
+                    break;
+                // Monaco stores the complete state of the editor in saveViewState() that is why I simply return nothing here
+                case 'listSelections':
+                case 'somethingSelected':
+                // This is for error highlighting inside the editor. As Monaco already provides this there is no need to implement anything here.
+                case 'removeLineClass':
+                case 'addLineClass':
+                    return function(){
+                        return;
+                    }
+                    break;
+                case 'getScrollInfo':
+                    return function(){
+                        return target.saveViewState();
+                    }
+                    break;
+                    // setCursor, setSelection is not available in Monaco. We simply restore the saved view state
+                case 'setCursor':
+                case 'setSelection':
+                    return function(...args){
+                        target.restoreViewState(args);
+                    }
+                    break;
+                case 'lineCount':
+                    return function(...args){
+                        return target.getModel().getLineCount();
+                    }
+                    break;
+                case 'scrollTo':
+                    return function(...args){
+                        target.setScrollPosition( {scrollLeft: args[0], scrollTop: args[1]} );
+                    }
+                    break;
+                case 'getValue':
+                    return function(){
+                        return target.getModel().getValue();
+                    }
+                    break;
+                case 'name':
+                    return "Monaco";
+                    break;
+                default:
+                    console.warn("Intercepting " + propKey + " which is not yet mapped to Monaco-Editor. Please add functionality inside this switch statement" );
+
+            }
+        }
+        else {
+            return target[propKey];
+        }
+    },
+    set: (target, propKey, value, receiver) => {
+        target[propKey] = value;
+    }
+}
 CodingPadWidget.loadCodeMirror();
 /****************************************************************************/

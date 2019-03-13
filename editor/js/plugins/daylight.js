@@ -7,12 +7,12 @@ var DayLightTool = {
 
 	init: function()
 	{
-		LiteGUI.menubar.add("Actions/Tools/day light", { callback: function() { DayLightTool.showDialog(); }});
+		//LiteGUI.menubar.add("Actions/Tools/day light", { callback: function() { DayLightTool.showDialog(); }});
 	},
 
 	deinit: function()
 	{
-		LiteGUI.menubar.remove("Actions/Tools/day light");
+		//LiteGUI.menubar.remove("Actions/Tools/day light");
 	},
 
 	showDialog: function()

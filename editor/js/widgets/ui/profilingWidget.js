@@ -13,8 +13,6 @@ function ProfilingPanelWidget( options )
 	this.frames = 0;	
 	this.buffer = [];
 
-
-
 	this.root = document.createElement("div");
 	this.root.className = "profiling-panel";
 	this.root.panel = this; //link

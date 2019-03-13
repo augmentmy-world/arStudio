@@ -1,0 +1,12 @@
+[submodule "litegl"]
+	path = litegl
+	url = http://realmaxdemos.com:3000/realweb/litegl.js.git
+[submodule "liteserver"]
+	path = liteserver
+	url = http://realmaxdemos.com:3000/realweb/litefilesystem.js.git
+[submodule "litescene"]
+	path = litescene
+	url = http://realmaxdemos.com:3000/realweb/litescene.js.git
+[submodule "litegui"]
+	path = litegui
+	url = http://realmaxdemos.com:3000/realweb/litegui.js.git

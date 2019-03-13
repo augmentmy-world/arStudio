@@ -105,10 +105,16 @@ var PlayModule = {
 			var selected_node = SelectionModule.getSelectedNode();
 			this._selected_node_uid = selected_node ? selected_node.uid : null;
 
-			this.play_button.innerHTML = this.icons.stop;
-			this.pause_button.removeAttribute('disabled');
-			this.pause_button.classList.remove("enabled");
-			this.stopkeep_button.removeAttribute('disabled');
+			//this.play_button.innerHTML = this.icons.stop;
+            this.play_button.className = "litebutton playing";
+            
+            if(RenderModule.getActiveViewport().name !== "markertracking"){
+                this.pause_button.removeAttribute('disabled');
+                this.pause_button.classList.remove("enabled");
+            }
+
+
+			//this.stopkeep_button.removeAttribute('disabled');
 			this.changeState("play");
 		}
 		else //stop

@@ -2,7 +2,7 @@ var TestCollisionsTool = {
 	name: "testCollisions",
 	description: "To test collisions",
 	section: "select",
-	icon: "imgs/mini-icon-test.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-test.png",
 
 	color: vec4.fromValues(1,0,1,1),
 	mode: "colliders",

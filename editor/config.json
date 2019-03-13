@@ -1,9 +1,11 @@
 {
 	"version":"0.6",
-	"server":"fileserver/src/",
-	"resources":"fileserver/files/",
-	"proxy":"@/proxy.php?url=",
+	"server":"../liteserver/src/",
+	"resources":"../liteserver/src/files/",
+	"proxy":"",
 	"shaders":"data/shaders.xml",
 	"nocache": false,
-	"scene_url":"scene.json"
+	"scene_url":"scene.json",
+	"i18n": true,
+	"skin": "realmax"
 }

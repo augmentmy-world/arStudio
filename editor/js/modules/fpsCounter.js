@@ -9,8 +9,8 @@ var fpsCounter = {
 
 	init: function()
 	{
-		LiteGUI.menubar.add("View/FPS Counter", {  instance: fpsCounter , property: "show_counter", type:"checkbox", callback: fpsCounter.onEnableFPS });
-		LiteGUI.menubar.add("View/Render Stats", {  instance: fpsCounter , property: "show_stats", type:"checkbox", callback: fpsCounter.onEnableStats });
+		//LiteGUI.menubar.add("View/FPS Counter", {  instance: fpsCounter , property: "show_counter", type:"checkbox", callback: fpsCounter.onEnableFPS });
+		//LiteGUI.menubar.add("View/Render Stats", {  instance: fpsCounter , property: "show_stats", type:"checkbox", callback: fpsCounter.onEnableStats });
 		LEvent.bind( LS.GlobalScene, "afterRender", fpsCounter.frameRendered.bind(this) );
 	},
 

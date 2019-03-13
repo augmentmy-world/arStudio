@@ -53,7 +53,7 @@ SillyClient.prototype.connect = function( url, room_name, on_connect, on_message
 		params = "?feedback=1";
 
 	//connect
-	this.socket = new WebSocket("ws://"+url+"/" + room_name + params );
+	this.socket = new WebSocket("wss://"+url+"/" + room_name + params );
 	this.socket.binaryType = "arraybuffer";
 	this.socket.onopen = function(){  
 		that.is_connected = true;
@@ -138,7 +138,9 @@ SillyClient.prototype.close = function()
 	this.socket = null;
 }
 
-//Process events 
+//=========================================
+//cw: Process SERVER events, ie NOT from other clients but from SERVER
+//=========================================
 SillyClient.prototype.onServerEvent = function( author_id, cmd, data, on_message )
 {
 	if (cmd == "MSG" || cmd == "DATA") //user message received
@@ -201,6 +203,11 @@ SillyClient.prototype.onServerEvent = function( author_id, cmd, data, on_message
 
 		if(this.on_room_info)
 			this.on_room_info( room_info );
+	}
+	else if (cmd == "scene_from_server" )
+	{
+		// This comes in directly after a connection to the server
+		CollaborateModule.setSceneFromJSON( data );
 	}
 }
 
@@ -320,3 +327,6 @@ SillyClient.prototype.findRooms = function( txt, on_complete )
 	};
 	req.send(null);
 }
+
+
+console.log("*** sillyclient.js **");

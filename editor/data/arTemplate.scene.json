@@ -1,0 +1,861 @@
+{
+    "uid": "@TREE-d5d40-510-1480d73-2",
+    "object_class": "SceneTree",
+    "external_repository": null,
+    "extra": {
+        "editor": {
+            "selected_node": "@NODE-d5d40-9f8f5-1eaaea6-21"
+        },
+        "folder": "thor17/projects",
+        "filename": "axis.scene.json",
+        "fullpath": "thor17/projects/axis.scene.json",
+        "viewport_layout": {
+            "mode": 1,
+            "viewports": [
+                {
+                    "name": "markertracking",
+                    "viewport": [
+                        0,
+                        0,
+                        1,
+                        1
+                    ],
+                    "render_settings": null,
+                    "editor_camera": {
+                        "object_class": "Camera",
+                        "uid": "@CAMd5d40-7b7-13b52ca-8",
+                        "layers": 255,
+                        "enabled": true,
+                        "type": 1,
+                        "eye": [
+                            83.78450012207031,
+                            246.9066162109375,
+                            136.42808532714844
+                        ],
+                        "center": [
+                            0,
+                            0,
+                            0
+                        ],
+                        "up": [
+                            0,
+                            1,
+                            0
+                        ],
+                        "near": 0.1,
+                        "far": 10000,
+                        "fov": 45,
+                        "aspect": 1,
+                        "orthographic": [
+                            -1,
+                            1,
+                            -1,
+                            1
+                        ],
+                        "background_color": [
+                            0,
+                            0,
+                            0,
+                            1
+                        ],
+                        "frustum_size": 50,
+                        "viewport": [
+                            0,
+                            0,
+                            1,
+                            1
+                        ],
+                        "render_to_texture": false,
+                        "frame": null,
+                        "show_frame": true,
+                        "clear_color": true,
+                        "clear_depth": true
+                    },
+                    "scene_camera": null
+                }
+            ]
+        }
+    },
+    "root": {
+        "object_class": "SceneNode",
+        "name": "root",
+        "uid": "@NODE-d5d40-511-191b9c1-5",
+        "layers": 3,
+        "flags": {
+            "visible": true,
+            "is_static": false,
+            "selectable": true
+        },
+        "children": [
+            {
+                "object_class": "SceneNode",
+                "name": "2D Trackable",
+                "uid": "@NODE-d5d40-42922-15f87ab-c",
+                "layers": 3,
+                "flags": {
+                    "visible": true,
+                    "is_static": false,
+                    "selectable": true
+                },
+                "children": [
+                    {
+                        "object_class": "SceneNode",
+                        "name": "y-Axis",
+                        "uid": "@NODE-d5d40-42924-150ad8a-e",
+                        "layers": 3,
+                        "material": {
+                            "uid": "@MAT-d5d40-79a44-116cb21-1e",
+                            "uvs_matrix": [
+                                1,
+                                0,
+                                0,
+                                0,
+                                1,
+                                0,
+                                0,
+                                0,
+                                1
+                            ],
+                            "textures": {},
+                            "flags": {
+                                "alpha_test": false,
+                                "alpha_test_shadows": false,
+                                "two_sided": false,
+                                "flip_normals": false,
+                                "depth_test": true,
+                                "depth_write": true,
+                                "ignore_lights": false,
+                                "cast_shadows": true,
+                                "receive_shadows": true,
+                                "ignore_frustum": false
+                            },
+                            "color": [
+                                0,
+                                1,
+                                0.1666666716337204
+                            ],
+                            "opacity": 1,
+                            "queue": 0,
+                            "render_state": {
+                                "front_face": 2305,
+                                "cull_face": true,
+                                "cull_face_mode": 0,
+                                "depth_test": true,
+                                "depth_mask": true,
+                                "depth_func": 513,
+                                "depth_range": [
+                                    0,
+                                    0
+                                ],
+                                "blend": false,
+                                "blendFunc0": 770,
+                                "blendFunc1": 771,
+                                "colorMask0": true,
+                                "colorMask1": true,
+                                "colorMask2": true,
+                                "colorMask3": true,
+                                "stencil_test": false,
+                                "stencil_mask": 255,
+                                "stencil_func_func": 519,
+                                "stencil_func_ref": 0,
+                                "stencil_func_mask": 255,
+                                "stencil_op_sfail": 7680,
+                                "stencil_op_dpfail": 7680,
+                                "stencil_op_dppass": 7680
+                            },
+                            "blend_mode": "normal",
+                            "shader_name": "global",
+                            "diffuse": [
+                                1,
+                                1,
+                                1
+                            ],
+                            "ambient": [
+                                1,
+                                1,
+                                1
+                            ],
+                            "emissive": [
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "backlight_factor": 0,
+                            "specular_on_top": false,
+                            "specular_on_alpha": false,
+                            "reflection_factor": 0,
+                            "reflection_fresnel": 1,
+                            "reflection_additive": false,
+                            "reflection_specular": false,
+                            "velvet": [
+                                0.5,
+                                0.5,
+                                0.5
+                            ],
+                            "velvet_exp": 0,
+                            "velvet_additive": false,
+                            "normalmap_factor": 1,
+                            "normalmap_tangent": true,
+                            "displacementmap_factor": 0.1,
+                            "bumpmap_factor": 1,
+                            "use_scene_ambient": true,
+                            "extra_surface_shader_code": "",
+                            "extra_uniforms": {},
+                            "detail_factor": 0,
+                            "detail_scale": [
+                                10,
+                                10
+                            ],
+                            "emissive_extra": 0,
+                            "extra_factor": 0,
+                            "extra_color": [
+                                0,
+                                0,
+                                0
+                            ],
+                            "specular_factor": 0.10000000149011612,
+                            "specular_gloss": 10,
+                            "material_class": "StandardMaterial"
+                        },
+                        "flags": {
+                            "visible": true,
+                            "is_static": false,
+                            "selectable": true
+                        },
+                        "components": [
+                            [
+                                "Transform",
+                                {
+                                    "object_class": "Transform",
+                                    "uid": "@COMP-d5d40-42924-1580edf-f",
+                                    "position": [
+                                        0,
+                                        35,
+                                        0
+                                    ],
+                                    "rotation": [
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                    ],
+                                    "scaling": [
+                                        0.30000001192092896,
+                                        7,
+                                        0.30000001192092896
+                                    ],
+                                    "matrix": [
+                                        0.30000001192092896,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        7,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        0.30000001192092896,
+                                        0,
+                                        0,
+                                        35,
+                                        0,
+                                        1
+                                    ]
+                                }
+                            ],
+                            [
+                                "GeometricPrimitive",
+                                {
+                                    "enabled": true,
+                                    "geometry": 3,
+                                    "size": 10,
+                                    "subdivisions": 10,
+                                    "primitive": -1,
+                                    "point_size": 0.1,
+                                    "uid": "@COMP-d5d40-4c879-1d2afb0-1a",
+                                    "object_class": "GeometricPrimitive",
+                                    "editor": {
+                                        "collapsed": false
+                                    }
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "object_class": "SceneNode",
+                        "name": "z-Axis",
+                        "uid": "@NODE-d5d40-9f8f5-1eaaea6-21",
+                        "layers": 3,
+                        "material": {
+                            "uid": "@MAT-d5d40-b61f4-1946121-25",
+                            "uvs_matrix": [
+                                1,
+                                0,
+                                0,
+                                0,
+                                1,
+                                0,
+                                0,
+                                0,
+                                1
+                            ],
+                            "textures": {},
+                            "flags": {
+                                "alpha_test": false,
+                                "alpha_test_shadows": false,
+                                "two_sided": false,
+                                "flip_normals": false,
+                                "depth_test": true,
+                                "depth_write": true,
+                                "ignore_lights": false,
+                                "cast_shadows": true,
+                                "receive_shadows": true,
+                                "ignore_frustum": false
+                            },
+                            "color": [
+                                0.019999999552965164,
+                                0.019999999552965164,
+                                1
+                            ],
+                            "opacity": 1,
+                            "queue": 0,
+                            "render_state": {
+                                "front_face": 2305,
+                                "cull_face": true,
+                                "cull_face_mode": 0,
+                                "depth_test": true,
+                                "depth_mask": true,
+                                "depth_func": 513,
+                                "depth_range": [
+                                    0,
+                                    0
+                                ],
+                                "blend": false,
+                                "blendFunc0": 770,
+                                "blendFunc1": 771,
+                                "colorMask0": true,
+                                "colorMask1": true,
+                                "colorMask2": true,
+                                "colorMask3": true,
+                                "stencil_test": false,
+                                "stencil_mask": 255,
+                                "stencil_func_func": 519,
+                                "stencil_func_ref": 0,
+                                "stencil_func_mask": 255,
+                                "stencil_op_sfail": 7680,
+                                "stencil_op_dpfail": 7680,
+                                "stencil_op_dppass": 7680
+                            },
+                            "blend_mode": "normal",
+                            "shader_name": "global",
+                            "diffuse": [
+                                1,
+                                1,
+                                1
+                            ],
+                            "ambient": [
+                                1,
+                                1,
+                                1
+                            ],
+                            "emissive": [
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "backlight_factor": 0,
+                            "specular_on_top": false,
+                            "specular_on_alpha": false,
+                            "reflection_factor": 0,
+                            "reflection_fresnel": 1,
+                            "reflection_additive": false,
+                            "reflection_specular": false,
+                            "velvet": [
+                                0.5,
+                                0.5,
+                                0.5
+                            ],
+                            "velvet_exp": 0,
+                            "velvet_additive": false,
+                            "normalmap_factor": 1,
+                            "normalmap_tangent": true,
+                            "displacementmap_factor": 0.1,
+                            "bumpmap_factor": 1,
+                            "use_scene_ambient": true,
+                            "extra_surface_shader_code": "",
+                            "extra_uniforms": {},
+                            "detail_factor": 0,
+                            "detail_scale": [
+                                10,
+                                10
+                            ],
+                            "emissive_extra": 0,
+                            "extra_factor": 0,
+                            "extra_color": [
+                                0,
+                                0,
+                                0
+                            ],
+                            "specular_factor": 0.10000000149011612,
+                            "specular_gloss": 10,
+                            "material_class": "StandardMaterial"
+                        },
+                        "flags": {
+                            "visible": true,
+                            "is_static": false,
+                            "selectable": true
+                        },
+                        "components": [
+                            [
+                                "Transform",
+                                {
+                                    "object_class": "Transform",
+                                    "uid": "@COMP-d5d40-9f8f5-10d4342-22",
+                                    "position": [
+                                        0,
+                                        0,
+                                        -35
+                                    ],
+                                    "rotation": [
+                                        0.7071067690849304,
+                                        0,
+                                        0,
+                                        0.7071067690849304
+                                    ],
+                                    "scaling": [
+                                        0.30000001192092896,
+                                        7,
+                                        0.30000001192092896
+                                    ],
+                                    "matrix": [
+                                        0.30000001192092896,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        2.395997853454901e-7,
+                                        6.999999523162842,
+                                        0,
+                                        0,
+                                        -0.29999998211860657,
+                                        1.0268562888882116e-8,
+                                        0,
+                                        0,
+                                        0,
+                                        -35,
+                                        1
+                                    ]
+                                }
+                            ],
+                            [
+                                "GeometricPrimitive",
+                                {
+                                    "enabled": true,
+                                    "geometry": 3,
+                                    "size": 10,
+                                    "subdivisions": 10,
+                                    "primitive": -1,
+                                    "point_size": 0.1,
+                                    "uid": "@COMP-d5d40-9f8f5-194a28a-23",
+                                    "object_class": "GeometricPrimitive"
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "object_class": "SceneNode",
+                        "name": "x-Axis",
+                        "uid": "@NODE-d5d40-bfac0-13c4273-26",
+                        "layers": 3,
+                        "material": {
+                            "uid": "@MAT-d5d40-cdfd6-1eba977-2a",
+                            "uvs_matrix": [
+                                1,
+                                0,
+                                0,
+                                0,
+                                1,
+                                0,
+                                0,
+                                0,
+                                1
+                            ],
+                            "textures": {},
+                            "flags": {
+                                "alpha_test": false,
+                                "alpha_test_shadows": false,
+                                "two_sided": false,
+                                "flip_normals": false,
+                                "depth_test": true,
+                                "depth_write": true,
+                                "ignore_lights": false,
+                                "cast_shadows": true,
+                                "receive_shadows": true,
+                                "ignore_frustum": false
+                            },
+                            "color": [
+                                1,
+                                0.10000000149011612,
+                                0
+                            ],
+                            "opacity": 1,
+                            "queue": 0,
+                            "render_state": {
+                                "front_face": 2305,
+                                "cull_face": true,
+                                "cull_face_mode": 0,
+                                "depth_test": true,
+                                "depth_mask": true,
+                                "depth_func": 513,
+                                "depth_range": [
+                                    0,
+                                    0
+                                ],
+                                "blend": false,
+                                "blendFunc0": 770,
+                                "blendFunc1": 771,
+                                "colorMask0": true,
+                                "colorMask1": true,
+                                "colorMask2": true,
+                                "colorMask3": true,
+                                "stencil_test": false,
+                                "stencil_mask": 255,
+                                "stencil_func_func": 519,
+                                "stencil_func_ref": 0,
+                                "stencil_func_mask": 255,
+                                "stencil_op_sfail": 7680,
+                                "stencil_op_dpfail": 7680,
+                                "stencil_op_dppass": 7680
+                            },
+                            "blend_mode": "normal",
+                            "shader_name": "global",
+                            "diffuse": [
+                                1,
+                                1,
+                                1
+                            ],
+                            "ambient": [
+                                1,
+                                1,
+                                1
+                            ],
+                            "emissive": [
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "backlight_factor": 0,
+                            "specular_on_top": false,
+                            "specular_on_alpha": false,
+                            "reflection_factor": 0,
+                            "reflection_fresnel": 1,
+                            "reflection_additive": false,
+                            "reflection_specular": false,
+                            "velvet": [
+                                0.5,
+                                0.5,
+                                0.5
+                            ],
+                            "velvet_exp": 0,
+                            "velvet_additive": false,
+                            "normalmap_factor": 1,
+                            "normalmap_tangent": true,
+                            "displacementmap_factor": 0.1,
+                            "bumpmap_factor": 1,
+                            "use_scene_ambient": true,
+                            "extra_surface_shader_code": "",
+                            "extra_uniforms": {},
+                            "detail_factor": 0,
+                            "detail_scale": [
+                                10,
+                                10
+                            ],
+                            "emissive_extra": 0,
+                            "extra_factor": 0,
+                            "extra_color": [
+                                0,
+                                0,
+                                0
+                            ],
+                            "specular_factor": 0.10000000149011612,
+                            "specular_gloss": 10,
+                            "material_class": "StandardMaterial"
+                        },
+                        "flags": {
+                            "visible": true,
+                            "is_static": false,
+                            "selectable": true
+                        },
+                        "components": [
+                            [
+                                "Transform",
+                                {
+                                    "object_class": "Transform",
+                                    "uid": "@COMP-d5d40-bfac0-1def2ca-27",
+                                    "position": [
+                                        35,
+                                        0,
+                                        0
+                                    ],
+                                    "rotation": [
+                                        0,
+                                        0,
+                                        0.7071067690849304,
+                                        0.7071067690849304
+                                    ],
+                                    "scaling": [
+                                        0.30000001192092896,
+                                        7,
+                                        0.30000001192092896
+                                    ],
+                                    "matrix": [
+                                        1.0268562888882116e-8,
+                                        0.29999998211860657,
+                                        0,
+                                        0,
+                                        -6.999999523162842,
+                                        2.395997853454901e-7,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        0.30000001192092896,
+                                        0,
+                                        35,
+                                        0,
+                                        0,
+                                        1
+                                    ]
+                                }
+                            ],
+                            [
+                                "GeometricPrimitive",
+                                {
+                                    "enabled": true,
+                                    "geometry": 3,
+                                    "size": 10,
+                                    "subdivisions": 10,
+                                    "primitive": -1,
+                                    "point_size": 0.1,
+                                    "uid": "@COMP-d5d40-c1d48-160bf11-28",
+                                    "object_class": "GeometricPrimitive"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "components": [
+                    [
+                        "Transform",
+                        {
+                            "object_class": "Transform",
+                            "uid": "@COMP-d5d40-42922-14b3bbf-d",
+                            "position": [
+                                0,
+                                0,
+                                0
+                            ],
+                            "rotation": [
+                                0,
+                                0,
+                                0,
+                                1
+                            ],
+                            "scaling": [
+                                1,
+                                1,
+                                1
+                            ],
+                            "matrix": [
+                                1,
+                                0,
+                                0,
+                                0,
+                                0,
+                                1,
+                                0,
+                                0,
+                                0,
+                                0,
+                                1,
+                                0,
+                                0,
+                                0,
+                                0,
+                                1
+                            ]
+                        }
+                    ],
+                    [
+                        "ArTrackable2D",
+                        {
+                            "trackableId": 1,
+                            "trackableType": "Pictorial",
+                            "trackablePath": "data/icon-08.patt",
+                            "uid": "@COMP-d5d40-42924-16d9780-10",
+                            "object_class": "ArTrackable2D"
+                        }
+                    ]
+                ]
+            }
+        ],
+        "components": [
+            [
+                "Camera",
+                {
+                    "object_class": "Camera",
+                    "uid": "@COMP-d5d40-513-15a6d69-6",
+                    "layers": 3,
+                    "enabled": true,
+                    "type": 1,
+                    "eye": [
+                        0,
+                        100,
+                        100
+                    ],
+                    "center": [
+                        0,
+                        0,
+                        0
+                    ],
+                    "up": [
+                        0,
+                        1,
+                        0
+                    ],
+                    "near": 0.1,
+                    "far": 1000,
+                    "fov": 45,
+                    "aspect": 1,
+                    "orthographic": [
+                        -1,
+                        1,
+                        -1,
+                        1
+                    ],
+                    "background_color": [
+                        0,
+                        0,
+                        0,
+                        1
+                    ],
+                    "frustum_size": 50,
+                    "viewport": [
+                        0,
+                        0,
+                        1,
+                        1
+                    ],
+                    "render_to_texture": false,
+                    "frame": null,
+                    "show_frame": true,
+                    "clear_color": true,
+                    "clear_depth": true
+                }
+            ],
+            [
+                "Light",
+                {
+                    "enabled": true,
+                    "layers": 255,
+                    "near": 1,
+                    "far": 500,
+                    "angle": 45,
+                    "angle_end": 60,
+                    "constant_diffuse": false,
+                    "use_specular": true,
+                    "att_start": 0,
+                    "att_end": 1000,
+                    "attenuation_type": 2,
+                    "offset": 0,
+                    "projective_texture": null,
+                    "use_target": false,
+                    "intensity": 1,
+                    "frustum_size": 50,
+                    "cast_shadows": false,
+                    "shadow_bias": 0.05,
+                    "shadowmap_resolution": 0,
+                    "shadow_type": "hard",
+                    "force_light_matrix": false,
+                    "extra_texture": null,
+                    "type": 1,
+                    "position": [
+                        100,
+                        100,
+                        100
+                    ],
+                    "target": [
+                        0,
+                        0,
+                        0
+                    ],
+                    "extra": [
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "up": [
+                        0,
+                        1,
+                        0
+                    ],
+                    "color": [
+                        1,
+                        1,
+                        1
+                    ],
+                    "spot_cone": true,
+                    "uid": "@COMP-d5d40-514-1603308-7",
+                    "object_class": "Light"
+                }
+            ],
+            [
+                "Skybox",
+                {
+                    "enabled": true,
+                    "texture": null,
+                    "material": null,
+                    "use_environment": false,
+                    "intensity": 1,
+                    "bake_to_cubemap": false,
+                    "uid": "@COMP-d5d40-7c9-164b034-9",
+                    "object_class": "Skybox"
+                }
+            ],
+            [
+                "ArControllerComponent",
+                {
+                    "farPlane": 1000,
+                    "nearPlane": 0.01,
+                    "defaultMarkerWidth": 80,
+                    "cameraCalibrationFile": "data/camera_para.dat",
+                    "initVideo": true,
+                    "running": false,
+                    "arController": null,
+                    "trackableDetectionModeList": {
+                        "Trackable square pattern (color)": 0,
+                        "Trackable square pattern (mono)": 1,
+                        "Trackable square barcode": 2,
+                        "Trackable square pattern and barcode (color)": 3,
+                        "Trackable square pattern and barcode (mono)": 4
+                    },
+                    "trackableDetectionMode": 3,
+                    "uid": "@COMP-d5d40-42922-1bcc6dd-b",
+                    "object_class": "ArControllerComponent"
+                }
+            ]
+        ]
+    },
+    "layer_names": [
+        "main",
+        "secondary"
+    ],
+    "global_scripts": [],
+    "external_scripts": [],
+    "preloaded_resources": {}
+}

@@ -7,22 +7,23 @@ var IntroModule = {
 
 	init: function()
 	{
-		if( this.preferences.show_intro_dialog !== false)
-			this.showIntroDialog();	
+		//if( this.preferences.show_intro_dialog !== false || true==true)
+			this.showIntroDialog();
 	},
 
 	showIntroDialog: function()
 	{
 		var dialog = new LiteGUI.Dialog("intro_dialog",{ width: 400, height: 400, closable: true });
 		dialog.content.innerHTML = ""+
-			"<p class='center'><img height='150' target='_blank' src='http://webglstudio.org/images/logo.png'/></p>" + 
-			"<p class='header center'>Welcome to WEBGLStudio!</p>" +
-			"<p class='msg center'>This is an Open Source work-in-progress tool to bring the 3D to the web.</p>" +
-			"<p class='msg center'>If you have any question/suggestion or problem using this tool, go to the <a target='_blank' href='http://webglstudio.org'>webglstudio.org</a> site or the <a href='https://github.com/jagenjo/webglstudio.js'>github page</a>.</p>";
+		//	"<p class='center'><img height='150' target='_blank' src='http://webglstudio.org/images/logo.png'/></p>" +
+			"<img src='imgs/realmax200.png' style='float:left;'>"+
+			"<p class='header center'>Welcome to Realmax AR Editor!</p>" +
+			"<p class='msg center'>Bringing AR to the Web.</p><br><br>" +
+			"<p class='msg center'>Create your own AR scenes to be triggered and played back using the Realmax AR system.</p>";
 
 		dialog.on_close = function()
 		{
-			IntroModule.preferences.show_intro_dialog = false;
+			IntroModule.preferences.show_intro_dialog = false;	// only show once... cw removed this!
 		}
 	
 		dialog.addButton("Close");
