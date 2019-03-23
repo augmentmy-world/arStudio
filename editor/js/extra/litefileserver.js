@@ -263,6 +263,7 @@ var LiteFileServer = {
 				}
 				catch (err)
 				{
+          console.log("ERROR: " + response);
 					console.error(err); 
 				}
 			}

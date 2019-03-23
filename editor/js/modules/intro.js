@@ -14,12 +14,13 @@ var IntroModule = {
 	showIntroDialog: function()
 	{
 		var dialog = new LiteGUI.Dialog("intro_dialog",{ width: 400, height: 400, closable: true });
-		dialog.content.innerHTML = ""+
-		//	"<p class='center'><img height='150' target='_blank' src='http://webglstudio.org/images/logo.png'/></p>" +
-			"<img src='imgs/realmax200.png' style='float:left;'>"+
-			"<p class='header center'>Welcome to Realmax AR Editor!</p>" +
-			"<p class='msg center'>Bringing AR to the Web.</p><br><br>" +
-			"<p class='msg center'>Create your own AR scenes to be triggered and played back using the Realmax AR system.</p>";
+    dialog.content.innerHTML = ""+
+    "<img src='imgs/icon200.png' style='float:left;'>"+
+    "<p class='header center'>Welcome to AR studio!</p>" +
+    "<p class='msg left'>The editor for webAR</p>" +
+    "<p class='msg left'>Design and develop your own AR scenes and share them with your audience.</p><br><br>" + 
+    "<p class='msg center'>The only system that supports pictures as targets!</p>";
+
 
 		dialog.on_close = function()
 		{
