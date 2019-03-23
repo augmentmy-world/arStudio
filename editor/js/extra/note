@@ -1,0 +1,4 @@
+<br />
+<b>Notice</b>:  A non well formed numeric value encountered in <b>/Users/thorstenbux/repos/2dTracking/arStudio/editor/liteserver/src/include/modules/user.php</b> on line <b>936</b><br />
+{"debug":["getUnits"],"msg":"retrieving units","status":1,"data_type":"units","data":[{"id":1,"user_id":"1","unit_id":"1","timestamp":"2019-03-20 19:56:22","mode":"ADMIN","name":"public","invite_token":"af246d8de8a813ea98ab5ebd8dbb8d24","author_id":1,"metadata":"{\"name\":\"Public\"}","used_size":0,"total_size":1048576000,"folders":null},{"id":2,"user_id":"1","unit_id":"2","timestamp":"2019-03-20 19:56:22","mode":"ADMIN","name":"admin","invite_token":"9fc3bc6f4525572dc7b5a86f91028e13","author_id":1,"metadata":"{\"name\":\"admin unit\"}","used_size":0,"total_size":10485760,"folders":{"projects":null}}]}
+"

@@ -623,26 +623,27 @@ CodingPadWidget.prototype.markLine = function(num)
 {
 	var cm = this.editor;
 
-    // Monaco editor already marks lines with syntax errors 
-    if(cm.name !== "Monaco"){
-        if(typeof(num) == "undefined" && this.last_error_line != null)
-        {
-            var lines = cm.lineCount();
-            for(var i = 0; i < lines; i++)
-                cm.removeLineClass( i, "background", "error-line");
-            //cm.removeLineClass( this.last_error_line, "background", "error-line");
-            this.last_error_line = null;
-            return;
-        }
+  // Monaco editor already marks lines with syntax errors 
+  if(cm.name !== "Monaco"){
+    if(typeof(num) == "undefined" && this.last_error_line != null)
+    {
+        var lines = cm.lineCount();
+        for(var i = 0; i < lines; i++)
+            cm.removeLineClass( i, "background", "error-line");
+        //cm.removeLineClass( this.last_error_line, "background", "error-line");
+        this.last_error_line = null;
+        return;
+    }
 
-	if(typeof(num) != "undefined")
-	{
-		if(this.last_error_line != null)
-			cm.removeLineClass( this.last_error_line, "background", "error-line");
+    if(typeof(num) != "undefined")
+    {
+      if(this.last_error_line != null)
+        cm.removeLineClass( this.last_error_line, "background", "error-line");
 
-		this.last_error_line = num;
-		cm.addLineClass(num, "background", "error-line");
-	}
+      this.last_error_line = num;
+      cm.addLineClass(num, "background", "error-line");
+    }
+  }
 }
 
 CodingPadWidget.prototype.getState = function(skip_content)
