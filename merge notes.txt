@@ -1,0 +1,9 @@
+Just chose B for merging:
+
+- editor/js/modules/componentEditors
+- editor/js/widgets/ui/inspectorWidget.js
+
+
+Interesting function:
+
+- initViewmode in editor/js/modules/render.js

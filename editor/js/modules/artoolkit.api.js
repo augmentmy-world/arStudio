@@ -1084,7 +1084,9 @@
 		var facing = configuration.facingMode || 'environment';
 
 		var onSuccess = configuration.onSuccess;
-		var onError = configuration.onError || function(err) { console.error("ARController.getUserMedia", err); };
+		var onError = configuration.onError || function(err) { 
+      console.error("ARController.getUserMedia", err.message); 
+    };
 
 		var video = document.createElement('video');
 		
@@ -1120,7 +1122,7 @@
 		var success = function(stream) {
 			video.addEventListener('loadedmetadata', initProgress, false);
             // video.src = window.URL.createObjectURL(stream);
-            video.srcObject = stream;
+      video.srcObject = stream;
 			readyToPlay = true;
 			play(); // Try playing without user input, should work on non-Android Chrome
 		};
@@ -1160,9 +1162,7 @@
 		navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 		var hdConstraints = {
 			audio: false,
-			video: {
-                facingMode : 'environment'
-		  	}
+			video: true
 		};
 
 		if ( false ) {
@@ -1197,6 +1197,8 @@
 			}
 		} else {
 			if (navigator.getUserMedia) {
+        const deviceIds = navigator.mediaDevices.enumerateDevices()
+        console.log(deviceIds)
 				navigator.getUserMedia(hdConstraints, success, onError);
 			} else {
 				onError('navigator.getUserMedia is not supported on your browser');
