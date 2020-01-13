@@ -1,5 +1,6 @@
 // Javi Agenjo  (@tamat) May 2016
 var LightmapTools = {
+	name:"LightmapTools",
 
 	init: function()
 	{
@@ -26,7 +27,7 @@ var LightmapTools = {
 		if(this.dialog)
 			this.dialog.close();
 
-		var dialog = new LiteGUI.Dialog("dialog_lightmap_tools", {title:"Lightmap Tools", close: true, minimize: true, width: 300, height: 440, scroll: false, draggable: true});
+		var dialog = new LiteGUI.Dialog({ id: "dialog_lightmap_tools", title:"Lightmap Tools", close: true, minimize: true, width: 300, height: 440, scroll: false, draggable: true});
 		dialog.show('fade');
 		dialog.setPosition(100,100);
 		this.dialog = dialog;

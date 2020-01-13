@@ -76,6 +76,23 @@ LS.SceneNode.actions["move_after"] = {
 	}
 };
 
+LS.SceneNode.actions["move_to_parent"] = { 
+	title:"Move to parent",
+	callback: function(){
+		if(!this.parentNode || !this.parentNode.parentNode)
+			return;
+		CORE.userAction("node_parenting", this);
+		var global = null;
+		if(this.transform)
+			global = this.transform.getGlobalMatrix();
+		var grandpa = this.parentNode.parentNode;
+		var index = grandpa._children.indexOf(this.parentNode);
+		grandpa.addChild( this, index );
+		if(global)
+			this.transform.fromMatrix( global, true );
+	}
+};
+
 LS.SceneNode.actions["create_child_node"] = { 
 	title:"Create Child Node",
 	callback: function(){
@@ -402,40 +419,17 @@ LS.Components.GeometricPrimitive.actions["to_mesh"] = {
 	}
 };
 
+LS.Components.ReflectionProbe.actions["preview"] = { title: "Preview", callback: function() { 
+		TextureTools.previewTexture( this._texture );
+		LS.GlobalScene.refresh();
+	}
+};
+
 
 //*********** Material Actions *************************************
 
 
 LS.MaterialClasses.StandardMaterial.actions = {}
-
-/*
-LS.MaterialClasses.newStandardMaterial.actions["to_ShaderMaterial"] = {
-	title:"Convert to ShaderMaterial",
-	callback: function( node )
-	{
-		var new_material = new LS.MaterialClasses.ShaderMaterial();
-		var shadercode = this.getShaderCode();
-		LS.RM.registerResource( "shader.glsl", shadercode );
-		new_material.shader = shadercode.filename;
-		node.material = new_material;
-		RenderModule.requestFrame();
-	}
-}
-*/
-
-LS.MaterialClasses.StandardMaterial.actions["to_newStandardMaterial"] = {
-	title:"Convert to newStandardMaterial",
-	callback: function( node )
-	{
-		var info = this.serialize();
-		info.object_class = "newStandardMaterial";
-		delete info.uid;
-		var new_material = new LS.MaterialClasses.newStandardMaterial();
-		new_material.configure( info );
-		node.material = new_material;
-	}
-}
-
 
 /*
 LS.Material.actions = {};

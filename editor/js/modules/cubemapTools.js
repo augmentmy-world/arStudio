@@ -1,5 +1,7 @@
 /* This module allows to create Cubemaps and store them as resources */
 var CubemapTools = {
+	name: "CubemapTools",
+
 	default_resolution: 256,
 
 	current_cubemap: null,
@@ -40,9 +42,10 @@ var CubemapTools = {
 		var loaded_resolution = CubemapTools.default_resolution;
 		var center = "camera eye";
 		var result = "cubemap";
-		var cubemap_modes = { "Cross Left": "CUBECROSSL", "Vertical": "CUBEVERT" };
+		var cubemap_modes = { "Cross Left": "CUBECROSSL", "Vertical": "CUBEVERT", "Polar":"CUBEPOLAR" };
 		var mode = "CUBECROSSL";
 		var layers = 0x3;
+		var export_format = "CUBECROSSL";
 
 		var url = "";
 		var original_file = null;
@@ -212,6 +215,8 @@ var CubemapTools = {
 				mode = v;
 				if(v == "CUBECROSSL")
 					cubemap_options = { keep_image: true, is_cross: 1 };
+				else if(v == "CUBEPOLAR")
+					cubemap_options = { keep_image: true, is_polar: 1 };
 				else
 					cubemap_options = { keep_image: true };
 			}});
@@ -242,6 +247,13 @@ var CubemapTools = {
 			widgets.addCombo("Output size", CubemapTools.default_resolution, { values: [0,32,64,128,256,512,1024], callback: function(v) { 
 				dialog.cubemap_resolution = v;
 			}});
+
+			widgets.addSection("Export", { collapsed: false });
+			widgets.addCombo("Format", export_format, { values: cubemap_modes, callback: function(v) { 
+				export_format = v;
+			}});
+			widgets.addButton( null, "Download cubemap", { callback: downloadCubemap });
+
 
 		}//refresh
 
@@ -330,7 +342,7 @@ var CubemapTools = {
 			return position;
 		}
 
-		function enableDragDropCubemapImages( dialog )
+		function enableDragDropCubemapImages( e, dialog )
 		{
 			console.log(e.dataTransfer);
 			var path = e.dataTransfer.getData("res-fullpath");
@@ -351,6 +363,33 @@ var CubemapTools = {
 			}
 			e.preventDefault();
 			e.stopPropagation();
+		}
+
+		function downloadCubemap()
+		{
+			var cubemap = CubemapTools.current_cubemap;
+			if(!cubemap)
+				return;
+			var data = null;
+			if(export_format == "CUBEPOLAR")
+			{
+				var polar_texture = CubemapTools.convertCubemapToPolar(cubemap);
+				data = polar_texture.toBinary();
+			}
+			else if(export_format == "CUBEVERT")
+			{
+				var image = CubemapTools.convertCubemapToVerticalImage(cubemap);
+				data = image.toBlob(function(v){
+					LiteGUI.downloadFile("cubemap.png", v );
+				});
+			}
+			else //if(export_format == "CUBECROSSL")
+			{
+				data = cubemap.toBinary();
+			}
+
+			if(data)
+				LiteGUI.downloadFile("cubemap.png", data );
 		}
 	},
 
@@ -439,50 +478,28 @@ var CubemapTools = {
 		return cubemap;
 	},
 
-	convertCubemapToPolar: function(cubemap_texture, size, target_texture)
+	convertCubemapToPolar: function( cubemap_texture, size, target_texture, keep_type )
 	{
-		if(!cubemap_texture || cubemap_texture.texture_type != gl.TEXTURE_CUBE_MAP) {
-			trace("No cubemap found");
-			return null;
+		return GL.Texture.cubemapToTexture2D( cubemap_texture, size, target_texture, keep_type, 0 );
+	},
+
+	convertCubemapToVerticalImage: function( cubemap_texture )
+	{
+		var pixels = cubemap_texture.getCubemapPixels();
+		var final_pixels = new Uint8Array( cubemap_texture.width * cubemap_texture.height * 6 * 4 );
+		var pos = 0;
+		for(var i = 0; i < 6; ++i)
+		{
+			final_pixels.set(pixels[i],pos);
+			pos += pixels[i].length;
 		}
 
-		size = size || 256;
-		var canvas = document.createElement("canvas");
-		canvas.width = canvas.height = size;
-
-		var texture = target_texture || new GL.Texture(size,size,{minFilter: gl.NEAREST});
-		texture.drawTo(function() {
-			gl.viewport(0,0,size,size);
-			gl.disable(gl.DEPTH_TEST);
-			gl.disable(gl.CULL_FACE);
-			gl.disable(gl.BLEND);
-			gl.clearColor(1,1,1,1);
-			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-			cubemap_texture.bind();
-			var shader = this.shader_cubemap_to_polar;
-			if(!shader)
-			{
-				this.compileShaders();
-				shader = this.shader_cubemap_to_polar;
-			}
-
-			cubemap_texture.toViewport( shader );
-			//shader.uniforms({color:[1,1,1,1], texture: 0}).draw( RenderModule.canvas_manager.screen_plane );
-
-			var ctx = canvas.getContext("2d");
-			var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
-			buffer = pixels.data;
-			var buffer = new Uint8Array(size*size*4);
-			gl.readPixels(0,0,size,size,gl.RGBA,gl.UNSIGNED_BYTE,buffer);
-			//for(var i = 0; i < buffer.length; ++i) { pixels.data[i] = buffer[i]; }
-			pixels.data.set(buffer);
-			ctx.putImageData(pixels, 0, 0);
-		});
-
-		//document.body.appendChild(canvas);
-		ResourcesManager.processImage("cubemap_" + (Math.random()*1000).toFixed(),canvas);
-		return texture;
+		var canvas = createCanvas(cubemap_texture.width, cubemap_texture.height*6 );
+		var ctx = canvas.getContext("2d");
+		var data = ctx.getImageData(0,0,canvas.width,canvas.height);
+		data.data.set(final_pixels);
+		ctx.putImageData(data,0,0);
+		return canvas;
 	},
 
 	generateCubemapFromFiles: function( files, callback, options )
@@ -614,28 +631,6 @@ var CubemapTools = {
 			if(callback)
 				callback(texture);
 		}
-	},
-
-	compileShaders: function()
-	{
-		this.shader_cubemap_to_polar = LS.Shaders.compile( LS.Shaders.common_vscode + '\
-			varying vec2 coord;\
-			void main() {\
-			coord = a_coord;\
-			gl_Position = vec4(coord * 2.0 - 1.0, 0.0, 1.0);\
-		}\
-		', LS.Shaders.common_pscode + '\
-			#define PI 3.14159265358979323846264\n\
-			uniform samplerCube texture;\
-			uniform vec4 color;\
-			varying vec2 coord;\
-			void main() {\
-				float alpha = (coord.x * 2.0) * PI;\
-				float beta = (coord.y * 2.0 - 1.0) * PI * 0.5;\
-				vec3 N = vec3( -cos(alpha) * cos(beta), sin(beta), sin(alpha) * cos(beta) );\
-				gl_FragColor = color * textureCube(texture,N);\
-			}\
-		',"cubemap_to_polar");
 	},
 
 	render: function( camera )

@@ -43,25 +43,39 @@ var LiteGUI = {
 		if(!this.container )
 			this.container = document.body;
 
-		//create litegui root element
-		var root = document.createElement("div");
-		root.className = "litegui-wrap fullscreen";
-		root.style.position = "relative";
-		root.style.overflow = "hidden";
-		this.root = root;
-		this.container.appendChild( root );
+		if( options.wrapped )
+		{
+			//create litegui root element
+			var root = document.createElement("div");
+			root.style.position = "relative";
+			root.style.overflow = "hidden";
+			this.root = root;
+			this.container.appendChild( root );
+
+			//content: the main container for everything
+			var content = document.createElement("div");
+			this.content = content;
+			this.root.appendChild(content);
+
+			//maximize
+			if( this.root.classList.contains("fullscreen") )
+			{
+				window.addEventListener("resize", function(e) { 
+					LiteGUI.maximizeWindow();
+				});
+			}
+		}
+		else
+			this.root = this.content = this.container;
+
+		this.root.className = "litegui-wrap fullscreen";
+		this.content.className = "litegui-maincontent";
 
 		//create modal dialogs container
 		var modalbg = this.modalbg_div = document.createElement("div");
 		this.modalbg_div.className = "litemodalbg";
 		this.root.appendChild(this.modalbg_div);
 		modalbg.style.display = "none";
-
-		//content: the main container for everything
-		var content = document.createElement("div");
-		content.className = "litegui-maincontent";
-		this.content = content;
-		this.root.appendChild(content);
 
 		//create menubar
 		if(options.menubar)
@@ -71,14 +85,7 @@ var LiteGUI = {
 		if(options.gui_callback)
 			options.gui_callback();
 
-		//maximize
-		if( this.root.classList.contains("fullscreen") )
-		{
-			window.addEventListener("resize", function(e) { 
-				LiteGUI.maximizeWindow();
-			});
-		}
-
+		//external windows
 		window.addEventListener("beforeunload", function(e) {
 			for(var i in LiteGUI.windows)
 				LiteGUI.windows[i].close();
@@ -180,7 +187,12 @@ var LiteGUI = {
 	* @param {String} class_name
 	*/
 	removeClass: function( elem, selector, class_name ){
-		var list = (elem || document).querySelectorAll( class_name );
+		if(!class_name)
+		{
+			class_name = selector;
+			selector = "." + selector;
+		}
+		var list = (elem || document).querySelectorAll( selector );
 		for(var i = 0; i < list.length; ++i)
 			list[i].classList.remove(class_name);
 	},
@@ -677,6 +689,32 @@ var LiteGUI = {
 	},
 
 	/**
+	* Useful to create elements from a text like '<div><span class="title"></span></div>' and an object like { ".title":"mytitle" }
+	* @method createListItem
+	* @param {String} code
+	* @param {Object} values it will use innerText in the elements that matches that selector
+	* @param {Object} style
+	* @return {HTMLElement} 
+	**/
+	createListItem: function( code, values, style )
+	{
+		var elem = document.createElement("span");
+		elem.innerHTML = code;
+		elem = elem.childNodes[0]; //to get the node
+		if(values)
+		for(var i in values)
+		{
+			var subelem = elem.querySelector(i);
+			if(subelem)
+				subelem.innerText = values[i];
+		}
+		if(style)
+		for(var i in style)
+			elem.style[i] = style[i];
+		return elem;
+	},
+
+	/**
 	* Request script and inserts it in the DOM
 	* @method createButton
 	* @param {String} id
@@ -1166,7 +1204,10 @@ var LiteGUI = {
 		navicon: "&#9776;",
 		refresh: "&#8634;",
 		gear: "&#9881;",
-		open_folder: "&#128194;"
+		open_folder: "&#128194;",
+		download: "&#11123;",
+		tick: "&#10003;",
+		trash: "&#128465;"
 	},
 	
 	//given a html entity string it returns the equivalent unicode character
@@ -1200,6 +1241,18 @@ var LiteGUI = {
 		if(v >= 0 )
 			return (v|0) + "px";
 		return "calc( 100% - " + Math.abs(v|0) + "px )";
+	},
+
+	/**
+	* Returns the window where this element is attached (used in multi window applications)
+	* @method getElementWindow
+	* @param {HTMLElement} v
+	* @return {Window} the window element
+	**/
+	getElementWindow: function(v)
+	{
+        var doc = v.ownerDocument;
+        return doc.defaultView || doc.parentWindow;
 	},
 
 	/**
@@ -1561,14 +1614,14 @@ function beautifyCode( code, reserved, skip_css )
 	reserved = reserved || ["abstract", "else", "instanceof", "super", "boolean", "enum", "int", "switch", "break", "export", "interface", "synchronized", "byte", "extends", "let", "this", "case", "false", "long", "throw", "catch", "final", "native", "throws", "char", "finally", "new", "transient", "class", "float", "null", "true", "const", "for", "package", "try", "continue", "function", "private", "typeof", "debugger", "goto", "protected", "var", "default", "if", "public", "void", "delete", "implements", "return", "volatile", "do", "import", "short", "while", "double", "in", "static", "with"];
 
 	//reserved words
-	code = code.replace(/(\w+)/g, function(v) {
+	code = code.replace(/\b(\w+)\b/g, function(v) {
 		if(reserved.indexOf(v) != -1)
 			return "<span class='rsv'>" + v + "</span>";
 		return v;
 	});
 
 	//numbers
-	code = code.replace(/([0-9]+)/g, function(v) {
+	code = code.replace(/\b([0-9]+)\b/g, function(v) {
 		return "<span class='num'>" + v + "</span>";
 	});
 
@@ -1588,10 +1641,11 @@ function beautifyCode( code, reserved, skip_css )
 		return "<span class='str'>" + v + "</span>";
 	});
 
-	//comments
-	code = code.replace(/(\/\/[a-zA-Z0-9\?\!\(\)_ ]*)/g, function(v) {
-		return "<span class='cmnt'>" + v + "</span>";
+	//comments 
+	code = code.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, function(v) { ///(\/\/[a-zA-Z0-9\?\!\(\)_ ]*)/g
+		return "<span class='cmnt'>" + v.replace(/<[^>]*>/g, "") + "</span>";
 	});
+
 
 	if(!skip_css)
 		code = "<style>.obj { color: #79B; } .prop { color: #B97; }	.str,.num { color: #A79; } .cmnt { color: #798; } .rsv { color: #9AB; } </style>" + code;
@@ -1704,6 +1758,7 @@ LiteGUI.Button = Button;
 function SearchBox( value, options )
 {
 	options = options || {};
+	value = value || "";
 	var element = document.createElement("div");
 	element.className = "litegui searchbox";
 	var placeholder = (options.placeholder != null ? options.placeholder : "Search");
@@ -2643,6 +2698,114 @@ function LineEditor(value, options)
 
 LiteGUI.LineEditor = LineEditor;
 
+
+function ComplexList( options )
+{
+	options = options || {};
+
+	this.root = document.createElement("div");
+	this.root.className = "litecomplexlist";
+
+	this.item_code = options.item_code || "<div class='listitem'><span class='tick'><span>"+LiteGUI.special_codes.tick+"</span></span><span class='title'></span><button class='trash'>"+LiteGUI.special_codes.close+"</button></div>";
+
+	if(options.height)
+		this.root.style.height = LiteGUI.sizeToCSS( options.height );
+
+	this.selected = null;
+	this.onItemSelected = null;
+	this.onItemToggled = null;
+	this.onItemRemoved = null;
+}
+
+ComplexList.prototype.addTitle = function( text )
+{
+	var elem = LiteGUI.createElement("div",".listtitle",text);
+	this.root.appendChild( elem );
+	return elem;
+}
+
+ComplexList.prototype.addHTML = function( html, on_click )
+{
+	var elem = LiteGUI.createElement("div",".listtext", html );
+	if(on_click)
+		elem.addEventListener("mousedown", on_click);
+	this.root.appendChild( elem );
+	return elem;
+}
+
+ComplexList.prototype.clear = function()
+{
+	this.root.innerHTML = "";
+}
+
+ComplexList.prototype.addItem = function( item, text, is_enabled, can_be_removed )
+{
+	var title = text || item.content || item.name;
+	var elem = LiteGUI.createListItem( this.item_code, { ".title": title } );
+	elem.item = item;
+
+	if(is_enabled)
+		elem.classList.add("enabled");
+
+	if(!can_be_removed)
+		elem.querySelector(".trash").style.display = "none";
+
+	var that = this;
+	elem.addEventListener("mousedown", function(e){
+		e.preventDefault();
+		this.setSelected(true);
+		if(that.onItemSelected)
+			that.onItemSelected( item, elem );
+	});
+	elem.querySelector(".tick").addEventListener("mousedown",  function(e){
+		e.preventDefault();
+		elem.classList.toggle("enabled");
+		if(that.onItemToggled)
+			that.onItemToggled( item, elem, elem.classList.contains("enabled"));
+	});
+
+	elem.querySelector(".trash").addEventListener("mousedown",function(e){
+		e.preventDefault();
+		e.stopPropagation();
+		e.stopImmediatePropagation();
+		if(that.onItemRemoved)
+			that.onItemRemoved( item, elem );
+	});
+
+	elem.setContent = function(v, is_html){
+		if(is_html)
+			elem.querySelector(".title").innerHTML = v;
+		else
+			elem.querySelector(".title").innerText = v;
+	}
+
+	elem.toggleEnabled = function(v){
+		elem.classList.toggle("enabled");
+	}
+
+	elem.setSelected = function(v)
+	{
+		LiteGUI.removeClass( that.root, "selected" );
+		if(v)
+			this.classList.add("selected");
+		else
+			this.classList.remove("selected");
+		that.selected = elem.item;
+	}
+
+	elem.show = function() { this.style.display = ""; }
+	elem.hide = function() { this.style.display = "none"; }
+
+	this.root.appendChild( elem );
+	return elem;
+}
+
+LiteGUI.ComplexList = ComplexList;
+
+
+
+
+
 })();
 //enclose in a scope
 (function(){
@@ -2653,21 +2816,22 @@ function Console( options )
 
 	this.root = document.createElement("div");
 	this.root.className = "liteconsole";
-
 	this.root.innerHTML = "<div class='log'></div><div class='foot'><input type='text'/></div>";
 
 	this.log_element = this.root.querySelector('.log');
 	this.input = this.root.querySelector('input');
 
-	this.input.addEventListener("keydown", this.onKeyDown.bind(this) );
-
+	this.input.addEventListener("keydown", this.processKeyDown.bind(this) );
 	this._prompt = options.prompt || "]";
+
+	this.onAutocomplete = null; //receives string, must return final string
+	this.onProcessCommand = null; //receives input value
 
 	this.history = [];
 	this._history_offset = 0;
 }
 
-Console.prototype.onKeyDown = function(e)
+Console.prototype.processKeyDown = function(e)
 {
 	if(this._input_blocked)
 		return;
@@ -5176,7 +5340,7 @@ LiteGUI.Console = Console;
 				var input = title.querySelector("input");
 
 				//loose focus when renaming
-				$(input).blur(function(e) { 
+				input.addEventListener("blur",function(e) { 
 					var new_name = e.target.value;
 					setTimeout(function() { that2.innerHTML = new_name; },1); //bug fix, if I destroy input inside the event, it produce a NotFoundError
 					//item.node_name = new_name;
@@ -5189,11 +5353,11 @@ LiteGUI.Console = Console;
 				input.addEventListener("keydown", function(e) {
 					if(e.keyCode != 13)
 						return;
-					$(this).blur();
+					this.blur();
 				});
 
 				//set on focus
-				$(input).focus();
+				input.focus();
 
 				e.preventDefault();
 			}
@@ -5491,18 +5655,22 @@ LiteGUI.Console = Console;
 		if(!item)
 			return;
 
-		var rects = this.root.getClientRects();
-		if(!rects.length)
-			return false;
-		var r = rects[0];
-		var h = r.height;
+		var container = this.root.parentNode;
+
+		if(!container)
+			return;
+
+		var rect = container.getBoundingClientRect();
+		if(!rect)
+			return;
+		var h = rect.height;
 		var x = ( parseInt( item.dataset["level"] ) + this.indent_offset) * Tree.INDENT + 50;
 
-		this.root.scrollTop = item.offsetTop - (h * 0.5)|0;
-		if( r.width * 0.75 < x )
-			this.root.scrollLeft = x;
+		container.scrollTop = item.offsetTop - (h * 0.5)|0;
+		if( rect.width * 0.75 < x )
+			container.scrollLeft = x;
 		else
-			this.root.scrollLeft = 0;
+			container.scrollLeft = 0;
 	}
 
 	/**
@@ -6023,6 +6191,17 @@ LiteGUI.Console = Console;
 		this.content = this.root.querySelector(".content");
 		this.footer = this.root.querySelector(".panel-footer");
 
+		if(options.width)
+			this.root.style.width = LiteGUI.sizeToCSS( options.width );
+		if(options.height)
+			this.root.style.height = LiteGUI.sizeToCSS( options.height );
+		if(options.position)
+		{
+			this.root.style.position = "absolute";
+			this.root.style.left = LiteGUI.sizeToCSS( options.position[0] );
+			this.root.style.top = LiteGUI.sizeToCSS( options.position[1] );
+		}
+
 		//if(options.scroll == false)	this.content.style.overflow = "hidden";
 		if(options.scroll == true)
 			this.content.style.overflow = "auto";
@@ -6330,8 +6509,6 @@ LiteGUI.Console = Console;
 			panel.style.height = "100%";
 			this.content.style.width = "100%";
 			this.content.style.height = "calc(100% - "+ LiteGUI.Panel.title_height +")"; //title offset: 20px
-			this.content.style.height = "-moz-calc(100% - "+ LiteGUI.Panel.title_height +")";
-			this.content.style.height = "-webkit-calc(100% - "+ LiteGUI.Panel.title_height +")"; 
 			this.content.style.overflow = "auto";
 		}
 		else if(dock_type == 'left' || dock_type == 'right')
@@ -6342,9 +6519,6 @@ LiteGUI.Console = Console;
 
 			panel.style.width = this.width + "px";
 			panel.style.height = "100%";
-
-			this.content.style.height = "-moz-calc(100% - "+ LiteGUI.Panel.title_height +")";
-			this.content.style.height = "-webkit-calc(100% - "+ LiteGUI.Panel.title_height +")";
 			this.content.style.height = "calc(100% - "+ LiteGUI.Panel.title_height +")";
 			this.content.style.overflow = "auto";
 
@@ -7054,9 +7228,30 @@ function Inspector( options )
 	this.widgets_per_row = options.widgets_per_row || 1;
 }
 
-//append the inspector to a parent
-Inspector.prototype.appendTo = function( parent, at_front)
+Inspector.prototype.getValues = function()
 {
+	var r = {};
+	for(var i in this.widgets_by_name)
+		r[i] = this.widgets_by_name[i].getValue();
+	return r;
+}
+
+Inspector.prototype.setValues = function(v)
+{
+	for(var i in v)
+		if( this.widgets_by_name[i] )
+			this.widgets_by_name[i].setValue( v[i] );
+}
+
+//append the inspector to a parent
+Inspector.prototype.appendTo = function( parent, at_front )
+{
+	if(!parent)
+		return;
+	if(parent.constructor === String)
+		parent = document.querySelector(parent);
+	if(!parent)
+		return;
 	if( at_front )
 		parent.insertBefore( this.root, parent.firstChild );
 	else
@@ -8504,7 +8699,7 @@ Inspector.prototype.addInfo = function( name, value, options)
 	value = (value === undefined || value === null) ? "" : value;
 	var element = null;
 	if(name != null)
-		element = this.createWidget(name,value, options);
+		element = this.createWidget( name, value, options);
 	else
 	{
 		element = document.createElement("div");
@@ -8535,6 +8730,13 @@ Inspector.prototype.addInfo = function( name, value, options)
 	if(!content)
 		content = element.querySelector(".winfo");
 
+	if(options.width)
+	{
+		element.style.width = LiteGUI.sizeToCSS(options.width);
+		element.style.display = "inline-block";
+		if(!name)
+			info.style.margin = "2px";
+	}
 	if(options.height)
 	{
 		content.style.height = LiteGUI.sizeToCSS(options.height);
@@ -9588,43 +9790,48 @@ Inspector.prototype.addFile = function(name, value, options)
 	var that = this;
 	this.values[name] = value;
 	
-	var element = this.createWidget(name,"<span class='inputfield full whidden' style='width: calc(100% - 26px)'><span class='filename'>"+value+"</span></span><button class='litebutton' style='width:20px; margin-left: 2px;'>...</button><input type='file' size='100' class='file' value='"+value+"'/>", options);
+	var element = this.createWidget(name,"<span class='inputfield full whidden' style='width: calc(100% - 26px)'><span class='filename'></span></span><button class='litebutton' style='width:20px; margin-left: 2px;'>...</button><input type='file' size='100' class='file' value='"+value+"'/>", options);
 	var content = element.querySelector(".wcontent");
 	content.style.position = "relative";
 	var input = element.querySelector(".wcontent input");
 	var filename_element = element.querySelector(".wcontent .filename");
+	if(value)
+		filename_element.innerText = value.name;
+
 	input.addEventListener("change", function(e) { 
 		if(!e.target.files.length)
 		{
 			//nothing
-			filename_element.innerHTML = "";
+			filename_element.innerText = "";
 			Inspector.onWidgetChange.call(that, element, name, null, options);
 			return;
 		}
 
 		var url = null;
+		//var data = { url: url, filename: e.target.value, file: e.target.files[0], files: e.target.files };
+		var file = e.target.files[0];
+		file.files = e.target.files;
 		if( options.generate_url )
-			url = URL.createObjectURL( e.target.files[0] );
-		var data = { url: url, filename: e.target.value, file: e.target.files[0], files: e.target.files };
+			file.url = URL.createObjectURL( e.target.files[0] );
+		filename_element.innerText = file.name;
 
 		if(options.read_file)
 		{
 			 var reader = new FileReader();
 			 reader.onload = function(e2){
-				data.data = e2.target.result;
-				Inspector.onWidgetChange.call( that, element, name, data, options );
+				file.data = e2.target.result;
+				Inspector.onWidgetChange.call( that, element, name, file, options );
 			 }
 			 if( options.read_file == "binary" )
-				 reader.readAsArrayBuffer( data.file );
+				 reader.readAsArrayBuffer( file );
 			 else if( options.read_file == "data_url" )
-				 reader.readAsDataURL( data.file );
+				 reader.readAsDataURL( file );
 			 else
-				 reader.readAsText( data.file );
+				 reader.readAsText( file );
 		}
 		else
 		{
-			filename_element.innerHTML = e.target.files[0].name;
-			Inspector.onWidgetChange.call( that, element, name, data, options );
+			Inspector.onWidgetChange.call( that, element, name, file, options );
 		}
 	});
 
@@ -9846,6 +10053,8 @@ Inspector.prototype.addArray = function( name, value, options )
 //creates an empty container but it is not set active
 Inspector.prototype.addContainer = function(name, options)
 {
+	if(name && name.constructor !== String)
+		console.warn("LiteGUI.Inspector.addContainer first parameter must be a string with the name");
 	var element = this.startContainer(null,options);
 	this.endContainer();
 	return element;

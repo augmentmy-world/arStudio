@@ -23,6 +23,7 @@ LS.Components.GlobalInfo["@inspector"] = function( component, inspector )
 		else
 			component.clearIrradiance();
 	}});
+	inspector.addColor("Irradiance color", component.irradiance_color, { pretitle: AnimationModule.getKeyframeCode( component, "irradiance_color"), callback: function(color) { vec3.copy(component.irradiance_color,color); } });
 	inspector.addSeparator();
 
 	inner_setTexture("environment");
@@ -97,13 +98,12 @@ LS.Components.Transform["@inspector"] = function(transform, inspector)
 			CORE.userAction("component_changed", transform );
 	}});
 
-	inspector.addNumber("Uniform Scale", transform._scaling[0].toFixed(3), {
+	inspector.addNumber("Uniform Scale", transform.uniform_scaling, {
 		name_width: 100,
 		step: 0.01,
-		pretitle: AnimationModule.getKeyframeCode( transform, "scaling"),
+		pretitle: AnimationModule.getKeyframeCode( transform, "uniform_scaling"),
 		callback: function(v) {
 			scale_widget.setValue([v,v,v]);
-			//transform.setScale(v,v,v);
 		}, callback_before: function() {
 			CORE.userAction("component_changed", transform );
 	}});
@@ -215,7 +215,7 @@ LS.Components.Camera["@inspector"] = function(camera, inspector)
 
 	function inner_view_from_here()
 	{
-		RenderModule.camera.lookAt( camera.eye, camera.center, camera.up );
+		RenderModule.camera.lookAt( camera.getEye(), camera.getCenter(), camera.up );
 		inspector.refresh();
 	}
 }
@@ -278,6 +278,7 @@ LS.Components.Light["@inspector"] = function(light, inspector)
 	if(light.cast_shadows)
 	{
 		inspector.widgets_per_row = 2;
+		//inspector.addCheckbox("Reverse faces", light.hard_shadows, { pretitle: AnimationModule.getKeyframeCode( light, "hard_shadows"), callback: function(v) { light.hard_shadows = v; }});
 		inspector.addCheckbox("Hard shadows", light.hard_shadows, { pretitle: AnimationModule.getKeyframeCode( light, "hard_shadows"), callback: function(v) { light.hard_shadows = v; }});
 		inspector.addLayers("Shadows Layers", light.shadows_layers, { pretitle: AnimationModule.getKeyframeCode( light, "shadows_layers"), callback: function (value) { 
 			light.shadows_layers = value;
@@ -287,7 +288,7 @@ LS.Components.Light["@inspector"] = function(light, inspector)
 		inspector.addNumber("Near", light.near, { pretitle: AnimationModule.getKeyframeCode( light, "near"), callback: function (value) { light.near = value;}});
 		inspector.addNumber("Far", light.far, { pretitle: AnimationModule.getKeyframeCode( light, "far"), callback: function (value) { light.far = value; }});
 		inspector.widgets_per_row = 1;
-		inspector.addNumber("Shadow bias", light.shadow_bias, { pretitle: AnimationModule.getKeyframeCode( light, "shadow_bias"), step: 0.001, precision: 3, min:0, callback: function (value) { light.shadow_bias = value; }});
+		inspector.addNumber("Shadow bias", light.shadow_bias, { pretitle: AnimationModule.getKeyframeCode( light, "shadow_bias"), step: 0.001, precision: 3, min:-0.5, callback: function (value) { light.shadow_bias = value; }});
 		inspector.addCombo("Shadowmap size", !light.shadowmap_resolution ? "Default" : light.shadowmap_resolution, { pretitle: AnimationModule.getKeyframeCode( light, "shadowmap_resolution"), values: ["Default",256,512,1024,2048,4096], callback: function(v) { 
 			if(v == "Default")
 				light.shadowmap_resolution = 0; 
@@ -317,7 +318,7 @@ LS.Components.Light["@inspector"] = function(light, inspector)
 LS.Components.MeshRenderer.onShowProperties = function( component, inspector )
 {
 	return; //work in progress
-
+	/*
 	var mesh = component.getMesh();
 
 	inspector.addCheckbox("use submaterials", component.use_submaterials, function(v){
@@ -365,6 +366,7 @@ LS.Components.MeshRenderer.onShowProperties = function( component, inspector )
 		component.submaterials.push(submaterial);
 		inspector.refresh();
 	}});
+	*/
 }
 
 EditorModule.onShowComponentCustomProperties = function( component, inspector, ignore_edit, replacement_component, extra_name )
@@ -624,6 +626,29 @@ LS.FXStack.prototype.inspect = function( inspector, component )
 	}
 }
 
+function computeSharedInitialString(array)
+{
+	var first = array[0];
+	for(var i = 0; i < first.length; ++i)
+		for(var j = 1; j < array.length; ++j)
+			if( first[i] != array[j][i] )
+				return i;
+	return first.length;
+}
+
+function removeSharedString(array)
+{
+	var n = computeSharedInitialString(array);
+	array = array.map(function(a){ 
+		a = a.substr(n);
+		var last = a.lastIndexOf(".");
+		if(last != -1)
+			return a.substr(0,last);
+		return a;
+	});
+	return array;
+}
+
 LS.Components.MorphDeformer["@inspector"] = function(component, inspector)
 {
 	inspector.widgets_per_row = 2;
@@ -635,31 +660,55 @@ LS.Components.MorphDeformer["@inspector"] = function(component, inspector)
 
 	if( component.morph_targets.length )
 	{
-		inspector.widgets_per_row = 3;
-		for(var i = 0; i < component.morph_targets.length; i++)
+		if(LS.Components.MorphDeformer.use_sliders)
 		{
-			var morph = component.morph_targets[i];
-			inspector.addMesh("", morph.mesh, { pretitle: AnimationModule.getKeyframeCode( component, "morphs/"+i+"/mesh" ), name_width: 20, align: "right", width: "60%", morph_index: i, callback: function(v) { 
-				component.setMorphMesh( this.options.morph_index, v );
-				LS.GlobalScene.refresh();
-			}});
+			var names = component.morph_targets.map(function(a){return a.mesh;});
+			names = removeSharedString(names);
+			inspector.widgets_per_row = 2;
+			for(var i = 0; i < component.morph_targets.length; i++)
+			{
+				var morph = component.morph_targets[i];
+				inspector.addSlider(names[i].replace(/_/g," "), morph.weight, { min: -1, max: 1, width: "calc(100% - 40px)", pretitle: AnimationModule.getKeyframeCode( component, "morphs/"+i+"/weight" ), morph_index: i, callback: function(v) { 
+					component.setMorphWeight( this.options.morph_index, v );
+					LS.GlobalScene.refresh();
+				}});
 
-			inspector.addNumber("", morph.weight, { pretitle: AnimationModule.getKeyframeCode( component, "morphs/"+i+"/weight" ), name_width: 20, width: "25%", step: 0.01, morph_index: i, callback: function(v) { 
-				component.setMorphWeight( this.options.morph_index, v );
-				LS.GlobalScene.refresh();
-			}});
+				inspector.addButton(null, "0", { width: "40px", morph_index: i, callback: function() { 
+					component.setMorphWeight( this.options.morph_index, 0 );
+					inspector.refresh();
+					LS.GlobalScene.refresh();
+				}});
+			}
+			inspector.widgets_per_row = 1;
+		}
+		else
+		{
+			inspector.widgets_per_row = 3;
+			for(var i = 0; i < component.morph_targets.length; i++)
+			{
+				var morph = component.morph_targets[i];
+				inspector.addMesh("", morph.mesh, { pretitle: AnimationModule.getKeyframeCode( component, "morphs/"+i+"/mesh" ), name_width: 20, align: "right", width: "60%", morph_index: i, callback: function(v) { 
+					component.setMorphMesh( this.options.morph_index, v );
+					LS.GlobalScene.refresh();
+				}});
 
-			inspector.addButton(null, TRASH_ICON_CODE, { width: "15%", index: i, callback: function() { 
-				component.morph_targets.splice( this.options.index, 1);
-				inspector.refresh();
-				LS.GlobalScene.refresh();
-			}});
+				inspector.addNumber("", morph.weight, { pretitle: AnimationModule.getKeyframeCode( component, "morphs/"+i+"/weight" ), name_width: 20, width: "25%", step: 0.01, morph_index: i, callback: function(v) { 
+					component.setMorphWeight( this.options.morph_index, v );
+					LS.GlobalScene.refresh();
+				}});
+
+				inspector.addButton(null, TRASH_ICON_CODE, { width: "15%", morph_index: i, callback: function() { 
+					component.morph_targets.splice( this.options.morph_index, 1);
+					inspector.refresh();
+					LS.GlobalScene.refresh();
+				}});
+			}
 		}
 		inspector.widgets_per_row = 1;
 	}
 
-	inspector.widgets_per_row = 2;
-	inspector.addButton(null,"Add Morph Target", { width: "85%", callback: function() { 
+	inspector.widgets_per_row = 3;
+	inspector.addButton(null,"Add Morph Target", { width: "55%", callback: function() { 
 		component.morph_targets.push({ mesh:"", weight: 0.0 });
 		inspector.refresh();
 	}});
@@ -667,10 +716,13 @@ LS.Components.MorphDeformer["@inspector"] = function(component, inspector)
 		component.clearWeights();
 		inspector.refresh();
 	}});
+	inspector.addCheckbox("Use Sliders", LS.Components.MorphDeformer.use_sliders, { name_width: 80, width:"30%", callback: function(v){ LS.Components.MorphDeformer.use_sliders = v; inspector.refresh(); }});
+
 	inspector.widgets_per_row = 1;
 }
 
-LS.Components.SkinDeformer.onShowProperties = LS.Components.SkinnedMeshRenderer.onShowProperties = function( component, inspector )
+if(LS.Components.SkinDeformer)
+LS.Components.SkinDeformer.onShowProperties = function( component, inspector )
 {
 	inspector.addButton("","See bones", { callback: function() { 
 		EditorModule.showBonesDialog( component.getMesh() ); //right below this function
@@ -731,6 +783,7 @@ EditorModule.showBonesDialog = function( mesh )
 	return dialog;
 }
 
+if( LS.Components.ParticleEmissor )
 LS.Components.ParticleEmissor["@inspector"] = function(component, inspector)
 {
 	if(!component) return;
@@ -805,14 +858,14 @@ LS.Components.ParticleEmissor["@inspector"] = function(component, inspector)
 
 /** extras ****/
 
-
+if( LS.Components.CameraController )
 LS.Components.CameraController.onShowProperties = function(component, inspector)
 {
 	if(!component._root || !component._root.camera)
 		inspector.addInfo(null,"<span class='alert'>Warning: No camera found in node</span>");
 }
 
-
+if(LS.Components.ThreeJS)
 LS.Components.ThreeJS.onShowProperties = function( component, inspector )
 {
 	//add to inspector the vars
@@ -824,6 +877,7 @@ LS.Components.ThreeJS.onShowProperties = function( component, inspector )
 	}
 }
 
+if(LS.Components.SpriteAtlas)
 LS.Components.SpriteAtlas["@inspector"] = function( component, inspector )
 {
 	inspector.addTexture("texture", component.texture, { callback: function(v){
@@ -835,7 +889,7 @@ LS.Components.SpriteAtlas["@inspector"] = function( component, inspector )
 	});
 }
 
-
+if(LS.Components.SceneInclude)
 LS.Components.SceneInclude["@inspector"] = function( component, inspector )
 {
 	inspector.widgets_per_row = 2;
@@ -875,64 +929,44 @@ LS.Components.SceneInclude["@inspector"] = function( component, inspector )
 	EditorModule.onShowComponentCustomProperties( component._scene.root.custom, inspector, true, component, "custom/" ); 
 }
 
+if(LS.Components.Poser)
 LS.Components.Poser["@inspector"] = function( component, inspector)
 {
 	inspector.widgets_per_row = 2;
 	inspector.addInfo("Nodes posed", component.base_nodes.length );
-	inspector.addButton(null,"Edit pose nodes", { callback: function(v,e){
+	inspector.addButton(null,"Edit poses", { callback: function(v,e){
 		LS.Components.Poser.showPoseNodesDialog( component, e );
 	}});
+
 	inspector.widgets_per_row = 1;
 
-	var poses = [];
-	for(var i in component.poses)
-		poses.push(i);
+	inspector.widgets_per_row = 2;
+	for(var i in component.poses )
+	{
+		var pose = component.poses[i];
+		inspector.addSlider(pose.name, pose.weight, { min: 0, max: 1, width: "calc(100% - 40px)", pretitle: AnimationModule.getKeyframeCode( component, "pose/"+i+"/weight" ), pose_name: pose.name, callback: function(v) { 
+			component.setPoseWeight( this.options.pose_name, v );
+			LS.GlobalScene.refresh();
+		}});
 
-	if(!component._selected)
-		component._selected = poses[0];
-	
-	inspector.addCombo("Pose", component._selected ,{values: poses, callback: function(v){
-		component._selected = v;
-	}});
+		inspector.addButton(null, "0", { width: "40px", pose_name: pose.name, callback: function() { 
+			component.setPoseWeight( this.options.pose_name, 0 );
+			inspector.refresh();
+			LS.GlobalScene.refresh();
+		}});
+	}
+	inspector.widgets_per_row = 1;
 
-	inspector.addButtons(null,["Apply","Overwrite","Delete"], function(v){
-		if(!component._selected)
-			return;
-		var pose_name = component._selected;
-		var pose = component.poses[ pose_name ];
-		if(!pose)
-			return;
-		if(v == "Apply")
-			component.applyPose( pose_name );
-		else if( v == "Overwrite")
-			component.updatePose( pose_name );
-		else if( v == "Delete" )
-		{
-			component.removePose( pose_name );
-			component._selected = null;
-		}
-		inspector.refresh();
-		LS.GlobalScene.requestFrame();
-	});
-
-	inspector.addSeparator();
-
-	var new_pose_name = "";
-
-	inspector.addStringButton( "New Pose", new_pose_name, { callback: function(v) { 
-		new_pose_name = v;
-	}, callback_button: function(){
-		if(!new_pose_name)
-			return;
-		component.addPose( new_pose_name );
-		component._selected = new_pose_name;
-		inspector.refresh();
+	inspector.addButton(null,"Reset to base", { callback: function(v,e){
+		component.applyBasePose();
+		LS.GlobalScene.refresh();
 	}});
 }
 
+if(LS.Components.Poser)
 LS.Components.Poser.showPoseNodesDialog = function( component, event )
 {
-	var dialog = new LiteGUI.Dialog({title:"Nodes in Pose", close: true, width: 600, height: 300, resizable: true, scroll: false, draggable: true});
+	var dialog = new LiteGUI.Dialog({title:"Poses editor", close: true, width: 600, height: 400, resizable: true, scroll: false, draggable: true});
 
 	var area = new LiteGUI.Area();
 	area.split( LiteGUI.Area.HORIZONTAL );
@@ -956,44 +990,66 @@ LS.Components.Poser.showPoseNodesDialog = function( component, event )
 	{
 		widgets_left.clear();
 
-		//get the names
-		var selected = null;
-		var node_names = [];
+		widgets_left.addTitle("Poses");
 
-		var base_nodes = component.base_nodes;
-		for(var i in base_nodes)
-		{
-			var base_node = LS.GlobalScene.getNode( base_nodes[i].node_uid );
-			if( base_node )
-				node_names.push( base_node.name );
-		}
+		var poses = [];
+		for(var i = 0; i < component.poses.length; ++i)
+			poses.push( component.poses[i].name );
 
-		var list = widgets_left.addList(null, node_names, { height: "calc( 100% - 30px)", callback: function(v) {
-			selected = v;
+		if(!component._selected)
+			component._selected = poses[0];
+		
+		widgets_left.addCombo("Pose", component._selected ,{values: poses, callback: function(v){
+			component._selected = v;
 		}});
 
-		widgets_left.addButtons(null,["Remove Selected"],{
-			callback: function(v){
-				component.removeBaseNode( selected );
-				widgets_left.refresh();
+		widgets_left.addButtons(null,["Update","Apply","Delete"], function(v){
+			if(!component._selected)
+				return;
+			var pose_name = component._selected;
+			var pose = component._poses_by_name[ pose_name ];
+			if(!pose)
+				return;
+			//if(v == "Apply")
+			//	component.applyPose( pose_name );
+			if( v == "Update")
+				component.updatePose( pose_name );
+			else if( v == "Apply")
+				component.applyPose( pose_name );
+			else if( v == "Delete" )
+			{
+				component.removePose( pose_name );
+				component._selected = null;
 			}
+			widgets_left.refresh();
+			LS.GlobalScene.requestFrame();
 		});
-	}
 
-	function inner_refresh_right()
-	{
-		widgets_right.clear();
-		widgets_right.addTitle("Select a node");
-		widgets_right.widgets_per_row = 2;
-		var node_widget = widgets_right.addNode("Node", "", { width: "70%", use_node: true, callback: function(v){
+		var new_pose_name = "";
+
+		widgets_left.addStringButton( "New Pose", new_pose_name, { button:"+", callback: function(v) { 
+			new_pose_name = v;
+		}, callback_button: function(){
+			if(!new_pose_name)
+				return;
+			component.addPose( new_pose_name );
+			component._selected = new_pose_name;
+			widgets_left.refresh();
+		}});
+
+		widgets_left.addSeparator();
+
+		widgets_left.addTitle("Select a node");
+		widgets_left.widgets_per_row = 2;
+		var node_widget = widgets_left.addNode("Node", "", { width: "70%", use_node: true, callback: function(v){
 			node = v;
 		}});
-		widgets_right.addButton(null,"From Select.", { width: "30%", callback: function(){
+		widgets_left.addButton(null,"From Select.", { width: "30%", callback: function(){
 			node_widget.setValue( SelectionModule.getSelectedNode() );
 		}});
-		widgets_right.widgets_per_row = 1;
-		widgets_right.addTitle("Actions");
-		widgets_right.addButtons(null,["Add Node", "Add Children"], function(v){
+		widgets_left.widgets_per_row = 1;
+		widgets_left.addTitle("Actions");
+		widgets_left.addButtons(null,["Add Node", "Add Children"], function(v){
 			if(!node)
 				return;
 			if(v == "Add Node")
@@ -1006,41 +1062,89 @@ LS.Components.Poser.showPoseNodesDialog = function( component, event )
 				for(var i in nodes)
 					component.addBaseNode( nodes[i] );
 			}
-			widgets_left.refresh();
+			widgets_right.refresh();
 		});
-		widgets_right.widgets_per_row = 1;
-		widgets_right.addSeparator();
-		widgets_right.addButton(null, "Add current scene selected nodes", function(){
+		widgets_left.widgets_per_row = 1;
+		widgets_left.addSeparator();
+		widgets_left.addButton(null, "Add current scene selected nodes", function(){
 			var nodes = SelectionModule.getSelectedNodes();
 			for(var i in nodes)
 				component.addBaseNode( nodes[i] );
 			widgets_right.refresh();
 		});
-		widgets_right.addButton(null, "Remove current scene selected nodes", function(){
+		widgets_left.addButton(null, "Remove current scene selected nodes", function(){
 			var nodes = SelectionModule.getSelectedNodes();
 			for(var i in nodes)
 				component.removeBaseNode( nodes[i] );
 			widgets_right.refresh();
+		});
+
+		widgets_left.addSeparator();
+		widgets_left.addButton(null,"Reset to base", { callback: function(v,e){
+			component.applyBasePose();
+			LS.GlobalScene.refresh();
+		}});
+	}
+
+	function inner_refresh_right()
+	{
+		widgets_right.clear();
+
+		//get the names
+		var selected = null;
+		var node_names = [];
+
+		var base_nodes = component.base_nodes;
+		for(var i in base_nodes)
+		{
+			var base_node = LS.GlobalScene.getNode( base_nodes[i].node_uid );
+			if( base_node )
+				node_names.push( base_node.name );
+		}
+
+		widgets_right.addTitle("Nodes in poses");
+
+		var list = widgets_right.addList(null, node_names, { height: "calc( 100% - 30px)", callback: function(v) {
+			selected = v;
+		}});
+
+		widgets_right.addButtons(null,["Remove Selected"],{
+			callback: function(v){
+				component.removeBaseNode( selected );
+				widgets_right.refresh();
+			}
 		});
 	}
 
 	return dialog;
 }
 
-LS.Components.ReflectionProbe.onShowProperties = function( component, inspector )
+if(LS.Components.ReflectionProbe)
 {
-	inspector.widgets_per_row = 2;
-	inspector.addButton( null, "Update", function(){ component.recompute(null,true); LS.GlobalScene.requestFrame(); });
-	inspector.addButton( null, "Update all", function(){ LS.Components.ReflectionProbe.updateAll(); LS.GlobalScene.requestFrame(); });
-    inspector.addSeparator();
+	LS.Components.ReflectionProbe.onShowProperties = function( component, inspector )
+	{
+		inspector.widgets_per_row = 3;
+		inspector.addButton( null, "Update", { width: "40%", callback: function(){ component.recompute(null,true); LS.GlobalScene.requestFrame(); }});
+		inspector.addButton( null, "Update all", { width: "50%", callback: function(){ LS.Components.ReflectionProbe.updateAll(); LS.GlobalScene.requestFrame(); }});
+		inspector.addButton( null, LiteGUI.special_codes.download, { width: "10%", callback: function(){ 
+			var texture = component.texture;
+			if(!texture)
+				return;
+			var polar_texture = CubemapTools.convertCubemapToPolar(texture);
+			var data = polar_texture.toBinary(true);
+			LiteGUI.downloadFile("polar_cubemap.png", data );
+		}});
+		inspector.addSeparator();
 
-	inspector.widgets_per_row = 3;
-	inspector.addCheckbox( "Visualize", LS.Components.ReflectionProbe.visualize_helpers, function(v){ LS.Components.ReflectionProbe.visualize_helpers = v; LS.GlobalScene.requestFrame(); });
-	inspector.addCheckbox( "Irradiance", LS.Components.ReflectionProbe.visualize_irradiance, function(v){ LS.Components.ReflectionProbe.visualize_irradiance = v; LS.GlobalScene.requestFrame(); });
-	inspector.addNumber( "Size", LS.Components.ReflectionProbe.helper_size, function(v){ LS.Components.ReflectionProbe.helper_size = v; LS.GlobalScene.requestFrame(); });
-	inspector.widgets_per_row = 1;
+		inspector.widgets_per_row = 3;
+		inspector.addCheckbox( "Visualize", LS.Components.ReflectionProbe.visualize_helpers, function(v){ LS.Components.ReflectionProbe.visualize_helpers = v; LS.GlobalScene.requestFrame(); });
+		inspector.addCheckbox( "Irradiance", LS.Components.ReflectionProbe.visualize_irradiance, function(v){ LS.Components.ReflectionProbe.visualize_irradiance = v; LS.GlobalScene.requestFrame(); });
+		inspector.addNumber( "Size", LS.Components.ReflectionProbe.helper_size, function(v){ LS.Components.ReflectionProbe.helper_size = v; LS.GlobalScene.requestFrame(); });
+		inspector.widgets_per_row = 1;
+	}
 }
 
+if(LS.Components.IrradianceCache)
 LS.Components.IrradianceCache.onShowProperties = function( component, inspector )
 {
 	var info = null;
@@ -1070,9 +1174,11 @@ LS.Components.IrradianceCache.onShowProperties = function( component, inspector 
 
 }
 
-
+if(LS.Components.Spline)
 LS.Components.Spline.onShowProperties = function( component, inspector )
 {
-	inspector.addButton( null, "Clear Points", function(){ component.clear(); LS.GlobalScene.requestFrame(); });
+	inspector.widgets_per_row = 2;
 	inspector.addInfo( "Num. Points", String(component.numberOfPoints) );
+	inspector.addButton( null, "Clear Points", function(){ component.clear(); LS.GlobalScene.requestFrame(); });
+	inspector.widgets_per_row = 1;
 }

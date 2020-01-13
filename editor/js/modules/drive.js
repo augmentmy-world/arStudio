@@ -1083,7 +1083,7 @@ var DriveModule = {
 		if(!fullpath)
 			return;
 
-		if(fullpath[0] == "#") 
+		if(fullpath[0] == "#" || fullpath[0] == ":") 
 			return;
 
 		if( this.server_resources[ fullpath ] )
@@ -1311,6 +1311,10 @@ var DriveModule = {
 				return this.takeScreenshotUsingCache( this.preview_size,this.preview_size, fullpath );
 			return null;
 		}
+
+		//nothing to see
+		if(resource.constructor === GL.Texture && resource.texture_type == GL.TEXTURE_CUBE_MAP)
+			return null;
 
 		if( resource.updatePreview )
 		{
@@ -2381,40 +2385,78 @@ var DriveModule = {
 		return dialog;
 	},
 
-	showCreateFileDialog: function( options )
+	//you can pass the kind of file you want: { filename: "text.txt", resource_type: "Animation", folder: "" }
+	showCreateFileDialog: function( options, on_ready )
 	{
 		var that = this;
 		options = options || {};
 		var filename = options.filename || "unnamed.txt";
 		var folder = options.folder || this.current_folder;
+		if(options.resource_type && options.resource_type.constructor !== String)
+			options.resource_type = LS.getClassName( options.resource_type );
+		var resource_type = options.resource_type || "Resource";
+		var types = Object.keys(LS.ResourceClasses);
 
-		var dialog = new LiteGUI.Dialog( { title: "New File", fullcontent: true, closable: true, draggable: true, resizable: true, width: 300, height: 300 });
-		var inspector = new LiteGUI.Inspector();
-
-		inspector.addString("Filename",filename, function(v){ filename = v; });
+		var dialog = new LiteGUI.Dialog( { title: "New File", fullcontent: true, closable: true, draggable: true, resizable: true, width: 400, height: 300 });
+		var inspector = new LiteGUI.Inspector({name_width: 120});
+		var res_widget = null;
+		var filename_widget = inspector.addString("Filename",filename, function(v){ 
+			if(filename == v)
+				return;
+			filename = v;
+			update_type();
+		});
 		inspector.addFolder("Folder",folder, function(v){ folder = v; });
+		res_widget = inspector.addCombo("Resource Type",resource_type, { values: types, callback: function(v){
+			if(resource_type == v)
+				return;
+			resource_type = v;
+			var extension = "";
+			var res_ctor = LS.ResourceClasses[ resource_type ];
+			if( res_ctor && res_ctor.EXTENSION )
+				extension = res_ctor.EXTENSION;
+			var new_filename = LS.RM.removeExtension(filename) + (extension ? "." + extension : "");
+			filename_widget.setValue( new_filename, true );
+		}});
 		inspector.addButton(null,"Create", inner);
+
+		function update_type()
+		{
+			if(options.resource_type)
+				return;
+
+			var extension = LS.RM.getExtension( filename );
+			var format_info = LS.Formats.getFileFormatInfo(extension);
+			if(format_info)
+				resource_type = format_info.resource;
+			res_widget.setValue(resource_type || "Resource");
+		}
+
+		update_type(); //to assign type to widget
 
 		function inner()
 		{
 			folder = folder || "";
-			//create dummy file
-			var resource = new LS.Resource();
-			resource.filename = filename;
-			if(folder && folder != "")
-				resource.fullpath = folder + "/" + filename;
-			resource.data = options.content || "";
+			var fullpath = folder + "/" + filename;
+
+			var resource = LS.RM.createResource( fullpath, options.content, true );
+			resource.fullpath = fullpath;
 
 			//upload to server? depends if it is local or not
-			resource.register();
-			if(resource.fullpath)
+			if(folder)
 			{
 				DriveModule.saveResource( resource, function(v){
+					if(on_ready)
+						on_ready(resource);
 					that.refreshContent();
 				}, { skip_alerts: true });
 			}
+			else
+				if(on_ready)
+					on_ready(resource);
 
 			//refresh
+			that.refreshContent();
 			//close
 			dialog.close();
 		}
@@ -2828,14 +2870,42 @@ DriveModule.registerAssignResourceCallback("Prefab", function( fullpath, restype
 });
 
 DriveModule.registerAssignResourceCallback("Animation", function( fullpath, restype, options ) {
-
-	//prefab
 	DriveModule.loadResource( fullpath, function(resource) { 
 		if(resource.constructor !== LS.Animation)
 			return console.error("This resource is not an Animation");
 		var filename = resource.fullpath || resource.filename;
 		var node = SelectionModule.getSelectedNode() || LS.GlobalScene.root;
-		node.addComponent( new LS.Components.PlayAnimation({ animation: filename }) );
+		var comp = node.getComponent( LS.Components.PlayAnimation );
+		if(!comp)
+		{
+			comp = new LS.Components.PlayAnimation()
+			node.addComponent( comp );
+		}
+		comp.animation = filename;
+		EditorModule.inspect( node );
+	});
+});
+
+DriveModule.registerAssignResourceCallback("SkeletalAnimation", function( fullpath, restype, options ) {
+	DriveModule.loadResource( fullpath, function(resource) { 
+		if(resource.constructor !== LS.SkeletalAnimation)
+			return console.error("This resource is not an Animation");
+		var filename = resource.fullpath || resource.filename;
+		var node = SelectionModule.getSelectedNode() || LS.GlobalScene.root;
+		var comp = node.getComponent( LS.Components.SkinDeformer );
+		if(!comp)
+		{
+			comp = new LS.Components.SkinDeformer();
+			node.addComponent( comp );
+		}
+
+		comp = node.getComponent( LS.Components.PlaySkeletalAnimation );
+		if(!comp)
+		{
+			comp = new LS.Components.PlaySkeletalAnimation()
+			node.addComponent( comp );
+		}
+		comp.animation = filename;
 		EditorModule.inspect( node );
 	});
 });

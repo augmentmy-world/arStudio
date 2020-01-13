@@ -91,8 +91,10 @@ var ImporterModule  = {
 		GL.augmentEvent( evt );
 		var node = null;
 		if(evt.canvasx !== undefined ) //canvas drop
+		{
 			node = RenderModule.getNodeAtCanvasPosition( evt.canvasx, evt.canvasy );
 			options.node = node;
+		}
 		options.event = evt;
 
 		//files
@@ -113,7 +115,7 @@ var ImporterModule  = {
 				res_fullpath = evt.dataTransfer.getData("text/uri-list");
 
 			//if already has a fullpath (one with a unit...), could be a remote file or to move to other folder
-			if(res_fullpath && res_fullpath.split("/").length > 1)
+			if(res_fullpath && (res_fullpath.split("/").length > 1 || LS.RM.getResource(res_fullpath)) )
 			{
 				var res_info = LFS.parsePath(res_fullpath);
 				console.log( res_fullpath );

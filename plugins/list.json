@@ -1,0 +1,44 @@
+{
+	"scripts":[
+		{
+			"name":"Animation Retargeting",
+			"author":"Javi Agenjo",
+			"version": "0.1",
+			"script_url":"scripts/retargeting.js",
+			"includes":[],
+			"description":"Transform animation to match another skeleton"
+		},
+		{
+			"name":"FBX Importer (experimental)",
+			"author":"Javi Agenjo",
+			"version": "0.1",
+			"script_url":"scripts/fbxconv.js",
+			"includes":[],
+			"description":"Allows to import FBXs by sending the file to the server."
+		},
+		{
+			"name":"SpriteSheet",
+			"author":"Javi Agenjo",
+			"version": "0.1",
+			"script_url":"scripts/spritesheet.js",
+			"includes":[],
+			"description":"Allows to create sprite sheets from an animated 3D model."
+		},
+		{
+			"name":"Deployer",
+			"author":"Javi Agenjo",
+			"version": "0.1",
+			"script_url":"scripts/deployer.js",
+			"includes":[],
+			"description":"Allows to sync a project with a remote server, useful to publish your project somewhere else."
+		},
+		{
+			"name":"Mitsuba Importer",
+			"author":"Javi Agenjo",
+			"version": "0.1",
+			"script_url":"scripts/mitsuba.js",
+			"includes":[],
+			"description":"Imports XML files from mitsuba"
+		}
+	]
+}

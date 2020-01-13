@@ -76,7 +76,7 @@ var cameraTool = {
 			ToolUtils.testPerpendicularPlane( e.canvasx, gl.canvas.height - e.canvasy, center, cameraTool.collision );
 		}
 
-		if(e.which == GL.RIGHT_MOUSE_BUTTON)
+		if(e.which == 3) //GL.RIGHT_MOUSE_BUTTON
 		{
 			e.cancelBubble = true;
 			if( gl.canvas.requestPointerLock )
@@ -229,8 +229,6 @@ var cameraTool = {
 			controls = this.controls[ "RIGHT_MOUSE" ];
 		if( !controls && !this.first_person_mode )
 			return;
-
-
 
 		var action;
 		if( this.first_person_mode )
@@ -402,7 +400,7 @@ var cameraTool = {
 			camera._root.transform.rotate( -yaw, LS.TOP );
 			camera._root.transform.rotate( pitch, LS.RIGHT, true );
 		}
-		else
+		else //node cameras
 		{
 			camera.rotate( -yaw, LS.TOP );
 			camera.rotate( pitch, LS.RIGHT, true );
@@ -463,7 +461,7 @@ var cameraTool = {
 				camera._root.transform.lookAt( eye, point, LS.TOP );
 				camera.focalLength = vec3.distance( eye, point );
 			}
-			else
+			else if( vec3.distance( camera.eye, point ) > 0.0001 )
 				camera.center = point;
 		}
 		else

@@ -399,7 +399,9 @@ InspectorWidget.prototype.inspectScene = function( scene )
 		}});
 
 		inspector.addButton(null,"Add from Repository",{ width: "40%", callback: function(){
-			PluginsModule.showOficialScriptsDialog();
+			PluginsModule.showAddonsDialog(function(){
+				inspector.refresh();
+			});
 		}});
 		inspector.widgets_per_row = 1;
 
@@ -698,7 +700,10 @@ InspectorWidget.prototype.inspectNode = function( node, component_to_focus )
 
 		if(component_to_focus)
 			inspector.scrollTo( component_to_focus.uid.substr(1) );
-		AnimationModule.attachKeyframesBehaviour( inspector );
+
+		if(window.AnimationModule)
+			InterfaceModule.attachBulletsBehaviour( inspector, ".keyframe_icon", AnimationModule.onBulletClick, AnimationModule.onBulletRightClick, AnimationModule.onBulletDragStart );
+
 	}).bind(this);
 
 	inspector.refresh();

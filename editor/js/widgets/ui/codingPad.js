@@ -1326,6 +1326,7 @@ CodingPadWidget.prepareCodeMirror = function()
 
 	CodeMirror.commands.assign = function(cm) {
 		cm.display.input.blur();
+		setTimeout(function(){ cm.display.input.focus(); },1);
 		LS.GlobalScene.requestFrame();
 		setTimeout( LS.GlobalScene.requestFrame.bind( LS.GlobalScene ), 100 );
 	}

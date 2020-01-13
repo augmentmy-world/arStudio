@@ -22,6 +22,11 @@ var InterfaceModule = {
 		"Script": "imgs/mini-icon-js.png"
 	},
 
+	icons: {
+		refresh: "<img src='imgs/mini-icon-refresh.png'/>",
+		trash: "<img src='imgs/mini-icon-trash.png'/>"
+	},
+
 	init: function()
 	{
 		//create menubar
@@ -242,6 +247,33 @@ var InterfaceModule = {
 		}
 	},
 
+	createFloatingDialog: function( parent, widget_class, detach )
+	{
+		var dialog = new LiteGUI.Dialog( { title:"Panel", fullcontent: true, closable: true, detachable: true, draggable: true, minimize: true, resizable: true, parent: parent, width: 800, height: 500 });
+		var widget = null;
+		if(widget_class)
+		{
+			var widget = new widget_class();
+			dialog.add( widget );
+			dialog.widget = widget;
+		}
+
+		dialog.on_close = function()
+		{
+			if(widget)
+				widget.unbindEvents();		
+		}
+		dialog.on_resize = function()
+		{
+			if(widget)
+				widget.onResize();
+		}
+		dialog.show();
+		if(detach)
+			dialog.detachWindow();
+		return dialog;
+	},
+
 	//something dragged into the canvas
 	onItemDrop: function(e)
 	{
@@ -383,6 +415,36 @@ var InterfaceModule = {
 		LiteGUI.trigger( this.visorarea.root, "visibility_change" );
 		this.lower_tabs_widget.onResize();
 	},
+
+	attachBulletsBehaviour: function( inspector, class_name, onBulletClick, onBulletRightClick, onBulletDragStart )
+	{
+		var elements = inspector.root.querySelectorAll( class_name );
+		for(var i = 0; i < elements.length; i++)
+		{
+			var element = elements[i];
+			element.draggable = true;
+			if(onBulletClick)
+				element.addEventListener("click", onBulletClick );
+			element.addEventListener("contextmenu", (function(e) { 
+				if(e.button != 2) //right button
+					return false;
+				if(onBulletRightClick)
+					onBulletRightClick(e);
+				e.preventDefault();
+				e.stopPropagation();
+				return false;
+			}).bind(this));
+			if(onBulletDragStart)
+				element.addEventListener("dragstart", onBulletDragStart );
+			element.addEventListener("drop", inner_drop );
+		}
+
+		function inner_drop(e)
+		{
+			var element = EditorModule.getSceneElementFromDropEvent(e);
+			//something to do?
+		}
+	}
 };
 
 CORE.registerModule( InterfaceModule );
@@ -440,6 +502,8 @@ function generalNodeWidget( name, value, options, force_node )
 		e.preventDefault();
 		e.stopPropagation();
 		var node_uid = e.dataTransfer.getData("node_uid");
+		if(!node_uid)
+			console.warn("no node_uid found in event");
 		if(force_node) //options.use_node
 		{
 			value = LS.GlobalScene.getNode( node_uid );
@@ -801,7 +865,8 @@ function addGenericResource ( name, value, options, resource_classname )
 	element.addEventListener("dragover",function(e){ 
 		var path = e.dataTransfer.getData( "res-fullpath" );
 		var type = e.dataTransfer.getData( "res-type" );
-		if(path) // && (type == "Texture" || type == "Image") )
+		var has_locator = e.dataTransfer.types.indexOf("locator") != -1;
+		if(path || has_locator) // && (type == "Texture" || type == "Image") )
 			e.preventDefault();
 	},true);
 	element.addEventListener("drop", function(e){
@@ -825,6 +890,16 @@ function addGenericResource ( name, value, options, resource_classname )
 			value = input.value = e.dataTransfer.getData("text/uri-list");
 			LiteGUI.trigger( input, "change" );
 			e.stopPropagation();
+		}
+		else if( e.dataTransfer.getData("locator") )
+		{
+			var r = LSQ.get( e.dataTransfer.getData("locator") );
+			if(r)
+				input.value = r;
+		}
+		else
+		{
+			console.log("unknown item drop on resource text box");
 		}
 		e.preventDefault();
 		return false;
@@ -965,12 +1040,15 @@ LiteGUI.Inspector.prototype.addGraph = function( name, value, options )
 		if(path && path.indexOf(".json") == -1)
 			return;
 
+		/*
+		//if there is already a graph? dont do anything
 		var graph = LS.RM.getResource( path );
 		if(graph)
 		{
 			//GraphModule.editInstanceGraph( graph, null, true );
 			return;
 		}
+		*/
 
 		var default_filename = "";
 		if (options.graph_type == LS.GraphCode.SHADER_GRAPH)
@@ -980,12 +1058,14 @@ LiteGUI.Inspector.prototype.addGraph = function( name, value, options )
 
 		DriveModule.showSelectFolderFilenameDialog(null, function( folder, filename, fullpath ){
 			//GraphModule.editInstanceGraph( resource );
-			var graph = new LS.GraphCode();
+			var graphcode = new LS.GraphCode();
 			if(options.graph_type)
-				graph.type = options.graph_type;
-			LS.RM.registerResource( fullpath, graph );
+				graphcode.type = options.graph_type;
+			if( graphcode.type == LS.GraphCode.SHADER_GRAPH && LS.MaterialClasses.GraphMaterial.default_graph )
+				graphcode.graph.configure( LS.MaterialClasses.GraphMaterial.default_graph );
+			LS.RM.registerResource( fullpath, graphcode );
 			if(options.callback)
-				options.callback( fullpath, graph );
+				options.callback( fullpath, graphcode );
 			that.refresh();
 		}, { button: "Create", filename: default_filename, folder: DriveModule.getSceneBaseFolder(), extension:"GRAPH.json" } );
 		return;
@@ -1073,7 +1153,8 @@ LiteGUI.Inspector.prototype.addTextureSampler = function(name, value, options)
 	element.addEventListener("dragover",function(e){ 
 		var path = e.dataTransfer.getData("res-fullpath");
 		var type = e.dataTransfer.getData( "res-type" );
-		if(path) // && (type == "Texture" || type == "Image") )
+		var has_locator = e.dataTransfer.types.indexOf("locator") != -1;
+		if(path || has_locator) // && (type == "Texture" || type == "Image") )
 			e.preventDefault();
 	},true);
 	element.addEventListener("drop", function(e){
@@ -1095,6 +1176,12 @@ LiteGUI.Inspector.prototype.addTextureSampler = function(name, value, options)
 		else if (e.dataTransfer.getData("text/uri-list") )
 		{
 			input.value = e.dataTransfer.getData("text/uri-list");
+			LiteGUI.trigger( input, "change" );
+			e.stopPropagation();
+		}
+		else if (e.dataTransfer.getData("locator") )
+		{
+			input.value = LSQ.get( e.dataTransfer.getData("locator") );
 			LiteGUI.trigger( input, "change" );
 			e.stopPropagation();
 		}
