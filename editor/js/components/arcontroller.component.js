@@ -18,8 +18,8 @@ function ArControllerComponent( o )
         'Trackable square barcode' : artoolkit.AR_MATRIX_CODE_DETECTION,
         'Trackable square pattern and barcode (color)' : artoolkit.AR_TEMPLATE_MATCHING_COLOR_AND_MATRIX,
         'Trackable square pattern and barcode (mono)' : artoolkit.AR_TEMPLATE_MATCHING_MONO_AND_MATRIX
-    };    
-    
+    };
+
     this.trackableDetectionMode = artoolkit.AR_TEMPLATE_MATCHING_COLOR_AND_MATRIX;
 
     // Register orientation change listener to be informed on orientation change events
@@ -47,13 +47,13 @@ ArControllerComponent.arBackgroundCamera = 'arbackgroundcamera';
 ArControllerComponent.arBackground = 'arBackground';
 
 ArControllerComponent["@inspector"] = function( arController, inspector )
-{   
+{
     inspector.addTitle("AR Controller");
     inspector.addCombo("Trackable detection mode", arController.trackableDetectionMode, { values: arController.trackableDetectionModeList, callback: function (value) { arController.trackableDetectionMode = value }});
-    
+
     inspector.addNumber("Far plane", arController.farPlane, {callback: v => arController.farPlane = v, precision:2, step:1});
     inspector.addNumber("Near plane", arController.nearPlane, {callback: v => arController.nearPlane = v, precision:2, step:0.01});
-    
+
     inspector.addNumber("Trackable width", arController.defaultMarkerWidth, {callback: v => arController.defaultMarkerWidth = v, precision:0, step:1, units: arController._defaultMarkerWidthUnit, min: 10});
 }
 
@@ -64,7 +64,7 @@ ArControllerComponent.prototype.onAddedToScene = function( scene ){
     LEvent.bind(scene,'finish',this.stopAR, this );
 }
 ArControllerComponent.prototype.onRemovedFromScene = function( scene ) {
-    LEvent.unbind(scene,"start", this.startAR, this); 
+    LEvent.unbind(scene,"start", this.startAR, this);
     LEvent.unbind(scene,'finish',this.stopAR, this );
 }
 
@@ -92,25 +92,33 @@ ArControllerComponent.prototype.startAR = function() {
 					w = h;
 					h = tmp;
 				}
-                
-                this.arController = new ARController(w, h, this.cameraPara);        
+
+                this.arController = new ARController(w, h, this.cameraPara);
                 this.arController.image = stream;
 
                 this.arController.setDefaultMarkerWidth(this.defaultMarkerWidth);
-                
-                // FIXME: In Player-Mode the detection Mode is undefined 
-                this.arController.setPatternDetectionMode( (this.trackableDetectionMode || 3) );     
+
+                // FIXME: In Player-Mode the detection Mode is undefined
+                this.arController.setPatternDetectionMode( (this.trackableDetectionMode || 3) );
 
                 // Add an event listener to listen to getMarker events on the ARController.
                 // Whenever ARController#process detects a marker, it fires a getMarker event
                 // with the marker details.
-                this.arController.addEventListener('getMarker',this.onTrackableFound.bind(this));         
+                this.arController.addEventListener('getMarker',this.onTrackableFound.bind(this));
+                this.arController.addEventListener('getNFTMarker',this.onTrackableFound.bind(this));
 
-                this._arTrackable2DList.forEach(trackable2D => { 
+                this._arTrackable2DList.forEach(trackable2D => {
                     if(trackable2D._trackableType === trackable2D.trackableTypes[1])
                     {
                         this.arController.loadMarker(trackable2D.trackablePath, function(markerId) {
                             console.log("Register trackable - Pattern");
+                            trackable2D.trackableId = markerId;
+                        });
+                    }
+                    else if(trackable2D._trackableType === trackable2D.trackableTypes[2])
+                    {
+                        this.arController.loadNFTMarker(trackable2D.trackablePath, function(markerId) {
+                            console.log("Register trackable - NFT");
                             trackable2D.trackableId = markerId;
                         });
                     }
@@ -121,7 +129,7 @@ ArControllerComponent.prototype.startAR = function() {
                 var w = 1;
                 var h = 1;
                 var cw = 0;
-                var ch = 0;                
+                var ch = 0;
                 var vw = 0;
                 var vh = 0;
 
@@ -173,16 +181,16 @@ ArControllerComponent.prototype.startAR = function() {
                     }
 
                 }
-                
+
                 const sceneRoot = LS.GlobalScene.root;
-     
+
                 //Add the AR-Camera to the scene
                 this.arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
                 this.arCamera = new LS.Camera();
                 this.arCamera.background_color=[0, 0, 0, 0];
                 this.arCamera.clear_color = true; //We must clear buffer from first camera.
                 this.arCameraNode.addComponent(this.arCamera);
-                this.recalculateViewPort(cw, ch, vw, vh);         
+                this.recalculateViewPort(cw, ch, vw, vh);
 
                 self = this;
                 window.addEventListener('resize', function() {
@@ -198,16 +206,16 @@ ArControllerComponent.prototype.startAR = function() {
                         vw = selectedVideo[0].clientWidth;
                         vh = selectedVideo[0].clientHeight;
 
-                        self.recalculateViewPort(cw, ch, vw, vh); 
-                        //this.resize(cw, ch, vw, vh);                 
-    
+                        self.recalculateViewPort(cw, ch, vw, vh);
+                        //this.resize(cw, ch, vw, vh);
+
                     }
 
-                }, false);                
+                }, false);
 
                 sceneRoot.addChild(this.arCameraNode, 0);
                 LS.GlobalScene.root.getComponent(LS.Camera).background_color=[0, 0, 0, 0];
-                this._setupCameraForScreenOrientation(screen.orientation.type);                
+                this._setupCameraForScreenOrientation(screen.orientation.type);
 
                 // On each frame, detect markers, update their positions and
                 // render the frame on the renderer.
@@ -216,10 +224,10 @@ ArControllerComponent.prototype.startAR = function() {
                         return;
 
                     requestAnimationFrame(tick);
-                    
+
                     // Hide the marker, as we don't know if it's visible in this frame.
                     for (var trackable2D of this._arTrackable2DList){
-                        trackable2D._previousState = trackable2D._currentState;                        
+                        trackable2D._previousState = trackable2D._currentState;
                         trackable2D._currentState = undefined;
                     }
 
@@ -233,7 +241,7 @@ ArControllerComponent.prototype.startAR = function() {
                             arTrackable.visible = false;
                         }
                     });
-                    
+
                     // Render the updated scene.
                     LS.GlobalScene.refresh();
                     //renderer.render(scene, camera);
@@ -293,7 +301,7 @@ ArControllerComponent.prototype.resize = function(cw, ch, vw, vh) {
 }
 
 ArControllerComponent.prototype.stopAR = function(){
-    console.log("Stop AR");    
+    console.log("Stop AR");
     this.running = false;
     if(this.arController)
         this.arController.dispose();
@@ -304,11 +312,11 @@ ArControllerComponent.prototype.stopAR = function(){
 
     if(this.arCamera)
         LS.GlobalScene.root.removeChild(this.arCamera);
-    
+
     var arBackgroundCamera = LS.GlobalScene.getNode(ArControllerComponent.arBackgroundCamera);
     if(arBackgroundCamera)
         LS.GlobalScene.root.removeChild(arBackgroundCamera);
-    
+
     var arBackground = LS.GlobalScene.getNode(ArControllerComponent.arBackground);
     if(arBackground)
         LS.GlobalScene.root.removeChild(arBackground);
@@ -338,7 +346,7 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
     if(trackableId === undefined || trackableId < 0) {
         trackableId = ev.data.marker.idPatt;
     }
-    
+
     if (trackableId !== -1) {
         console.log("saw a trackable with id", trackableId);
 
@@ -346,7 +354,7 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
             if(trackableId === arTrackable.trackableId) {
                 let markerRoot = arTrackable.attachedGameObject;
                 arTrackable.visible = true;
-                
+
                 // Note that you need to copy the values of the transformation matrix,
                 // as the event transformation matrix is reused for each marker event
                 // sent by an ARController.
@@ -356,9 +364,9 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
                 // Apply transform to marker root
                 if(this.arController.orientation=="portrait")
                 {
-                    let rotMat = mat4.create();  
-                    mat4.identity(rotMat);  
-                    mat4.rotateZ(rotMat, rotMat, -1.5708);       // Rotate around z by 90°   
+                    let rotMat = mat4.create();
+                    mat4.identity(rotMat);
+                    mat4.rotateZ(rotMat, rotMat, -1.5708);       // Rotate around z by 90°
                     mat4.multiply(transform, rotMat, transform);
 
                 }
@@ -377,7 +385,7 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
 };
 
 ArControllerComponent.prototype._setupCameraForScreenOrientation = function (orientation) {
-    
+
     // Camera matrix is used to define the “perspective” that the camera would see.
     // The camera matrix returned from arController.getCameraMatrix() is already the OpenGLProjectionMatrix
     // LiteScene supports setting a custom projection matrix but an update of LiteScene is needed to do that.
@@ -394,11 +402,11 @@ ArControllerComponent.prototype._setupCameraForScreenOrientation = function (ori
 
         // TODO once we have proper handling of calibration file we use this
         // let cameraProjectionMatrix = this.arController.getCameraMatrix();
-        // mat4.rotateX(cameraProjectionMatrix, cameraProjectionMatrix, 3.14159);  // Rotate around x by 180°                  
+        // mat4.rotateX(cameraProjectionMatrix, cameraProjectionMatrix, 3.14159);  // Rotate around x by 180°
 
         //let cameraProjectionMatrix = mat4.create();
-        //mat4.copy(cameraProjectionMatrix, this.originalProjectionMatrix);                 
-        //mat4.rotateZ(cameraProjectionMatrix, cameraProjectionMatrix, 1.5708);       // Rotate around z by 90°               
+        //mat4.copy(cameraProjectionMatrix, this.originalProjectionMatrix);
+        //mat4.rotateZ(cameraProjectionMatrix, cameraProjectionMatrix, 1.5708);       // Rotate around z by 90°
         //this.arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
     } else {
         this.arController.orientation = 'landscape';
@@ -406,10 +414,9 @@ ArControllerComponent.prototype._setupCameraForScreenOrientation = function (ori
         this.arController.videoHeight = this._video.videoHeight;
         // TODO: once we have proper handling of calibration file we use this
         // let cameraProjectionMatrix = this.arController.getCameraMatrix();
-        // mat4.rotateX(cameraProjectionMatrix, cameraProjectionMatrix, 3.14159);                 
+        // mat4.rotateX(cameraProjectionMatrix, cameraProjectionMatrix, 3.14159);
         // arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
 
         //this.arCamera.setCustomProjectionMatrix(this.originalProjectionMatrix);
     }
 }
-
