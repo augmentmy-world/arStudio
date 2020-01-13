@@ -3,7 +3,7 @@
 	"server":"http://localhost:8080/src/",
 	"resources":"http://localhost:8080/src/files/",
 	"proxy":"",
-	"shaders":"data/shaders.xml",
+	"plugins":"js/plugins",
 	"nocache": false,
 	"scene_url":"scene.json",
 	"i18n": true,

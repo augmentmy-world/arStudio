@@ -1,4 +1,5 @@
 var ExportModule = {
+	name:"ExportModule",
 
 	//list of files to be included when exporting the player
 	player_files: [
@@ -334,24 +335,144 @@ var ExportModule = {
 		return code;
 	},
 
-	exportToOBJ: function( to_memory )
+	exportToMesh: function( group_materials )
 	{
-		var meshes = [];
-		for(var i = 0; i < LS.Renderer._visible_instances.length; i++)
+		var final_vertices = [];
+		var final_normals = [];
+		var final_uvs = [];
+		//meshes are deindexed to prevent problems
+
+		var groups = [];
+		var offset = 0;
+		var length = 0;
+		var instances = LS.Renderer._visible_instances.concat();
+
+		//group by material
+		group_materials = true;
+		if(group_materials)
+			instances.sort(function(a,b){ if( a.material.uid < b.material.uid ) return -1; if( a.material.uid > b.material.uid ) return 1; return 0; });
+
+		var last_group = null;
+		var last_material = null;
+
+		for(var i = 0; i < instances.length; i++)
 		{
-			var ri = LS.Renderer._visible_instances[i];
-			meshes.push( { mesh: ri.mesh, vertices_matrix: ri.matrix, normals_matrix: ri.normal_matrix } );
+			var ri = instances[i];
+			var mesh = ri.mesh;
+
+			var indices_buffer = ri.index_buffer;
+
+			var vertices_buffer = ri.vertex_buffers.vertices;
+			var normals_buffer = ri.vertex_buffers.normals;
+			var coords_buffer = ri.vertex_buffers.coords;
+
+			var vertices = vertices_buffer.data;
+			var normals = normals_buffer ? normals_buffer.data : null;
+			var uvs = coords_buffer ? coords_buffer.data : null;
+
+			var v2 = vec3.create();
+			var is_new_group = !last_material || !group_materials || ri.material != last_material;
+			last_material = ri.material;
+
+			if(indices_buffer)
+			{
+				var indices_data = indices_buffer.data;
+				length = indices_data.length;
+				for(var j = 0; j < indices_data.length; ++j)
+				{
+					var index = indices_data[j];
+					var v = vertices.subarray( index*3, index*3 + 3 );
+					vec3.transformMat4( v2, v, ri.matrix );
+					final_vertices.push(v2[0],v2[1],v2[2]);
+
+					if(normals)
+					{
+						var v = normals.subarray( index*3, index*3 + 3 );
+						mat4.rotateVec3( v2, ri.normal_matrix, v );
+						final_normals.push(v2[0],v2[1],v2[2]);
+					}
+
+					if(uvs)
+					{
+						var uv = uvs.subarray( index*2, index*2 + 2 );
+						final_uvs.push( uv[0], uv[1] );
+					}
+				}
+			}
+			else
+			{
+				length = vertices.length/3;
+				for(var j = 0; j < length; ++j)
+				{
+					var index = j;
+					var v = vertices.subarray( index*3, index*3 + 3 );
+					vec3.transformMat4( v2, v, ri.matrix );
+					final_vertices.push(v2[0],v2[1],v2[2]);
+
+					if(normals)
+					{
+						var v = normals.subarray( index*3, index*3 + 3 );
+						mat4.rotateVec3( v2, ri.normal_matrix, v );
+						final_normals.push(v2[0],v2[1],v2[2]);
+					}
+
+					if(uvs)
+					{
+						var uv = uvs.subarray( index*2, index*2 + 2 );
+						final_uvs.push( uv[0], v[1] );
+					}
+				}
+			}
+
+			var material = ri.material;
+			var material_name = LS.RM.getBasename( ri.material.filename );
+			if(!material_name && ri.material.textures.color && ri.material.textures.color.texture)
+				material_name = LS.RM.getFilename( ri.material.textures.color.texture );
+
+			//groups
+			if(is_new_group)
+			{
+				var group = last_group = {
+					name: "mesh_" + i,
+					start: offset,
+					length: length,
+					material: material_name
+				};
+				groups.push( group );
+			}
+			else
+				last_group.length += length;
+
+			offset += length;
 		}
-		if(!meshes.length)
-			return;
-		var final_mesh = GL.Mesh.mergeMeshes( meshes );
+
+		var extra = { info: { groups: groups } };
+
+		var final_mesh = new GL.Mesh( { vertices: final_vertices, normals: final_normals, coords: final_uvs }, null, extra );
+		window.LAST_EXPORTED_MESH = final_mesh;
+		return final_mesh;
+	},
+
+	exportToMeshOBJ: function( to_memory, group_materials )
+	{
+		var final_mesh = this.exportToMesh( group_materials );
 		LS.RM.registerResource( "export.obj", final_mesh );
 		var data = final_mesh.encode("obj");
-
 		if(!to_memory)
 			LiteGUI.downloadFile("export.OBJ", data );
 		else
 			LS.RM.processResource("export.obj", data );
+	},
+
+	exportToMeshWBIN: function( to_memory, group_materials )
+	{
+		var final_mesh = this.exportToMesh( group_materials );
+		LS.RM.registerResource( "export.wbin", final_mesh );
+		var data = final_mesh.encode("wbin");
+		if(!to_memory)
+			LiteGUI.downloadFile("export.WBIN", data );
+		else
+			LS.RM.processResource("export.wbin", data );
 	},
 
 	exportToZIP: function( resources, include_player, settings, on_complete )
@@ -490,7 +611,7 @@ var ExportModule = {
 		}
 	},
 
-	exportToWBIN: function( resources )
+	exportSceneToWBIN: function( resources )
 	{
 		var pack = LS.GlobalScene.toPack( "scene", resources );
 		if(pack)
@@ -552,7 +673,7 @@ var ExportModule = {
 
 
 ExportModule.registerExporter({
-	name:"zip",
+	name:"scene in zip",
 	settings: {
 		player: true,
 		strip_unitnames: false,
@@ -580,7 +701,7 @@ ExportModule.registerExporter({
 });
 
 ExportModule.registerExporter({
-	name:"wbin",
+	name:"scene in wbin",
 	settings: {
 		player: true
 	},
@@ -590,15 +711,14 @@ ExportModule.registerExporter({
 	},
 	export: function( info, on_complete )
 	{
-		ExportModule.exportToWBIN( info.resources );
+		ExportModule.exportSceneToWBIN( info.resources );
 		if(on_complete)
 			on_complete();
 	}
 });
 
-
 ExportModule.registerExporter({
-	name:"obj",
+	name:"mesh in wbin",
 	settings: {
 		to_memory: false
 	},
@@ -609,7 +729,25 @@ ExportModule.registerExporter({
 	},
 	export: function( info, on_complete )
 	{
-		ExportModule.exportToOBJ( this.settings.to_memory );
+		ExportModule.exportToMeshWBIN( this.settings.to_memory );
+		if(on_complete)
+			on_complete();
+	}
+});
+
+ExportModule.registerExporter({
+	name:"mesh in obj",
+	settings: {
+		to_memory: false
+	},
+	inspect: function(inspector)
+	{
+		var that = this;
+		inspector.addCheckbox("Export to memory", this.settings.to_memory, function(v){ that.settings.to_memory = v; });
+	},
+	export: function( info, on_complete )
+	{
+		ExportModule.exportToMeshOBJ( this.settings.to_memory );
 		if(on_complete)
 			on_complete();
 	}

@@ -1,4 +1,6 @@
 var TextureTools = {
+	name: "TextureTools",
+
 	init: function()
 	{
 		LiteGUI.menubar.add("Actions/Texture Tools", { callback: function() { 
@@ -365,7 +367,16 @@ color.xyz = normalize(normal) * 0.5 + vec3(0.5);\n",
 		LS.GlobalScene.texture_atlas = info;
 
 		return atlas_texture;
+	},
+
+	previewTexture: function(texture)
+	{
+		var texture_preview = new TexturePreviewWidget();
+		RenderModule.canvas_manager.root.addChild(texture_preview);
+		texture_preview._texture = texture;
+		return texture_preview;
 	}
+
 };
 
 GL.Texture.prototype.inspect = function( widgets, skip_default_widgets )
@@ -419,6 +430,19 @@ GL.Texture.prototype.inspect = function( widgets, skip_default_widgets )
 	});
 
 	widgets.widgets_per_row = 1;
+
+	widgets.addButton(null, "Preview in Window", function(){
+		TextureTools.previewTexture(texture);
+	});
+
+	if(texture.texture_type == gl.TEXTURE_CUBE_MAP)
+	{
+		widgets.addButton(null, "Download as Polar", function(){
+			var polar_texture = CubemapTools.convertCubemapToPolar(texture);
+			var data = polar_texture.toBinary();
+			LiteGUI.downloadFile("polar_cubemap.png", data );
+		});
+	}
 
 	var clone_name = LS.RM.getBasename( texture.filename ) + "_clone.png";
 	widgets.addStringButton("Clone", clone_name, { button: "Clone", button_width: "25%", callback: function(v){

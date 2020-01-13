@@ -26,6 +26,7 @@ var RenderModule = {
 	commands:{},
 
 	preview_camera: null,
+	view_safe_frame: false,
 	temp_camera: null, //used to clone preview camera
 	show_stencil_mask: -1,
 	view_from_scene_cameras: false,
@@ -64,7 +65,8 @@ var RenderModule = {
 		var visorarea = this.visorarea = new LiteGUI.Area({ id: "visorarea", height: "100%", autoresize: true, inmediateResize: true});
 		visorarea.split("vertical",[null,260], true);
 		visorarea.getSection(0).content.innerHTML = "<div id='visor'><div id='maincanvas'></div><div id='statusbar'><span class='msg'></span></div></div>";
-		visorarea.root.querySelector( "#statusbar" ).addEventListener("click", InterfaceModule.toggleStatusBar.bind( InterfaceModule ) );
+		//click to expand
+		//visorarea.root.querySelector( "#statusbar" ).addEventListener("click", InterfaceModule.toggleStatusBar.bind( InterfaceModule ) );
 
 		this.tab.add( visorarea );
 
@@ -74,9 +76,12 @@ var RenderModule = {
 		var canvas_container = this.canvas_container = document.getElementById("maincanvas");
 		InterfaceModule.setVisorArea( visorarea );
 
+		// WEBGL_VERSION is set to 1 because some extensions are not supported (p.e. draw_buffers) in WebGL2 unless you migrate the code to 330
+		// So to support webgl 2 I would need to have all the shaders in two versions 
+
 		//The WebGLContext is created from CanvasManager, not here
 		//Create canvas and store inside the #visor
-		this.canvas_manager = new CanvasManager( { container: canvas_container, full: true, antialiasing: true } );
+		this.canvas_manager = new CanvasManager( { webgl_version: 1, container: canvas_container, full: true, antialiasing: true } );
 		if(!this.canvas_manager.gl)
 		{
 			this.onWebGLNotEnabled();
@@ -94,6 +99,7 @@ var RenderModule = {
 		LS.Input.init();
 		LS.catch_errors = false; //helps coding
 		LS.GUI._allow_change_cursor = false;
+		LS.Renderer._in_player = false;
 
 		this.render_settings.render_all_cameras = false;
 		this.render_settings.in_player = false;
@@ -329,8 +335,28 @@ var RenderModule = {
 			LS.Renderer.resetState(); //in case some error stopped the rendering inm the previous frame
 			LS.Renderer.render( LS.GlobalScene, render_settings, cameras );
 		}
+
+		if(this.view_safe_frame)
+			this.renderSafeFrame();
+
 		LEvent.trigger(this,"post_scene_render");
 	},
+
+	renderSafeFrame: function()
+	{
+		var w = 800;
+		var h = 600;
+		var x = (gl.drawingBufferWidth - w) * 0.5;
+		var y = (gl.drawingBufferHeight - h) * 0.5;
+		gl.start2D();
+		gl.strokeStyle = "white";
+		gl.globalAlpha = 0.5;
+		gl.strokeRect(x,y,w,h);
+		gl.strokeRect(gl.drawingBufferWidth*0.5,0, 0.5,gl.drawingBufferHeight);
+		gl.strokeRect(0,gl.drawingBufferHeight*0.5, gl.drawingBufferWidth, 0.5);
+		gl.globalAlpha = 1;
+	},
+
 
 	//binded to the LS.Renderer so we can add special passes on top of the render
 	onAfterRenderInstances: function()
@@ -595,6 +621,91 @@ var RenderModule = {
 		}
 	},
 
+	/**
+	* Renders the material preview to an image (or to the screen)
+	*
+	* @method renderMaterialPreview
+	* @param {Material} material
+	* @param {number} size image size
+	* @param {Object} options could be environment_texture, to_viewport
+	* @param {HTMLCanvas} canvas [optional] the output canvas where to store the preview
+	* @return {Image} the preview image (in canvas format) or null if it was rendered to the viewport
+	*/
+	renderMaterialPreview: function( material, size, options, canvas )
+	{
+		options = options || {};
+
+		if(!material)
+		{
+			console.error("No material provided to renderMaterialPreview");
+			return;
+		}
+
+		//create scene
+		var scene = LS.Renderer._material_scene;
+		if(!scene)
+		{
+			scene = LS.Renderer._material_scene = new LS.Scene();
+			scene.root.camera.background_color.set([0.0,0.0,0.0,0]);
+			if(options.environment_texture)
+				scene.info.textures.environment = options.environment_texture;
+			var node = new LS.SceneNode( "sphere" );
+			var compo = new LS.Components.GeometricPrimitive( { size: 40, subdivisions: 50, geometry: LS.Components.GeometricPrimitive.SPHERE } );
+			node.addComponent( compo );
+			scene.root.addChild( node );
+		}
+
+		if(!LS.Renderer._preview_material_render_settings)
+			LS.Renderer._preview_material_render_settings = new LS.RenderSettings({ skip_viewport: true, render_helpers: false, update_materials: true });
+		var render_settings = LS.Renderer._preview_material_render_settings;
+
+		if(options.background_color)
+			scene.root.camera.background_color.set(options.background_color);
+
+		var node = scene.getNode( "sphere");
+		if(!node)
+		{
+			console.error("Node not found in Material Preview Scene");
+			return null;
+		}
+
+		if(options.rotate)
+		{
+			node.transform.reset();
+			node.transform.rotateY( options.rotate );
+		}
+
+		var new_material = null;
+		if( material.constructor === String )
+			new_material = material;
+		else
+		{
+			new_material = new material.constructor();
+			new_material.configure( material.serialize() );
+		}
+		node.material = new_material;
+
+		if(options.to_viewport)
+		{
+			LS.Renderer.renderFrame( scene.root.camera, render_settings, scene );
+			return;
+		}
+
+		var tex = LS.Renderer._material_preview_texture || new GL.Texture(size,size);
+		if(!LS.Renderer._material_preview_texture)
+			LS.Renderer._material_preview_texture = tex;
+
+		tex.drawTo( function()
+		{
+			//it already clears everything
+			//just render
+			LS.Renderer.renderFrame( scene.root.camera, render_settings, scene );
+		});
+
+		var canvas = tex.toCanvas( canvas, true );
+		return canvas;
+	},
+
 	//returns string or blob
 	takeScreenshot: function( width, height, on_complete )
 	{
@@ -741,7 +852,35 @@ RenderModule._depth_fragment_shader_code = "\n\
 }";
 
 
+LS.Material.prototype.updatePreview = function(size, options)
+{
+	options = options || {};
 
+	var res = {};
+	this.getResources(res);
+
+	for(var i in res)
+	{
+		var resource = LS.ResourcesManager.resources[i];
+		if(!resource)
+		{
+			console.warn("Cannot generate preview with resources missing.");
+			return null;
+		}
+	}
+
+	if(LS.GlobalScene.info.textures.environment)
+		options.environment = LS.GlobalScene.info.textures.environment;
+
+	size = size || 256;
+	var preview = RenderModule.renderMaterialPreview( this, size, options, this._preview );
+	if(!preview)
+		return;
+
+	this._preview = preview;
+	if(preview.toDataURL)
+		this._preview_url = preview.toDataURL("image/png");
+}
 
 
 

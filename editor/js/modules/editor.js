@@ -309,16 +309,19 @@ var EditorModule = {
 	},
 
 	//given a code it shows in a tab
-	checkCode: function( code )
+	checkCode: function( code, tabtitle )
 	{
 		if(!code)
 			return;
+		tabtitle = tabtitle || "Code";
 		console.log(code); //helps navigating
+		code = LiteGUI.htmlEncode( code ); //otherwise < is probleamtic
 		var w = window.open("",'_blank');
-		w.document.write("<style>* { margin: 0; padding: 0; } html,body { margin: 20px; background-color: #222; color: #eee; } </style>");
-		var str = beautifyJSON( code );
+		w.document.write("<style>* { margin: 0; padding: 0; } html,body { margin: 20px; background-color: #222; color: #ddd; } </style>");
+		var str = beautifyCode( code );
 		w.document.write("<pre>"+str+"</pre>");
 		w.document.close();
+		w.document.title = tabtitle;
 		return w;
 	},
 
@@ -407,14 +410,18 @@ var EditorModule = {
 		dialog.adjustSize();
 	},
 
-	showEditPropertiesDialog: function( properties, valid_fields, callback )
+	showEditPropertiesDialog: function( properties, valid_fields, callback, parent )
 	{
-		valid_fields = valid_fields || ["string","number","vec2","vec3","vec4","color","texture","enum"];
+		valid_fields = valid_fields || ["string","number","vec2","vec3","vec4","texture","enum"];
 		var selected = null;
 		var properties_by_name = {};
 
-		var dialog = new LiteGUI.Dialog( { title: "Edit Properties", parent:"#visor", close: true, minimize: true, width: 600, height: 300, resizable:true, draggable: true } );
+		var dialog = new LiteGUI.Dialog( { title: "Edit Properties", parent: parent, close: true, minimize: true, width: 600, height: 300, resizable:true, draggable: true } );
 		dialog.show();
+		dialog.on_close = function(){
+			if(callback)
+				callback(properties);
+		}
 
 		//list
 		var area = new LiteGUI.Area();
@@ -467,12 +474,13 @@ var EditorModule = {
 			properties_by_name = {};
 			for(var i in properties)
 			{
-				if(!selected)
-					selected = properties[i].name;
+				//if(!selected)
+				//	selected = properties[i].name;
 				properties_by_name[ properties[i].name ] = properties[i];
 			}
 
 			inspector.clear();
+			inspector.addTitle("Property");
 
 			var property = properties_by_name[ selected ];
 			if(!property)
@@ -500,7 +508,7 @@ var EditorModule = {
 
 			inspector.addCombo("Type", property.type, { values: valid_fields, callback: function(v) {
 				var change = false;
-				if(v != property.value)
+				if(v != property.type)
 				{
 					property.type = v;
 					change = true;
@@ -511,6 +519,22 @@ var EditorModule = {
 				EditorModule.refreshAttributes();
 			}});
 
+			var valid_widgets = null;
+			if( property.type == "number" )
+				valid_widgets = ["number","slider"];
+			else if( property.type == "vec3")
+				valid_widgets = ["vec3","color"];
+			else if( property.type == "vec4")
+				valid_widgets = ["vec4","color"];
+
+			if(valid_widgets)
+			inspector.addCombo("Widget", property.widget || "", { values: valid_widgets, callback: function(v) {
+				var change = false;
+				property.widget = v;
+				inner_value_widget( property, change );
+				inner_update_properties();
+				EditorModule.refreshAttributes();
+			}});
 
 			//value_widget = inspector.addNumber("Value", property.value, { step: property.step, callback: function(v){ property.value = v; }});
 			inner_value_widget(property);
@@ -534,15 +558,16 @@ var EditorModule = {
 			}});
 			*/
 			inspector.addButton(null,"Close",{ callback: function() {
-				if(callback)
-					callback(properties);
 				dialog.close();
 			}});
+
+			if(callback)
+				callback(properties);
 		}
 
 		function inner_value_widget(property, change)
 		{
-			var type = property.type;
+			var type = property.widget || property.type;
 
 			if(type == "number")
 			{
@@ -822,6 +847,11 @@ var EditorModule = {
 	{
 		if(!node)
 			return;
+		if(node.constructor !== LS.SceneNode )
+		{
+			console.error("onDropOnNode expect SceneNode");
+			return;
+		}
 
 		var block = false;
 
@@ -852,11 +882,13 @@ var EditorModule = {
 				{
 					var new_component = component.clone();
 					node.addComponent( new_component );
+					CORE.userAction( "component_created", new_component );
 					console.log("Component cloned");
 				}
 				else
 				{
-					component.root.removeComponent( component );
+					CORE.userAction( "component_moved", component );
+					component._root.removeComponent( component );
 					node.addComponent( component );
 					console.log("Component moved");
 				}
@@ -1621,11 +1653,32 @@ var EditorModule = {
 			list_widget.updateItems(mats);
 		}});
 
-		list_widget = widgets.addList(null, mats, { height: 140, callback: inner_selected });
+		list_widget = widgets.addList( null, mats, { height: 140, callback: inner_selected, callback_dblclick: inner_add });
 		widgets.widgets_per_row = 1;
 
-		widgets.addButton(null,"Add", { className:"big", callback: function()
-		{ 
+		var info_area = widgets.addContainer("", { height:110 });
+		info_area.style.padding = "8px";
+		info_area.style.background = "#111";
+		info_area.style.borderRadius = "2px";
+
+		widgets.addButton(null,"Add", { className:"big", callback: inner_add });
+
+		dialog.add( widgets );
+		dialog.adjustSize();
+
+		function inner_selected(value)
+		{
+			selected = value;
+			if(value)
+			{
+				var desc = value.ctor.description || "No description available for this material.";
+				desc = desc.replace(/\n/g, "<br />");
+				info_area.innerHTML = desc;
+			}
+		}
+
+		function inner_add()
+		{
 			if(!node || !selected )
 			{
 				if( on_complete )
@@ -1644,14 +1697,6 @@ var EditorModule = {
 			RenderModule.requestFrame();
 			if( on_complete )
 				on_complete( material );
-		}});
-
-		dialog.add( widgets );
-		dialog.adjustSize();
-
-		function inner_selected(value)
-		{
-			selected = value;
 		}
 	},
 
@@ -1672,19 +1717,45 @@ var EditorModule = {
 		var list_widget = null;
 
 		var compos = [];
-		for(var i in LS.Components)
-			compos.push( { icon: EditorModule.icons_path + LS.Components[i].icon, ctor: LS.Components[i], name: LS.getClassName( LS.Components[i] ) });
 
 		var filter = "";
 		var widgets = new LiteGUI.Inspector();
 		var filter_widget = widgets.addString("Filter", filter, { focus:true, immediate:true, callback: function(v) {
 			filter = v.toLowerCase();
+			inner_refresh();
+		}});
+
+		list_widget = widgets.addList(null, compos, { height: 364, callback: inner_selected, callback_dblclick: function(v){
+			selected_component = v;
+			inner_add();
+		}});
+
+		inner_refresh();
+
+		widgets.widgets_per_row = 1;
+
+		var icons = list_widget.querySelectorAll(".icon");
+		for(var i = 0; i < icons.length; i++)
+			icons[i].onerror = function() { this.src = "imgs/mini-icon-question.png"; }
+
+		widgets.addButton("Import from repository","Open", { name_width: 200, callback: function(){
+			PluginsModule.showAddonsDialog(function(){
+				inner_refresh();
+			});
+		}});
+		widgets.addButton(null,"Add", { className:"big", callback: inner_add });
+
+		dialog.add( widgets );
+		dialog.center();
+
+		function inner_refresh()
+		{
 			compos = [];
 			for(var i in LS.Components)
 			{
 				var ctor = LS.Components[i];
 				var name = LS.getClassName( ctor );
-				if(name.toLowerCase().indexOf(filter) != -1)
+				if(!filter || name.toLowerCase().indexOf(filter) != -1)
 				{
 					var o = { ctor: ctor, name: name };
 					if( ctor.icon )
@@ -1694,33 +1765,17 @@ var EditorModule = {
 					compos.push(o);
 				}
 			}
+
+			compos.sort(function compare(a,b) {
+			  if (a.name < b.name)
+				return -1;
+			  if (a.name > b.name)
+				return 1;
+			  return 0;
+			});
+
 			list_widget.updateItems(compos);
-		}});
-
-		compos.sort(function compare(a,b) {
-		  if (a.name < b.name)
-			return -1;
-		  if (a.name > b.name)
-			return 1;
-		  return 0;
-		});
-
-		list_widget = widgets.addList(null, compos, { height: 340, callback: inner_selected, callback_dblclick: function(v){
-			selected_component = v;
-			inner_add();
-		}});
-
-		widgets.widgets_per_row = 1;
-
-		var icons = list_widget.querySelectorAll(".icon");
-		for(var i = 0; i < icons.length; i++)
-			icons[i].onerror = function() { this.src = "imgs/mini-icon-question.png"; }
-
-
-		widgets.addButton(null,"Add", { className:"big", callback: inner_add });
-
-		dialog.add( widgets );
-		dialog.center();
+		}
 
 		function inner_selected(value)
 		{
@@ -1994,7 +2049,7 @@ var EditorModule = {
 		icon.className = "icon";
 		icon.style.width = "20px";
 		icon.setAttribute("draggable",true);
-		icon.innerHTML = "<img title='Drag icon to transfer' src='"+ EditorModule.icons_path + icon_url+"'/>";
+		icon.innerHTML = "<img width=14 height=14 title='Drag icon to transfer' src='"+ EditorModule.icons_path + icon_url+"'/>";
 		icon.addEventListener("dragstart", function(event) { 
 			
 			event.dataTransfer.setData("uid", component.uid);
@@ -2184,7 +2239,11 @@ var EditorModule = {
 				e.preventDefault();
 				e.stopPropagation();
 				return false;
-				break; //F6
+				break; 
+			case 118: //F7
+				if(window.CodingModule)
+					CodingModule.reloadProjectScripts();
+				break;
 			case 38: //UP
 				if(e.ctrlKey)
 					SelectionModule.selectParentNode();

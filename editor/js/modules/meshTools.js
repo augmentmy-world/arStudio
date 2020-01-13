@@ -1,4 +1,6 @@
 var MeshTools = {
+	name: "MeshTools",
+
 	init: function()
 	{
 		LiteGUI.menubar.add("Actions/Mesh Tools", { callback: function() { 
@@ -11,9 +13,10 @@ var MeshTools = {
 		if(this.dialog)
 			this.dialog.close();
 
-		var dialog = new LiteGUI.Dialog({ id: "dialog_mesh_tools", title:"Mesh Tools", close: true, minimize: true, width: 300, height: 440, scroll: false, draggable: true});
+		var dialog = new LiteGUI.Dialog({ id: "dialog_mesh_tools", title:"Mesh Tools", close: true, minimize: true, width: 400, height: 740, scroll: true, resizable:true, draggable: true});
 		dialog.show('fade');
 		dialog.setPosition(100,100);
+		dialog.content.style.height = "calc( 100% - 30px )";
 		this.dialog = dialog;
 
 		var widgets = new LiteGUI.Inspector({ id: "mesh_tools", name_width: "50%" });
@@ -66,12 +69,10 @@ var MeshTools = {
 			widgets.addButton("", "Close" , { callback: function (value) { 
 				dialog.close(); 
 			}});
-			dialog.adjustSize(10);
 
 		}//inner update
 
 		dialog.add( widgets );
-		dialog.adjustSize(10);		
 	},
 
 	sortMeshTriangles: function( mesh, sort_mode )
@@ -183,7 +184,13 @@ var MeshTools = {
 		var normals = mesh.getBuffer("normals");
 		if(normals)
 			normals.applyTransform( rot_matrix ).upload( gl.STATIC_DRAW );
-		mesh.updateBounding();
+		mesh.updateBoundingBox();
+
+		if (mesh.bind_matrix)
+		{
+			var inv = mat4.invert( mat4.create(), rot_matrix );
+			mat4.multiply( mesh.bind_matrix, mesh.bind_matrix, inv );
+		}
 		return true;
 	},
 
@@ -197,7 +204,14 @@ var MeshTools = {
 		if(!vertices)
 			return false;
 		vertices.applyTransform( matrix ).upload( gl.STATIC_DRAW );
-		mesh.updateBounding();
+		mesh.updateBoundingBox();
+
+		if (mesh.bind_matrix)
+		{
+			var inv = mat4.invert( mat4.create(), matrix );
+			mat4.multiply( mesh.bind_matrix, mesh.bind_matrix, inv );
+		}
+
 		return true;
 	},
 
@@ -276,8 +290,136 @@ var MeshTools = {
 			return false;
 		normals.applyTransform( normal_matrix ).upload( gl.STATIC_DRAW );
 
-		mesh.updateBounding();
+		/*
+		if(mesh.bones)
+			for(var i = 0; i < mesh.bones.length; ++i)
+				mat4.multiply( mesh.bones[i][1], matrix, mesh.bones[i][1] );
+		*/
+		if (mesh.bind_matrix)
+		{
+			var inv = mat4.invert( mat4.create(), matrix );
+			mat4.multiply( mesh.bind_matrix, mesh.bind_matrix, inv );
+		}
+
+		mesh.updateBoundingBox();
 		return true;
+	},
+
+	centerVertices: function( mesh )
+	{
+		if(!mesh)
+			return false;
+		var vertices = mesh.getBuffer("vertices");
+		if(!vertices)
+			return false;
+		var offset = BBox.getCenter( mesh.bounding );
+		for(var i = 0; i < vertices.data.length; i+=3 )
+		{
+			var v = vertices.data.subarray(i,i+3);
+			vec3.add(v, v, offset );
+		}
+		vertices.upload( gl.STATIC_DRAW );
+		mesh.updateBoundingBox();
+
+		if (mesh.bind_matrix)
+		{
+			var matrix = mat4.create();
+			mat4.translate( matrix, matrix, offset);
+			var inv = mat4.invert( mat4.create(), matrix );
+			mat4.multiply( mesh.bind_matrix, mesh.bind_matrix, inv );
+		}
+
+		return true;
+	},
+
+	filterTriangleByVolume: function(V1,V2,V3,i)
+	{
+		var volume = SelectionModule.selection_volume;
+		if( !BBox.isPointInside( volume, V1 ) ||
+			!BBox.isPointInside( volume, V2 ) ||
+			!BBox.isPointInside( volume, V3 ) )
+			return false;
+		return true;
+	},
+
+	filterTriangles: function( mesh, model, filter_func )
+	{
+		var vertices_buffer = mesh.getBuffer("vertices"); 
+		var vertices = vertices_buffer.data;
+		var indices_buffer = mesh.getIndexBuffer("triangles");
+		var v1m = vec3.create();
+		var v2m = vec3.create();
+		var v3m = vec3.create();
+		var final_mesh = { vertices: [], indices: [] };
+		if(indices_buffer)
+		{
+			var last_index = 0;
+			var new_indices = [];
+			var indices_remap = {};
+			var indices = indices_buffer.data;
+			for(var i = 0; i < indices.length; i+=3)
+			{
+				var index1 = indices[i];
+				var index2 = indices[i+1];
+				var index3 = indices[i+2];
+				var V1 = vertices.subarray( index1*3, index1*3+3 );
+				var V2 = vertices.subarray( index2*3, index2*3+3 );
+				var V3 = vertices.subarray( index3*3, index3*3+3 );
+				if(model)
+				{
+					V1 = vec3.transformMat4( v1m, V1, model );
+					V2 = vec3.transformMat4( v2m, V2, model );
+					V3 = vec3.transformMat4( v3m, V3, model );
+				}
+
+				if( !filter_func( V1, V2, V3, i ) )
+					continue;
+
+				for( var w = 0; w < 3; ++w )
+				{
+					var index = indices[i + w];
+					var final_index = indices_remap[index];
+					if( final_index != null )
+					{
+						new_indices.push( final_index );
+						continue;
+					}
+
+					final_index = last_index++;
+					new_indices.push( final_index );
+					indices_remap[index] = final_index;
+
+					for(var j in mesh.vertexBuffers)
+					{
+						var buffer = mesh.vertexBuffers[j];
+						var final_data = final_mesh[j];
+						if(!final_data)
+							final_data = final_mesh[j] = [];
+
+						for(var k = 0; k < buffer.spacing; ++k)
+							final_data.push( buffer.data[ index*buffer.spacing + k ] );
+					}
+
+					//TODO: groups
+				}
+			}
+
+			//all out
+			if(final_mesh.vertices.length == 0)
+				return null;
+
+			final_mesh = new GL.Mesh( final_mesh, { triangles: new_indices } );
+			final_mesh.info = mesh.info || {};
+			final_mesh.info.groups = [];
+			if(mesh.bones)
+				final_mesh.bones = mesh.bones;
+			if(mesh.bind_matrix)
+				final_mesh.bind_matrix = new Float32Array( mesh.bind_matrix );
+			final_mesh.updateBoundingBox();
+			return final_mesh;
+		}
+		else //not indexed
+			throw("not indexed not supported");
 	},
 
 	deindexMesh: function(mesh)
@@ -338,6 +480,57 @@ var MeshTools = {
 		mesh.removeIndexBuffer("triangles");
 
 		return true;
+	},
+
+	showEditMeshGroupDialog: function( mesh, group_index )
+	{
+		var group = mesh.info.groups[ group_index ];
+		if(!group)
+			return;
+
+		var dialog = new LiteGUI.Dialog({ id: "dialog_mesh_groups", title:"Edit Mesh Group", close: true, minimize: true, width: 400, height: 340, scroll: true, resizable:true, draggable: true});
+		dialog.show();
+		dialog.setPosition(300,100);
+		//dialog.content.style.height = "calc( 100% - 30px )";
+		var widgets = new LiteGUI.Inspector({ id: "mesh_tools", name_width: 100 });
+		dialog.add(widgets);
+		widgets.addString("Mesh", mesh.fullpath || mesh.filename, { disbled: true} );
+
+		widgets.addString("Group Name", group.name, { callback: function(v){
+			group.name = v;
+			LS.RM.resourceModified(mesh);
+			RenderModule.requestFrame();
+		}});
+
+		widgets.addNumber("Start", group.start, { step: 3, min: 0, precision: 0, callback: function(v){
+			group.start = v|0;
+			LS.RM.resourceModified(mesh);
+			RenderModule.requestFrame();
+		}});
+		widgets.addNumber("Length", group.length, { step: 3, min: 0, precision: 0, callback: function(v){
+			group.length = v|0;
+			LS.RM.resourceModified(mesh);
+			RenderModule.requestFrame();
+		}});
+		widgets.addString("Material", group.material || "", { callback: function(v){
+			group.material = v;
+		}});
+
+		widgets.addSeparator();
+
+		widgets.addStringButton("Export as Mesh","mesh_" + group.name, { button:"Export", button_width: 100, callback_button: function(v){
+			var submesh = mesh.slice( group.start, group.length );
+			if(!submesh)
+				return;
+			LS.RM.registerResource( v, submesh );
+		}});
+
+		widgets.addSeparator();
+		widgets.addButton(null,"Close", { callback: function(v){
+			dialog.close();
+		}});
+
+		dialog.adjustSize(10);
 	}
 
 };
@@ -345,7 +538,7 @@ var MeshTools = {
 GL.Mesh.prototype.inspect = function( widgets, skip_default_widgets )
 {
 	var mesh = this;
-
+	console.log(mesh);
 	widgets.addString("Name", mesh.filename || mesh.fullpath );
 	widgets.addTitle("Vertex Buffers [num. vertex]");
 	widgets.widgets_per_row = 2;
@@ -419,27 +612,87 @@ GL.Mesh.prototype.inspect = function( widgets, skip_default_widgets )
 		widgets.addVector3("Halfsize", BBox.getHalfsize( mesh.bounding ), { disabled: true } );
 	}
 
-	if(mesh.info && mesh.info.groups)
+	if(mesh.bones)
 	{
-		var group = widgets.beginGroup("Groups",{ collapsed: true, height: 150, scrollable: true });
+		widgets.addTitle("Bones");
+		widgets.widgets_per_row = 2;
+		widgets.addCombo("Bones", "", { name_width: 60, width: "70%", values: mesh.bones.map(function(a){ return a[0]; }) } );
+		widgets.addButton(null,"Re-prefix", { width: "30%", callback: function(){
+			LiteGUI.prompt("Change name prefix for bones",inner)
+
+			function inner(v)
+			{
+				if(v === null)
+					return;
+				for(var i = 0; i < mesh.bones.length; ++i)
+				{
+					var bone = mesh.bones[i];
+					var name = bone[0];
+					var parts = name.split("_");
+					if(parts.length > 1)
+					{
+						if(v)
+							parts[0] = v;
+						else
+							parts.shift();
+					}
+					else if(v)
+							parts.unshift(String(v));
+					var newname = parts.join("_");
+					bone[0] = newname;
+					LS.RM.resourceModified(mesh);
+					widgets.refresh();
+				}
+			}			
+		}});
+		widgets.widgets_per_row = 1;
+	}
+
+	var group = widgets.beginGroup("Groups",{ collapsed: true, height: 150, scrollable: true });
+	if(mesh.info && mesh.info.groups)
 		for(var i = 0; i < mesh.info.groups.length; i++)
 		{
 			var group = mesh.info.groups[i];
 			var str = group.name;
 			if(group.material)
-				str += " <span class='mat' style='color:white;'>"+group.material+"<span>";
+				str += " <span class='mat' style='color:white;'>"+group.material+"</span>";
 			if(group.bounding)
-				str += " <span class='info' style='color:gray;'>[BB]<span>";
-			var w = widgets.addInfo(i, str, { name_width: 50 } );
+				str += " <span class='info' style='color:gray;'>[BB]</span> <span>"+group.start+":"+group.length+"</span>";
+			widgets.widgets_per_row = 2;
+			var w = widgets.addInfo(i, str, { width: "calc(100% - 60px)", name_width: 50, content_width: "calc(100% - 60px)" } );
+			var w = widgets.addButton(null,"Edit", { width: 50, group: i, callback: function(){
+				console.log("edit group " + this.options.group );
+				MeshTools.showEditMeshGroupDialog( mesh, this.options.group );
+			}});
+			widgets.widgets_per_row = 1;
 		}
-		widgets.addButton(null,"Compute bounding boxes", { callback: function(){
-			mesh.updateBoundingBox();
-			widgets.refresh();
-			LS.RM.resourceModified(mesh);
-			RenderModule.requestFrame();
-		}});
-		widgets.endGroup();
-	}
+	widgets.addStringButton("New Group","",{ name_width: 70, button:"+", callback_button: function(v){
+		if(!v)
+			return;
+		if(!mesh.info)
+			mesh.info = {};
+		if(!mesh.info.groups)
+			mesh.info.groups = [];
+		mesh.info.groups.push({
+			name: v,
+			start: 0,
+			material: "",
+			length: mesh.getNumTriangles() * 3
+		});
+		LS.RM.resourceModified(mesh);
+		widgets.refresh();
+		RenderModule.requestFrame();
+	}});
+
+	widgets.addButton(null,"Compute bounding boxes", { callback: function(){
+		mesh.updateBoundingBox();
+		widgets.refresh();
+		LS.RM.resourceModified(mesh);
+		RenderModule.requestFrame();
+	}});
+
+	widgets.endGroup();
+
 
 	widgets.addTitle("Actions");
 
@@ -505,6 +758,33 @@ GL.Mesh.prototype.inspect = function( widgets, skip_default_widgets )
 		widgets.refresh();
 	} );
 
+	var filter_mode = "volume";
+	widgets.addCombo("Filter", filter_mode, { values:["volume"], callback: function(v){
+		filter_mode = v;
+	}});
+
+	widgets.addButton(null, "Filter triangles", function(){
+		var func = null;
+		if(filter_mode == "volume")
+			func = MeshTools.filterTriangleByVolume;
+		if(!func)
+			return;
+		var node = SelectionModule.getSelectedNode();
+		var model = null;
+		if( node && node.transform )
+			model = node.transform.getGlobalMatrix();
+		var new_mesh = MeshTools.filterTriangles( mesh, model, func );
+		if(!new_mesh)
+		{
+			console.log("mesh empty!");
+			return;
+		}
+		LS.RM.registerResource( mesh.filename, new_mesh );
+		LS.RM.resourceModified( new_mesh );
+		RenderModule.requestFrame();
+		widgets.refresh();
+	});
+
 	widgets.addButton(null, "De-index", function(){
 		if( MeshTools.deindexMesh( mesh ) )
 		{
@@ -514,10 +794,31 @@ GL.Mesh.prototype.inspect = function( widgets, skip_default_widgets )
 		widgets.refresh();
 	} );
 
-	widgets.addButton(null, "Download OBJ", function(){
-		var data = mesh.encode("obj");
-		LS.downloadFile( mesh.filename + ".obj", data );
+	widgets.addButton(null, "Center", function(){
+		if( MeshTools.centerVertices( mesh ) )
+		{
+			LS.RM.resourceModified(mesh);
+			RenderModule.requestFrame();
+		}
+		widgets.refresh();
 	});
+
+	widgets.widgets_per_row = 1;
+
+	widgets.addTitle("Export");
+
+	widgets.widgets_per_row = 2;
+
+	var export_selection = "obj";
+	widgets.addCombo("Format", export_selection, { values: Object.keys( GL.Mesh.encoders ), width: "70%", callback: function(v){
+		export_selection = v;
+	}});
+	widgets.addButton(null,"Export", { width: "30%", callback: function(){
+		var data = mesh.encode(export_selection);
+		if(!data)
+			return;
+		LS.downloadFile( mesh.filename + "." + export_selection, data );
+	}});
 
 	widgets.widgets_per_row = 1;
 	//widgets.addButton(null, "Weld", function(){} );

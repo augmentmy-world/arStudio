@@ -7,6 +7,8 @@ var AnimationModule = {
 
 	_trajectories: [],
 
+	export_animation_formats: {},
+
 	init: function()
 	{
 		//create the timeline
@@ -17,6 +19,7 @@ var AnimationModule = {
 		LEvent.bind( LS.GlobalScene, "renderPicking", this.renderPicking.bind(this));
 
 		RenderModule.canvas_manager.addWidget( AnimationModule ); //capture update, render trajectories
+		LiteGUI.menubar.add("Actions/Skeletal export", { callback: AnimationModule.showSKAnimExportDialog.bind(AnimationModule) });
 	},
 
 	createTimeline: function()
@@ -38,81 +41,56 @@ var AnimationModule = {
 		InterfaceModule.selectTab( RenderModule.tab_name );
 		InterfaceModule.setLowerPanelVisibility( true );
 		if(animation)
+		{
 			this.timeline.setAnimation( animation );
+			this.timeline.resetView();
+		}
 	},
 
-	attachKeyframesBehaviour: function( inspector )
+	onBulletClick: function( e )
 	{
-		var elements = inspector.root.querySelectorAll(".keyframe_icon");
-		for(var i = 0; i < elements.length; i++)
-		{
-			var element = elements[i];
-			element.draggable = true;
-			element.addEventListener("click", inner_click );
-			element.addEventListener("contextmenu", (function(e) { 
-				if(e.button != 2) //right button
-					return false;
-				inner_rightclick(e);
-				e.preventDefault();
-				e.stopPropagation();
-				return false;
-			}).bind(this));
-			element.addEventListener("dragstart", inner_dragstart );
-			element.addEventListener("drop", inner_drop );
-		}
+		AnimationModule.insertKeyframe( e.target, e.shiftKey );
+		e.preventDefault();
+		e.stopPropagation();
+		return true;
+	},
 
-		function inner_click( e )
-		{
-			AnimationModule.insertKeyframe( e.target, e.shiftKey );
-			e.preventDefault();
-			e.stopPropagation();
-			return true;
-		}
+	onBulletRightClick: function( e )
+	{
+		var menu = new LiteGUI.ContextMenu( ["Add track [UID]","Add track [name]","Copy Query","Copy Unique Query",null,"Show Info"], { event: e, title:"Property", callback: function(value) {
+			if(value == "Add track [UID]")
+				AnimationModule.insertKeyframe(e.target);
+			else if(value == "Add track [name]")
+				AnimationModule.insertKeyframe(e.target, true);
+			else if(value == "Copy Query")
+				AnimationModule.copyQueryToClipboard( e.target.dataset["propertyuid"], true );
+			else if(value == "Copy Unique Query")
+				AnimationModule.copyQueryToClipboard( e.target.dataset["propertyuid"] );
+			else
+				AnimationModule.showPropertyInfo( e.target.dataset["propertyuid"] );
+		}});
+	},
 
-		function inner_rightclick( e )
-		{
-			var menu = new LiteGUI.ContextMenu( ["Add track [UID]","Add track [name]","Copy Query","Copy Unique Query",null,"Show Info"], { event: e, title:"Property", callback: function(value) {
-				if(value == "Add track [UID]")
-					AnimationModule.insertKeyframe(e.target);
-				else if(value == "Add track [name]")
-					AnimationModule.insertKeyframe(e.target, true);
-				else if(value == "Copy Query")
-					AnimationModule.copyQueryToClipboard( e.target.dataset["propertyuid"], true );
-				else if(value == "Copy Unique Query")
-					AnimationModule.copyQueryToClipboard( e.target.dataset["propertyuid"] );
-				else
-					AnimationModule.showPropertyInfo( e.target.dataset["propertyuid"] );
-			}});
-		}
+	onBulletDragStart: function( e )
+	{
+		var locator = e.target.dataset["propertyuid"];
+		if(e.shiftKey)
+			locator = LSQ.shortify( locator );
 
-		function inner_dragstart(e)
+		var info = LSQ.get( locator );
+		if(info && info.node)
 		{
-			var locator = e.target.dataset["propertyuid"];
-			if(e.shiftKey)
-				locator = LSQ.shortify( locator );
-
-			var info = LSQ.get( locator );
-			if(info && info.node)
+			var prefab = info.node.insidePrefab();
+			if(prefab)
 			{
-				var prefab = info.node.insidePrefab();
-				if(prefab)
-				{
-					console.warn("locator belongs to a node in a prefab, converting locator to name");
-					locator = LS.convertLocatorFromUIDsToName( locator );
-				}
+				console.warn("locator belongs to a node in a prefab, converting locator to name");
+				locator = LS.convertLocatorFromUIDsToName( locator );
 			}
-
-			e.dataTransfer.setData("type", "property" );
-			e.dataTransfer.setData("uid", locator );
-			e.dataTransfer.setData("locator", locator );
 		}
 
-		function inner_drop(e)
-		{
-			var element = EditorModule.getSceneElementFromDropEvent(e);
-			//something to do?
-		}
-
+		e.dataTransfer.setData("type", "property" );
+		e.dataTransfer.setData("uid", locator );
+		e.dataTransfer.setData("locator", locator );
 	},
 
 	copyQueryToClipboard: function( locator, shorten )
@@ -212,8 +190,10 @@ var AnimationModule = {
 
 		function inner_refresh_left()
 		{
-			var widgets = widgets1;
+			if(!animation)
+				return;
 
+			var widgets = widgets1;
 			var selected_take = animation.takes[ selected_take_name ];
 			var duration = selected_take ? selected_take.duration : 0;
 			var tracks = selected_take ? selected_take.tracks.length : 0;
@@ -224,7 +204,7 @@ var AnimationModule = {
 			var takes = [];
 			for( var i in animation.takes )
 				takes.push( i );
-			widgets.addList( null, takes, { height: 140, selected: selected_take_name, callback: function(v){
+			widgets.addList( null, takes, { height: 180, selected: selected_take_name, callback: function(v){
 				selected_take_name = v;
 				widgets1.refresh();
 				widgets2.refresh();
@@ -300,6 +280,7 @@ var AnimationModule = {
 			var widgets = widgets2;
 
 			var selected_take = animation.takes[ selected_take_name ];
+			console.log(selected_take);
 			var duration = selected_take ? selected_take.duration : 0;
 			var tracks = selected_take ? selected_take.tracks.length : 0;
 
@@ -330,7 +311,6 @@ var AnimationModule = {
 
 			widgets.widgets_per_row = 2;
 			var values = [];
-			//"Pack all tracks","Unpack all tracks","Use names as ids","Optimize Tracks","Match Translation","Only Rotations"
 
 			for(var i in Timeline.actions.take)
 				values.push(i);
@@ -413,6 +393,23 @@ var AnimationModule = {
 			});
 			widgets.widgets_per_row = 1;
 
+			widgets.addTitle("Export");
+			widgets.widgets_per_row = 2;
+			var export_selection = "anim";
+			widgets.addCombo("Format", export_selection, { values: Object.keys( AnimationModule.export_animation_formats ), width: "50%", callback: function(v){
+				export_selection = v;
+			}});
+			widgets.addButton(null,"Export", { width: "50%", callback: function(){
+				var exporter = AnimationModule.export_animation_formats[ export_selection ];
+				if(!exporter)
+					return;
+				var data = exporter( selected_take );
+				if(!data)
+					return;
+				LiteGUI.downloadFile( selected_take.name + "." + export_selection, data, data.constructor === String ? "text/plain" : "application/octet-stream" );
+			}});
+			widgets.widgets_per_row = 1;
+			
 			dialog.adjustSize(10);
 		}
 
@@ -534,7 +531,7 @@ var AnimationModule = {
 				var pos = points[j];
 				if( parent_matrix )
 					pos = vec3.transformMat4( vec3.create(), pos, parent_matrix );
-				EditorView.addPickingPoint( pos, 10, { pos: pos, value: points[j], type: "keyframe", traj:i, instance: this, take: this.timeline.current_take, track: traj.index, num: j, callback: callback } );
+				LS.Picking.addPickingPoint( pos, 10, { pos: pos, value: points[j], type: "keyframe", traj:i, instance: this, take: this.timeline.current_take, track: traj.index, num: j, callback: callback } );
 			}
 		}
 	},
@@ -562,7 +559,7 @@ var AnimationModule = {
 		for(var i = 0; i < take.tracks.length; ++i)
 		{
 			var track = take.tracks[i];
-			if( (track.type != "position" && track.type != "vec3") || !track.enabled)
+			if( !track.enabled || (track._type_index != LS.TYPES_INDEX.VEC3 && track._type_index != LS.TYPES_INDEX.TRANS10))
 				continue;
 
 			var num = track.getNumberOfKeyframes();
@@ -594,10 +591,10 @@ var AnimationModule = {
 					start = keyframe[0];
 				else if(j == num - 1)
 					end = keyframe[0];
-				var pos = keyframe[1];
+				var pos = track.value_size == 3 ? keyframe[1] : keyframe[1].subarray(0,3);
 				points.push(pos);
 				if(colors)
-					colors.push( j == selection.index ? colorB : colorA );
+					colors.push( j == selection.keyframe_index ? colorB : colorA );
 			}
 
 			LS.Draw.setColor( colors ? white : colorA );
@@ -632,10 +629,10 @@ var AnimationModule = {
 					for(var k = 0; k <= num_samples; ++k)
 					{
 						var t = start_t + offset * k;
-						var sample = track.getSample(t, true, vec3.create());
+						var sample = track.getSample( t, true );
 						if(!sample)
 							continue;
-						points.push(sample);
+						points.push( vec3.clone( sample.subarray(0,3) ) );
 					}
 				}
 				last = keyframe;
@@ -680,7 +677,12 @@ var AnimationModule = {
 		vec3.transformMat4( point, point, matrix );
 		if(selection.pos != selection.value) //update the visual point
 			vec3.transformMat4( selection.pos, selection.pos, matrix );
-		this.timeline.applyTracks();
+		if(this.timeline)
+		{
+			this.timeline.applyTracks();
+			this.timeline.redrawCanvas();
+		}
+
 		return true;
 	},
 
@@ -688,6 +690,125 @@ var AnimationModule = {
 	{
 		if( this.timeline )
 			this.timeline.update(dt);
+	},
+
+	showSKAnimExportDialog: function()
+	{
+		var dialog = new LiteGUI.Dialog({ id:"dialog_skanim_exporter", title:"SKAnim exporter", close: true, minimize: true, width: 400, height: 440, scroll: false, draggable: true});
+		dialog.show();
+		dialog.setPosition(100,100);
+		this.dialog = dialog;
+
+		var widgets = new LiteGUI.Inspector({ name_width: 100 });
+		dialog.add( widgets );
+
+		var mesh = null;
+		var anim = null;
+		var take = null;
+		var anim_filename = "animation";
+		var duration = 1;
+		var frames_per_second = 30;
+		var mesh_filename = "character";
+
+		//fetch
+		var playanim = LS.GlobalScene.root.findComponents("PlayAnimation")[0];
+		if(playanim && playanim.getAnimation())
+		{
+			anim = playanim.getAnimation();
+			anim_filename = LS.RM.getBasename(anim.filename);
+			take = playanim.getTake();
+			duration = take.duration;
+		}
+
+		var skindeformer = LS.GlobalScene.root.findComponents("SkinDeformer")[0];
+		if(skindeformer)
+			mesh = skindeformer._root.getMesh();
+
+		widgets.on_refresh = inner_refresh;
+		inner_refresh();
+		dialog.adjustSize(10);
+
+		function inner_refresh()
+		{
+			widgets.clear();
+			widgets.addTitle("Animation");
+			widgets.widgets_per_row = 2;
+			widgets.addString("Animation", anim ? anim.filename : "", { name_width: 80, width: "calc( 100% - 80px )", callback: function(v){ 
+				anim = LS.RM.getResource(anim);
+				if(anim)
+					take = anim.takes["default"];
+				inner_refresh();
+			}});
+			widgets.addButton(null,"From node",{ width: 80, callback: inner_from_node });
+
+			widgets.addNumber("Duration", duration, { min: 0, callback: function(v){ duration = v; }});
+			widgets.addNumber("Frames per second",frames_per_second, { min: 1, callback: function(v){ frames_per_second = v; }});
+			widgets.widgets_per_row = 1;
+			widgets.addString("Filename",anim_filename, { callback: function(v){ filename = v; }});
+			widgets.addButton(null,"Export Animation", { callback: inner_export_anim });
+			widgets.addSeparator();
+			widgets.addTitle("Mesh");
+			widgets.widgets_per_row = 2;
+			widgets.addMesh("Mesh",mesh ? mesh.filename : "", { name_width: 80, width: "calc( 100% - 80px )", callback: function(v){ 
+				mesh = LS.RM.getResource(v); 
+				inner_refresh();
+			}});
+			widgets.addButton(null,"From node",{ width: 80, callback: inner_mesh_from_node });
+			widgets.widgets_per_row = 1;
+			widgets.addString("Filename",mesh_filename, { callback: function(v){ mesh_filename = v; }});
+			widgets.addButton(null,"Export Mesh", { callback: inner_export_mesh });
+		}
+
+		function inner_from_node()
+		{
+			var node = SelectionModule.getSelectedNode();
+			if(!node)
+				return LiteGUI.alert("No node selected");
+			var comp = node.getComponent("PlayAnimation");
+			if(!comp)
+				return LiteGUI.alert("No PlayAnimation in node");
+			take = comp.getTake();
+			if(!take)
+				return LiteGUI.alert("No Animation in node");
+			duration = take.duration;
+			var anim = comp.getAnimation();
+			anim_filename = LS.RM.getBasename(anim.filename);
+			inner_refresh();
+		}		
+
+		function inner_export_anim()
+		{
+			if(!take)
+				return LiteGUI.alert("You must select a node that contains a PlayAnimation, select the root node of your DAE and click From Selected Node.");
+			var data = exportTakeInSKANIM( take, frames_per_second, duration );
+			if(!data)
+				return;
+			LiteGUI.downloadFile( anim_filename + ".skanim", data );
+		}
+
+		function inner_mesh_from_node()
+		{
+			var node = SelectionModule.getSelectedNode();
+			if(!node)
+				return LiteGUI.alert("No node selected");
+			var comp = node.getComponent("MeshRenderer");
+			if(!comp)
+				return LiteGUI.alert("No MeshRenderer in node");
+			mesh = comp.getMesh();
+			if(!mesh)
+				return LiteGUI.alert("No mesh found");
+			inner_refresh();
+		}		
+
+		function inner_export_mesh()
+		{
+			if(!mesh)
+				return LiteGUI.alert("You must select a node that contains a MeshRenderer, select the mesh and click the From Selected Node");
+			var data = GL.Mesh.encoders["mesh"](mesh);
+			if(!data)
+				return;
+			LiteGUI.downloadFile( mesh_filename + ".mesh", data );
+		}
 	}
 
 };
@@ -710,3 +831,437 @@ LS.Animation.prototype.inspect = function( widgets, skip_default_widgets )
 	if(!skip_default_widgets)
 		DriveModule.addResourceInspectorFields( this, widgets );
 }
+
+
+AnimationModule.export_animation_formats["anim"] = function( take ){
+	var lines = [];
+	lines.push( [take.name,take.duration,take.tracks.length].join(",") );
+	for(var i = 0; i < take.tracks.length; ++i)
+	{
+		var track = take.tracks[i];
+		track.unpackData();
+		var nodename = track.property.split("/")[0];
+		var track_str = nodename + "," + track.type + "," + track.data.length + "," + track.data.flat();
+		lines.push( track_str );
+	}
+	return lines.join("\n");
+}
+
+//skeletal anim
+AnimationModule.export_animation_formats["skanim"] = exportTakeInSKANIM;
+	
+function exportTakeInSKANIM( take, sampling, duration ) {
+	sampling = sampling || 30; //samples per second
+	duration = duration || take.duration; //duration in seconds
+	var total_samples = Math.floor( duration * sampling ); //total number of samples
+
+	var lines = [];
+	if(!take.tracks.length)
+		return null;
+
+	//find bones
+	var bone_names = [];
+	var bones = [];
+	var bones_by_name = {};
+	for(var i = 0; i < take.tracks.length; ++i)
+	{
+		var track = take.tracks[i];
+		if(!track.enabled)
+			continue;
+		var node = track.getPropertyNode();
+		if(!node)
+			continue;
+		bone_names.push( node.name );
+		bones.push( node );
+		bones_by_name[ node.name ] = node;
+	}
+
+	//find root
+	var root = null;
+	for(var i = 0; i < bones.length; ++i)
+	{
+		var bone = bones[i];
+		var parent = bone.parentNode;
+		if (!parent)
+			continue;
+		if( bones_by_name[ parent.name ] )
+			continue;
+		root = bone;
+	}
+
+	var out = [];
+	var last_bone_index = 0;
+	var bone_index = {};
+	inner_tree(root,0,out);
+
+	function inner_tree(node,level,out)
+	{
+		if( !node._is_bone )
+			return;
+		bone_index[node.name] = last_bone_index++;
+		var parent = node.parentNode;
+		var parent_index = -1;
+		if( bone_index[parent.name] !== undefined )
+			parent_index = bone_index[parent.name];
+		var index = out.length;
+		out.push( "B" + index + "," + node.name + "," + parent_index + "," + typedArrayToArray(node.transform.getMatrix()) );
+		if(node._children)
+		for(var i = 0; i < node._children.length; ++i)
+		{
+			var child = node._children[i];
+			inner_tree(child,level + 1,out);
+		}
+	}
+
+	var time_offset = duration / (total_samples-1);
+
+	if(1) //remove last frame for better looping
+	{
+		duration -= 1/sampling;
+		time_offset = duration / (total_samples-1);
+		total_samples--;
+	}
+
+	//duration in seconds, samples per second, num. samples, number of bones in the skeleton
+	lines.push( [ duration.toFixed(3), sampling, total_samples, out.length ].join(",") );
+
+	//write bones
+	var bones_indices = [];
+	for(var i = 0; i < bone_names.length; ++i)
+		bones_indices.push( bone_index[ bone_names[i] ] );
+	lines = lines.concat(out);
+	lines.push( "@" + bones_indices.length + "," + bones_indices.join(",") );
+
+	//write keyframes for every sample
+	for(var i = 0; i < total_samples; ++i)
+	{
+		var t = i*time_offset;
+		take.applyTracks(t,t,false);
+		var data = [t.toFixed(3)]
+		for(var j=0; j < bones.length; ++j)
+		{
+			var b = bones[j];
+			if( b && b.transform ) //weird case
+				data.push( typedArrayToArray( b == root ? b.transform.getGlobalMatrix() : b.transform.getMatrix() ) );
+			else
+				data.push( typedArrayToArray( mat4.create() ) );
+		}
+		lines.push( "K" + data.flat().join(",") );
+	}
+
+	return lines.join("\n");
+}
+
+
+//**************** EXTRA STUFF ************************************************
+
+
+//assigns the same translation to all nodes?
+LS.Animation.Take.prototype.matchTranslation = function( root )
+{
+	var num = 0;
+
+	for(var i = 0; i < this.tracks.length; ++i)
+	{
+		var track = this.tracks[i];
+
+		if(track._type != "trans10" && track._type != "mat4")
+			continue;
+
+		if( !track._property_path || !track._property_path.length )
+			continue;
+
+		var node = LSQ.get( track._property_path[0], root );
+		if(!node)
+			continue;
+		
+		var position = node.transform.position;
+		var offset = track.value_size + 1;
+
+		var data = track.data;
+		var num_samples = data.length / offset;
+		if(track._type == "trans10")
+		{
+			for(var j = 0; j < num_samples; ++j)
+				data.set( position, j*offset + 1 );
+		}
+		else if(track._type == "mat4")
+		{
+			for(var j = 0; j < num_samples; ++j)
+				data.set( position, j*offset + 1 + 12 ); //12,13,14 contain translation
+		}
+
+		num += 1;
+	}
+
+	return num;
+}
+
+/**
+* If this is a transform track it removes translation and scale leaving only rotations
+* @method onlyRotations
+*/
+LS.Animation.Take.prototype.onlyRotations = function()
+{
+	var num = 0;
+
+	for(var i = 0; i < this.tracks.length; ++i)
+	{
+		var track = this.tracks[i];
+		if(!track.enabled)
+			continue;
+
+		if(track._type == "vec3") //position, scale
+		{
+			this.removeTrack( track );
+			--i;
+			num += 1;
+			continue;
+		}
+
+		if( track.onlyRotations() )
+			num += 1;
+	}
+	return num;
+}
+
+/**
+* removes scaling in transform tracks
+* @method removeScaling
+*/
+LS.Animation.Take.prototype.removeScaling = function()
+{
+	var num = 0;
+
+	for(var i = 0; i < this.tracks.length; ++i)
+	{
+		var track = this.tracks[i];
+		if( track.removeScaling() )
+			num += 1;
+	}
+	return num;
+}
+
+LS.Animation.Take.prototype.removeUnusedKeyframes = function()
+{
+	var num = 0;
+	for(var i = 0; i < this.tracks.length; ++i)
+	{
+		var track = this.tracks[i];
+		if(track.packed_data)
+			track.unpackData();
+		var value_size = track.value_size;
+		for(var j = 1; j < track.data.length - 1; ++j)
+		{
+			var prev = track.data[j-1];
+			var now = track.data[j];
+			var next = track.data[j+1];
+
+			var diff = 0;
+			if(value_size == 1)
+				diff += Math.abs((now[1] - prev[1]) - (next[1] - now[1]));
+			else if(value_size > 1)
+				for(var k = 0; k < value_size; ++k)
+					diff += Math.abs((now[1][k] - prev[1][k]) - (next[1][k] - now[1][k]));
+			if(diff > 0.00001)
+				continue;
+
+			track.data.splice(j,1);
+			j--;
+			num++;
+		}
+	}
+
+	return num;
+}
+
+LS.Animation.Take.prototype.trimTracks = function( start, end )
+{
+	var num = 0;
+	for(var i = 0; i < this.tracks.length; ++i)
+	{
+		var track = this.tracks[i];
+		num += track.trim( start, end );
+	}
+
+	this.duration = end - start;
+
+	return num;
+}
+
+LS.Animation.Take.prototype.stretchTracks = function( duration )
+{
+	if(duration <= 0 || this.duration == 0)
+		return 0;
+	var scale = duration / this.duration;
+	this.duration *= scale;
+	for(var i = 0; i < this.tracks.length; ++i)
+		this.tracks[i].stretch( scale );
+	return this.tracks.length;
+}
+
+
+LS.Animation.Take.prototype.replacePrefix = function(v)
+{
+	for(var i = 0; i < this.tracks.length; ++i)
+	{
+		var track = this.tracks[i];
+		var t = track.property.split("/");
+		var node = track.getPropertyNode();
+		var name = t[0];
+		if(name[0]=="@")
+			continue;
+		var parts = name.split("_");
+		if(parts.length > 1)
+		{
+			if(v)
+				parts[0] = v;
+			else
+				parts.shift();
+		}
+		else
+		{
+			if(v)
+				parts.unshift(String(v));
+		}
+		var newnodename = parts.join("_");
+		t[0] = newnodename;
+		track.property = t.join("/");
+		track.name = track.property;
+		if(node)
+			node.name = newnodename;
+	}
+}
+
+
+
+/**
+* removes keyframes that are before or after the time range
+* @method trim
+* @param {number} start time
+* @param {number} end time
+*/
+LS.Animation.Track.prototype.trim = function( start, end )
+{
+	if(this.packed_data)
+		this.unpackData();
+
+	var size = this.data.length;
+
+	var result = [];
+	for(var i = 0; i < size; ++i)
+	{
+		var d = this.data[i];
+		if(d[0] < start || d[0] > end)
+			continue;
+		d[0] -= start;
+		result.push(d);
+	}
+	this.data = result;
+
+	//changes has been made?
+	if(this.data.length != size)
+		return 1;
+	return 0;
+}
+
+/**
+* Scales the time in every keyframe
+* @method stretch
+* @param {number} scale the sacle to apply to all times
+*/
+LS.Animation.Track.prototype.stretch = function( scale )
+{
+	if(this.packed_data)
+		this.unpackData();
+	var size = this.data.length;
+	for(var i = 0; i < size; ++i)
+		this.data[i][0] *= scale; //scale time
+	return 1;
+}
+
+/**
+* If this track changes the scale, it forces it to be 1,1,1
+* @method removeScaling
+*/
+LS.Animation.Track.prototype.removeScaling = function()
+{
+	var modified = false;
+
+	if(this.type == "matrix")
+	{
+		this.convertToTrans10();
+		modified = true;
+	}
+
+	if( this.type != "trans10" )
+	{
+		if(modified)
+			return true;
+	}
+
+	var num_keyframes = this.getNumberOfKeyframes();
+	for( var j = 0; j < num_keyframes; ++j )
+	{
+		var k = this.getKeyframe(j);
+		k[1][7] = k[1][8] = k[1][9] = 1; //set scale equal to 1
+	}
+	return true;
+}
+
+LS.Animation.Track.prototype.onlyRotations = (function()
+{
+	var temp = new Float32Array(10);
+	var temp_quat = new Float32Array(4);
+
+	return function(){
+
+		//convert locator
+		var path = this.property.split("/");
+		var last_path = path[ path.length - 1 ];
+		var old_size = this.value_size;
+		if( this.type != "mat4" && this.type != "trans10" )
+			return false;
+
+		if(last_path == "matrix")
+			path[ path.length - 1 ] = "Transform/rotation";
+		else if (last_path == "data")
+			path[ path.length - 1 ] = "rotation";
+
+		//convert samples
+		if(!this.packed_data)
+			this.packData();
+
+		this.property = path.join("/");
+		var old_type = this._type;
+		this.type = "quat";
+		this.value_size = 4;
+
+		var data = this.data;
+		var num_samples = data.length / (old_size+1);
+
+		if( old_type == "mat4" )
+		{
+			for(var k = 0; k < num_samples; ++k)
+			{
+				var sample = data.subarray(k*17+1,(k*17)+17);
+				var new_data = LS.Transform.fromMatrix4ToTransformData( sample, temp );
+				temp_quat.set( temp.subarray(3,7) );
+				data[k*5] = data[k*17]; //timestamp
+				data.set( temp_quat, k*5+1); //overwrite inplace (because the output is less big that the input)
+			}
+		}
+		else if( old_type == "trans10" )
+		{
+			for(var k = 0; k < num_samples; ++k)
+			{
+				var sample = data.subarray(k*11+4,(k*11)+8);
+				data[k*5] = data[k*11]; //timestamp
+				data.set( sample, k*5+1); //overwrite inplace (because the output is less big that the input)
+			}
+		}
+		
+		this.data = new Float32Array( data.subarray(0,num_samples*5) );
+		return true;
+	};
+})();

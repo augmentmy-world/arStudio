@@ -160,15 +160,23 @@ var ToolsModule = {
 	//every frame
 	render: function()
 	{
-		if (!this.current_tool || !RenderModule.frame_updated) 
+		if(!RenderModule.frame_updated)
 			return;
 
 		if(!this._active_camera)
 			return;
-
 		var camera = this._active_camera;
 		LS.Renderer.enableCamera( camera ); //sets viewport, update matrices and set Draw
-		this.renderView(null, camera);
+
+		for(var i in this.tools)
+		{
+			var tool = this.tools[i];
+			if(tool.renderEditorAlways)
+				tool.renderEditorAlways( camera );
+		}
+
+		if (this.current_tool)
+			this.renderView(null, camera);
 	},
 	//*/
 
@@ -310,6 +318,12 @@ var ToolsModule = {
 		element.addEventListener("contextmenu", function(e) { 
 			if(e.button != 2) //right button
 				return false;
+			e.preventDefault(); 
+			ToolsModule.showToolProperties( this.data );
+			return false;
+		} );
+
+		element.addEventListener("dblclick", function(e) { 
 			e.preventDefault(); 
 			ToolsModule.showToolProperties( this.data );
 			return false;

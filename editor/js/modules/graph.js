@@ -7,6 +7,7 @@ var GraphModule = {
 
 	current_graph_info: null,
 	current_overgraph: null,
+	_link_texture: null,
 
 	is_sceneview_visible: true,
 	show_panel: true,
@@ -52,6 +53,7 @@ var GraphModule = {
 		this.root.appendChild( graph_area.root );
 		graph_area.split("vertical",[null,"50%"],true);
 		this.graph_3D_area = graph_area.getSection(0).content;
+		this.graph_3D_area.style.backgroundColor = "black";
 
 		LiteGUI.bind( graph_area, "split_moved", function(e){
 			that.tabs_widget.onResize();
@@ -77,7 +79,6 @@ var GraphModule = {
 			inspector.addButton(null,"Side", { width: 80, callback: function(){
 				GraphModule.showSidePanel();
 			}});
-
 		});
 
 		this.tabs_widget.addWidgetTab( GraphWidget );
@@ -171,20 +172,16 @@ var GraphModule = {
 
 	render: function()
 	{
-		return;
-
-		if( !EditorView.render_overgraph || !this.current_overgraph || RenderModule.render_settings.in_player || !RenderModule.frame_updated )
+		if( !EditorView.render_helpers || RenderModule.render_settings.in_player || !RenderModule.frame_updated )
 			return;
 
-		if(!this.graph_canvas)
-		{
-			this.graph_canvas = new LGraphCanvas();
-			this.graph_canvas.pause_rendering = true;
-			this.graph_canvas.setCanvas( gl.canvas );
-		}
+		if(!this._link_texture || !GraphModule._force_render)
+			return;
 
-		this.graph_canvas.setGraph( this.current_overgraph );
-		this.graph_canvas.draw();
+		var h = gl.canvas.height * 0.8;
+		var w = h * (this._link_texture.width / this._link_texture.height);
+		gl.drawImage( this._link_texture, 50, gl.canvas.height * 0.1,w,h );
+		return;
 	},
 
 	onKeyDown: function(e)
@@ -250,9 +247,16 @@ GraphModule.showGraphComponent = function( component, inspector )
 
 	if(component.constructor == LS.Components.GraphComponent)
 	{
-		inspector.widgets_per_row = 2;
-		inspector.addCombo("on event", component.on_event, { name_width: 60, width:"70%", values: LS.Components.GraphComponent["@on_event"].values , callback: function(v) { component.on_event = v; }});
-		inspector.addCheckbox("redraw", component.force_redraw, { width:"30%", callback: function(v) { component.force_redraw = v; }});
+		inspector.widgets_per_row = 3;
+		inspector.addCombo("on event", component.on_event, { name_width: 60, width:"calc( 100% - 110px )", values: LS.Components.GraphComponent["@on_event"].values , callback: function(v) { component.on_event = v; }});
+		inspector.addCheckbox("redraw", component.force_redraw, { width:80, callback: function(v) { component.force_redraw = v; }});
+		inspector.addButton(null,LiteGUI.special_codes.navicon, { width: 30, callback: function(v,event) {
+			var graph = component.graph;
+			var options = graph._nodes;
+			var menu = new LiteGUI.ContextMenu( options, { ignore_item_callbacks: true, event: event, title: "Nodes", autoopen: false, callback: function( v, o, e ) {
+				EditorModule.inspect(v);
+			}});
+		}});
 		inspector.widgets_per_row = 1;
 	}
 	else if(component.constructor == LS.Components.FXGraphComponent)
@@ -284,10 +288,13 @@ GraphModule.showGraphComponent = function( component, inspector )
 		}
 	}
 
+	inspector.widgets_per_row = 1;
 	inspector.addButton(null,"Edit Graph", { callback: function() {
 		GraphModule.openTab();
 		GraphModule.editInstanceGraph( component, { id: component.uid, title: component._root.uid } );
 	}});
+
+	inspector.widgets_per_row = 1;
 }
 
 LS.Components.GraphComponent["@inspector"] = GraphModule.showGraphComponent;
@@ -297,6 +304,20 @@ if(!LS.Components.GraphComponent.actions)
 	LS.Components.GraphComponent.actions = {}
 if(!LS.Components.FXGraphComponent.actions)
 	LS.Components.FXGraphComponent.actions = {}
+
+LS.Components.GraphComponent.actions["set_title"] = LS.Components.FXGraphComponent.actions["set_title"] = { 
+	title: "Set Title",
+	callback: function(){
+		var that = this;
+		LiteGUI.prompt("Set a title for the Graph", function(v){
+			if(v)
+				that.title = v;
+			else if (v == "")
+				that.title = null;
+		});
+	}
+};
+
 
 LS.Components.GraphComponent.actions["show_graph_json"] = LS.Components.FXGraphComponent.actions["show_graph_json"] = { 
 	title: "Show Graph JSON",

@@ -8,6 +8,7 @@ var CORE = {
 
 	Modules: [], //registered modules
 	Widgets: [], //valid tab widgets (used by GenericTabsWidget)
+	Widgets_by_name: {}, //valid tab widgets (used by GenericTabsWidget)
 	Scenes: [], //current scenes
 	ProxyScene: {},
 
@@ -25,18 +26,6 @@ var CORE = {
 			dataType:"json",
 			success: this.configLoaded.bind(this)
 		});
-
-		/*
-		this.ProxyScene.onLEventBinded = function( event_type, callback, target_instance )
-		{
-		
-		}
-
-		this.ProxyScene.onLEventUnbinded = function( event_type, callback, target_instance )
-		{
-		
-		}
-		*/
 	},
 
 	configLoaded: function( config )
@@ -199,9 +188,12 @@ var CORE = {
 
 	registerModule: function( module )
 	{
+		if(this.Modules.indexOf(module) != -1)
+			return; //already present
+
 		this.Modules.push(module);
-		//if(!module.name)
-		//	console.warn("Module without name, some features wouldnt be available");
+		if(!module.name)
+			console.warn("Module without name, some features wont be available",module);
 
 		//initialize on late registration
 		if(this._modules_initialized)
@@ -217,7 +209,20 @@ var CORE = {
 	//used mostly to reload plugins
 	removeModule: function( module )
 	{
-		var index = this.Modules.indexOf( module );
+		var module_to_remove = null;
+		for(var i = 0; i < this.Modules.length; ++i)
+		{
+			var m = this.Modules[i];
+			if(m.name != module.name) //use names to avoid problems overwritting old module versions
+				continue;
+			module_to_remove = m;
+			break;
+		}
+
+		if(!module_to_remove)
+			return;
+
+		var index = this.Modules.indexOf( module_to_remove );
 		if(index == -1)
 			return;
 		if(module.deinit)
@@ -370,21 +375,15 @@ var CORE = {
 
 	selectScene: function( scene, save_current )
 	{
-		if(scene.constructor !== LS.Scene)
-			throw("Not an scene");
-
-		if(save_current)
-			this.Scenes.push( scene );
-
-		var old_scene = LS.GlobalScene;
-		LEvent.trigger( this, "global_scene_selected", scene );
-		LS.GlobalScene = scene;
+		LS.switchGlobalScene( scene );
 		CORE.inspect( scene.root );
 	},
 
 	registerWidget: function( widget )
 	{
-		this.Widgets.push( { title: widget.widget_name || widget.name, "class": widget });
+		var name = widget.widget_name || widget.name;
+		this.Widgets.push( { title: name, "class": widget });
+		this.Widgets_by_name[ name ] = widget;
 	},
 
 	// hub to redirect to the propper place

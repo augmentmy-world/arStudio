@@ -23,7 +23,18 @@ function SceneTreeWidget( options )
 		that.onDraw();
 	}});
 
+	this.search.root.style.width = "calc( 100% - 30px )";
+	this.search.root.style.display = "inline-block";
+
 	this.root.appendChild( this.search.root );
+
+	//options button
+	this.button =  document.createElement("button");
+	this.button.className = "litebutton flat";
+	this.button.style.width = "24px";
+	this.button.innerHTML = LiteGUI.special_codes.navicon;
+	this.root.appendChild( this.button );
+	this.button.addEventListener("click", this.showOptionsDialog.bind(this) );
 
 	var root_uid = scene.root.uid;
 
@@ -39,6 +50,10 @@ function SceneTreeWidget( options )
 	this.dragging_scroll = false;
 	this.locked = false;
 	this.max_visible_items = 1;
+
+	this.filter_layers = 0xFF;
+	this.filter_by_camera = false;
+	this.filter_by_distance = false;
 
 	this.canvas = document.createElement("canvas");
 	this.canvas.width = 100;
@@ -60,15 +75,20 @@ function SceneTreeWidget( options )
 	this.canvas.addEventListener("wheel", this._mouse_wheel_callback, false );
 	this.canvas.addEventListener("contextmenu", SceneTreeWidget._doNothing );
 
+	this._drop_callback = this.processItemDrop.bind(this);
+	this.canvas.addEventListener("drop", this._drop_callback, true); 
+
+
 	this.visible_nodes = [];
 
+	//bind events to scene
 	this.root.addEventListener("DOMNodeInsertedIntoDocument", function(){ 
 		that.bindEvents( LS.GlobalScene );
-		LEvent.bind( CORE, "global_scene_selected", that.onGlobalSceneSelected, that );
+		LEvent.bind( CORE, "global_scene_changed", that.onGlobalSceneSelected, that );
 	});
 	this.root.addEventListener("DOMNodeRemovedFromDocument", function(){ 
 		that.unbindEvents();
-		LEvent.unbind( CORE, "global_scene_selected", that.onGlobalSceneSelected, that );
+		LEvent.unbind( CORE, "global_scene_changed", that.onGlobalSceneSelected, that );
 	});
 
 	this.canvas.addEventListener("mousedown", function(){
@@ -103,6 +123,7 @@ SceneTreeWidget.prototype.onDraw = function()
 	var prev_selected = this.prev_selected;
 	var visible_nodes = this.visible_nodes;
 	visible_nodes.length = 0;
+	var filter_layers = this.filter_layers;
 
 	var selected_node = SelectionModule.getSelectedNode();
 	this.prev_selected.clear();
@@ -113,11 +134,11 @@ SceneTreeWidget.prototype.onDraw = function()
 			this.prev_selected.add(aux);
 	}
 
-	//first step, collect nodes
+	//first step, collect nodes and store them in visible_nodes
 	var scroll = this.scroll_items;
 	var max_items = this.max_visible_items = Math.ceil((canvas.height - 20) / line_height);
 	var last_item = max_items + scroll;
-	inner_fetch( scene.root, 0, -1 );
+	inner_fetch( scene.root, 0, -1 ); //recursive search
 	this.num_items = num_items;
 
 	this.scroll_items = Math.clamp( this.scroll_items, 0, num_items - 2);
@@ -131,6 +152,8 @@ SceneTreeWidget.prototype.onDraw = function()
 	{
 		var info = visible_nodes[i];
 		var node = info[0];
+		if( !(node.layers & filter_layers) )
+			continue;
 		var level = info[2];
 		var child_nodes = node._children;
 		var has_children = child_nodes && child_nodes.length;
@@ -294,6 +317,7 @@ SceneTreeWidget.prototype.onDraw = function()
 	}
 }
 
+//returns array [ node, index, depth_level, last_child_lines, parent_index ]
 SceneTreeWidget.prototype.getItemAtPos = function(y)
 {
 	var margin_y = 20;
@@ -323,7 +347,7 @@ SceneTreeWidget.prototype.processMouse = function(e)
 		{
 			this.dragging_scroll = false;
 
-			if( x >= this.canvas.height - 10 )
+			if( x >= this.canvas.width - 10 )
 			{
 				this.dragging_scroll = true;
 				var f = Math.clamp( y / this.canvas.height,0,1);
@@ -398,12 +422,16 @@ SceneTreeWidget.prototype.processMouse = function(e)
 				e.click_time = now - this.last_click_time;
 				if( e.click_time < 200 )
 				{
-					SelectionModule.setSelection( this.clicked_node );
+					if(e.shiftKey)
+						SelectionModule.addToSelection( this.clicked_node );
+					else
+						SelectionModule.setSelection( this.clicked_node );
 					EditorModule.inspect( this.clicked_node );
 				}
 				else if( this.dragging_node ) //dragging
 				{
 					var index = Math.floor((y - margin_y) / line_height);
+					index += this.scroll_items;
 					var local_y = (y - margin_y) % line_height;
 					var info = this.visible_nodes[ index ];
 					var node = info ? info[0] : null;
@@ -412,10 +440,10 @@ SceneTreeWidget.prototype.processMouse = function(e)
 						if( local_y > line_height - 4 && node.parentNode)
 						{
 							var node_index = node.parentNode._children.indexOf( node );
-							node.parentNode.addChild( this.clicked_node, node_index + 1 );
+							this.onChangeParent( this.clicked_node, node.parentNode, node_index + 1 );
 						}
 						else
-							node.addChild( this.clicked_node );
+							this.onChangeParent( this.clicked_node, node );
 						this.onDraw();
 					}
 				
@@ -443,6 +471,37 @@ SceneTreeWidget.prototype.processMouse = function(e)
 	}
 }
 
+SceneTreeWidget.prototype.onChangeParent = function(node, parent, index )
+{
+	if(node == parent)
+		return;
+	if(node.parentNode == parent && index == null) //nothing to do
+		return;
+
+	CORE.userAction("node_parenting", node);
+	var global = node.transform.getGlobalMatrix();
+	if(index != null)
+	{
+		if( node.parentNode == parent ) //when dragging to another pos in the same parent, if after its current position take into account that before 
+		{
+			var current_index = parent._children.indexOf(node);
+			if( current_index == index )
+				return;
+			if(current_index < index)
+				index--;
+			parent._children.splice(current_index,1);
+			parent._children.splice(index,0,node);
+			console.log("changing order in children");
+		}
+		else
+			parent.addChild( node, index );
+	}
+	else
+		parent.addChild( node );
+	node.transform.fromMatrix(global,true);
+	console.log("changing parent");
+}
+
 SceneTreeWidget.prototype.processDrag = function(e)
 {
 	//console.log(e);
@@ -451,8 +510,10 @@ SceneTreeWidget.prototype.processDrag = function(e)
 		return;
 
 	var that = this;
-	this._drop_callback = this.processDrop.bind(this);
-	document.addEventListener("drop",this._drop_callback,true);
+	this._drop_document_callback = this.processItemDrop.bind(this);
+
+	var ref_window = LiteGUI.getElementWindow(this.root);
+	ref_window.document.addEventListener("drop",this._drop_document_callback,true); //this is dangerous as it can trigger in wrong drops
 
 	var img = document.createElement("img");
 	img.src = "imgs/mini-icon-node.png";
@@ -472,10 +533,39 @@ SceneTreeWidget.prototype.processDrag = function(e)
 		e.dataTransfer.setData( i, drag_data[i] );
 }
 
-SceneTreeWidget.prototype.processDrop = function(e){
+//drop outside the canvas, set dragging to null
+SceneTreeWidget.prototype.processDocumentDrop = function(e){
 	this.dragging_node = null;
 	this.onDraw();
-	document.removeEventListener("drop",this._drop_callback);
+	var ref_window = LiteGUI.getElementWindow(this.root);
+	ref_window.document.removeEventListener("drop",this._drop_document_callback);
+}
+
+//drop inside the canvas
+SceneTreeWidget.prototype.processItemDrop = function(event)
+{
+	//warning: sometimes it is triggered when droping FROM the canvas to other elements in the DOM (due to binding to the document)
+	if( event.target != this.canvas )
+	{
+		this.dragging_node = null;
+		return; 
+	}
+
+	var b = this.canvas.getBoundingClientRect();
+	var x = event.pageX - b.left;
+	var y = event.pageY - b.top;
+
+	var info = this.getItemAtPos(y);
+	if(!info || !info[0])
+		return;
+	var node = info[0];
+	var r = EditorModule.onDropOnNode( node, event );
+	if(r === true)
+	{
+		event.stopPropagation();
+		event.stopImmediatePropagation();
+		event.preventDefault();
+	}
 }
 
 SceneTreeWidget.prototype.processMouseWheel = function(e)
@@ -542,7 +632,6 @@ SceneTreeWidget.prototype.onKeyDown = function( e )
 		return false;
 	}
 }
-
 
 SceneTreeWidget._doNothing = function doNothing(e) { e.preventDefault(); return false; };
 
@@ -708,4 +797,21 @@ SceneTreeWidget.prototype.testFilteringRule = function( node )
 		return true;
 
 	return false;
+}
+
+SceneTreeWidget.prototype.showOptionsDialog = function()
+{
+	var dialog = new LiteGUI.Dialog( { title: "Tree Options", close: true, width: 400, height: 280, draggable: true } );
+	var inspector = new LiteGUI.Inspector( { name_width: 140, scroll: true, resizable: true, full: true } );
+	dialog.add(inspector);
+
+	var that = this;
+	inspector.addTitle("Filters");
+	inspector.addLayers( "By Layers", this.filter_layers, { callback: function(v){ that.filter_layers = v; }});
+	//inspector.addCheckbox( "By Camera", this.filter_by_camera, { callback: function(v){ that.filter_by_camera = v; }});
+	//inspector.addCheckbox( "By Distance", this.filter_by_distance, { callback: function(v){ that.filter_by_distance = v; }});
+	inspector.addButton( null, "Apply filter", { callback: function(v){ that.refresh(); }});
+
+	dialog.adjustSize();
+	dialog.show();	
 }

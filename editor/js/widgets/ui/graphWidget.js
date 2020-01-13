@@ -8,6 +8,8 @@ GraphWidget.litegraph_path = "../../litegraph/";
 GraphWidget.litegraph_css_url = "css/litegraph.css";
 GraphWidget.litegraph_background = "imgs/litegraph_grid.png";
 
+GraphWidget.item_drop_types = {}; //.used when droping stuff on a graphcanvas
+
 LGraphCanvas.link_type_colors["Component"] = "#D99";
 
 GraphWidget.widget_name = "Graph";
@@ -41,6 +43,8 @@ GraphWidget.prototype.init = function( options )
 	top_widgets.addButton(null,"Run Step", this.onStepGraph.bind(this) );
 	top_widgets.addCheckbox("Redraw",this.redraw_canvas, { callback: function(v){ that.redraw_canvas = v; } } );
 	/* top_widgets.addButton(null,"Overgraph", this.onSelectOvergraph.bind(this) ); */
+	top_widgets.addButton(null,"Detach", { width: 80, callback: this.onDetachGraph.bind(this) });
+
 	this.root.appendChild( top_widgets.root );
 
 	//create area
@@ -62,6 +66,7 @@ GraphWidget.prototype.init = function( options )
 //	this.graphcanvas.onMenuNodeInputs = this.onMenuNodeInputs.bind(this);
 	this.graphcanvas.onMenuNodeOutputs = this.onMenuNodeOutputs.bind(this);
 	this.graphcanvas.getExtraMenuOptions = this.onGetExtraMenuOptions.bind(this);
+	this.graphcanvas.onDrawLinkTooltip = this.onDrawLinkTooltip.bind(this);
 
 	this.root.addEventListener("DOMNodeInsertedIntoDocument", function(){ 
 		that.bindEvents(); 
@@ -128,7 +133,11 @@ GraphWidget.prototype.onDraw = function()
 	if(GraphModule._texture_preview && this.inspected_node)
 	{
 		var widget = GraphModule._texture_preview;
-		var tex = this.inspected_node.getOutputData(0);
+		var tex = null;
+		if(this.inspected_node.getPreviewTexture)
+			tex = this.inspected_node.getPreviewTexture();
+		if(!tex)
+			tex = this.inspected_node.getOutputData(0);
 		if(!tex || tex.constructor !== GL.Texture)
 			widget._texture = null;
 		else
@@ -297,59 +306,54 @@ GraphWidget.prototype.onShowNodePanel = function( node )
 	this.inspected_node = node;
 }
 
+GraphWidget.prototype.onDetachGraph = function()
+{
+	//create floating window
+	var dialog = InterfaceModule.createFloatingDialog(null, CORE.Widgets_by_name.Graph, true );
+	if(this.current_graph_info.instance)
+		dialog.widget.editInstanceGraph( this.current_graph_info.instance );
+}
+
+//in case you want to have the option to drop stuff in the editor
+GraphWidget.registerItemDropType = function( type, callback )
+{
+	this.item_drop_types[ type ] = callback;
+}
+
 GraphWidget.prototype.onDropItem = function( e )
 {
 	e.preventDefault();
 	e.stopPropagation();
 
-	if(!this.graph)
-		return;
+	var graph = this.graphcanvas.getCurrentGraph();
+
+	if(!graph)
+		return false;
 
 	//scene node
-	var item_uid = e.dataTransfer.getData("uid");
 	var item_type = e.dataTransfer.getData("type");
-	var item_class = e.dataTransfer.getData("class");
-	var item_node_uid = e.dataTransfer.getData("node_uid");
 
-	var graphnode = null;
+	//get function in charge of processing drop
+	var callback = GraphWidget.item_drop_types[ item_type ];
+	if( !callback )
+		return false; 
 
-	if(item_type == "SceneNode")
-	{
-		graphnode = LiteGraph.createNode("scene/node");
-		graphnode.properties.node_id = item_uid;
-	}
-	else if(item_type == "Component")
-	{
-		graphnode = LiteGraph.createNode( item_class == "Transform" ? "scene/transform" : "scene/component");
-		graphnode.properties.node_id = item_node_uid;
-		graphnode.properties.component_id = item_uid;
-	}
-	else if(item_type == "Material")
-	{
-		graphnode = LiteGraph.createNode( "scene/material" );
-		graphnode.properties.node_id = item_node_uid;
-		graphnode.properties.material_id = item_uid;
-	}
-	else if(item_type == "property")
-	{
-		graphnode = LiteGraph.createNode( "scene/property" );
-		graphnode.properties.locator = item_uid;
-	}
-	else if(item_type == "object")
-	{
-		LiteGUI.alert("Objects cannot be dragged into the graph");
-	}
+	//get node
+	var graphnode = callback(e);
+	if(!graphnode)
+		return false;
 
-	if(graphnode)
-	{
-		graphnode.pos[0] = e.canvasX;
-		graphnode.pos[1] = e.canvasY;
-		this.graph.add( graphnode );
-		graphnode.onExecute();
-		return true;
-	}
+	//position node
+	var s = Math.floor(LiteGraph.NODE_TITLE_HEIGHT * 0.5);
+	graphnode.pos[0] = e.canvasX - s;
+	graphnode.pos[1] = e.canvasY + s;
 
-	return false;
+	//get active graph
+	graph.add( graphnode );
+	graphnode.onExecute();
+	if(graphnode.getTitle) //refresh title
+		graphnode.getTitle();
+	return true;
 }
 
 GraphWidget.prototype.onBeforeReload = function( e )
@@ -471,19 +475,6 @@ GraphWidget.prototype.onOpenGraph = function()
 	var dialog = new LiteGUI.Dialog( { title:"Select Graph", draggable: true, closable: true });
 	
 	var widgets = new LiteGUI.Inspector();
-
-	/*
-	widgets.addTitle("New Script");
-	widgets.addNode("Node", LS.GlobalScene.root.name );
-	widgets.addString("Name","unnamed");
-	widgets.addButton(null,"Create", function(){
-		//TODO
-		dialog.close();
-	});
-
-	widgets.addTitle("Open Script");
-	*/
-
 	var selected = null;
 
 	var graph_components = LS.GlobalScene.findNodeComponents( LS.Components.GraphComponent );
@@ -525,7 +516,20 @@ GraphWidget.prototype.onStepGraph = function()
 
 GraphWidget.prototype.onSelectOvergraph = function()
 {
-	GraphModule.current_overgraph = this.graph;
+	GraphModule.current_overgraph = this.graphcanvas.getCurrentGraph();
+}
+
+GraphWidget.prototype.onDrawLinkTooltip = function( ctx, link, graphcanvas )
+{
+	var tex = null;
+	if(link && link.data && link.data.constructor === GL.Texture)
+		tex = link.data;
+
+	if(GraphModule._link_texture != tex)
+	{
+		GraphModule._link_texture = tex;
+		LS.GlobalScene.requestFrame();
+	}
 }
 
 GraphWidget.prototype.onGetExtraMenuOptions = function(options)
@@ -544,7 +548,7 @@ GraphWidget.prototype.onGetExtraMenuOptions = function(options)
 
 	return [null,{ content: "Add " + className, callback: inner_add.bind(this) }];
 
-	function inner_add( node, e )
+	function inner_add( node, options, e )
 	{
 		var graphnode = null;
 
@@ -568,7 +572,8 @@ GraphWidget.prototype.onGetExtraMenuOptions = function(options)
 		this.graphcanvas.adjustMouseEvent(e);
 		graphnode.pos[0] = e.canvasX;
 		graphnode.pos[1] = e.canvasY;
-		this.graph.add( graphnode );
+		var graph = this.graphcanvas.getCurrentGraph();
+		graph.add( graphnode );
 		graphnode.onExecute();
 	}
 }
@@ -682,6 +687,13 @@ LiteGraph.addNodeMethod( "inspect", function( inspector )
 
 	if(graphnode.help)
 		inspector.addInfo( null, graphnode.help );
+	else
+		inspector.addInfo( null, graphnode.constructor.desc, { name_width: 100, disabled: graphnode.ignore_rename, callback: function(v) { graphnode.title = v; }});
+
+	if(graphnode.constructor.pixel_shader)
+		inspector.addButton(null,"Show Pixel Shader", function(){
+			EditorModule.checkCode(	graphnode.constructor.pixel_shader );
+		});
 
 	function inner_assign(v)
 	{
@@ -733,3 +745,60 @@ LiteGraph.LGraph.prototype.onGetNodeMenuOptions = function( options, node )
 	}
 }
 
+// drop types
+
+GraphWidget.registerItemDropType( "SceneNode", function(e){
+	var graphnode = LiteGraph.createNode("scene/node");
+	var item_uid = e.dataTransfer.getData("uid");
+	graphnode.setProperty("node_id",item_uid);
+	return graphnode;
+})
+
+GraphWidget.registerItemDropType( "Component", function(e){
+	var item_class = e.dataTransfer.getData("class");
+	var graphnode = LiteGraph.createNode( item_class == "Transform" ? "scene/transform" : "scene/component");
+	var item_node_uid = e.dataTransfer.getData("node_uid");
+	graphnode.setProperty("node_id",item_node_uid);
+	var item_uid = e.dataTransfer.getData("uid");
+	graphnode.setProperty("component_id",item_uid);
+	return graphnode;
+});
+
+GraphWidget.registerItemDropType( "Material", function(e){
+	graphnode = LiteGraph.createNode( "scene/material" );
+	var item_node_uid = e.dataTransfer.getData("node_uid");
+	graphnode.setProperty("node_id",item_node_uid);
+	var item_uid = e.dataTransfer.getData("uid");
+	graphnode.setProperty("material_id",item_uid);
+	return graphnode;
+});
+
+GraphWidget.registerItemDropType( "property", function(e){
+	var graphnode = LiteGraph.createNode( "scene/property" );
+	graphnode.title = null;
+	var item_uid = e.dataTransfer.getData("uid");
+	graphnode.setProperty( "locator", item_uid );
+	return graphnode;
+});
+
+GraphWidget.registerItemDropType( "resource", function(e){
+	var filename = e.dataTransfer.getData("res-fullpath");
+	var res = LS.ResourcesManager.getResource( filename );
+	var graphnode = null;
+
+	var info = LS.Formats.getFileFormatInfo( filename );
+
+	if(info.type == "image")
+	{
+		graphnode = LiteGraph.createNode( "texture/texture" );
+		graphnode.setProperty( "name", filename );
+		if(!res)
+			LS.ResourcesManager.load( filename );
+	}
+
+	return graphnode;
+});
+
+GraphWidget.registerItemDropType( "object", function(e){
+	LiteGUI.alert("Objects cannot be dragged into the graph");
+});
