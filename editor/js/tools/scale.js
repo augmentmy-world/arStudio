@@ -2,7 +2,7 @@ var scaleNodeTool = {
 	name: "scale",
 	description: "Scale the node",
 	section: "manipulate",
-	icon: "skins/" + CORE.config.skin + "/imgs/mid-icon-scale.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-scale.png",
 	_debug_pos: vec3.create(),
 	_center: vec3.create(),
 	_x_axis_end: vec3.create(),

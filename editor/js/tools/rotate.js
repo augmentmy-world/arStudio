@@ -2,7 +2,7 @@ var rotateNodeTool = {
 	name: "rotate",
 	description: "Rotate the node",
 	section: "manipulate",
-	icon: "skins/" + CORE.config.skin + "/imgs/mid-icon-rotate.png",
+	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-rotate.png",
 
 	_debug_pos: vec3.create(),
 	_x_axis_normal: vec3.create(),

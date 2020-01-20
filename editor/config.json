@@ -7,5 +7,5 @@
 	"nocache": false,
 	"scene_url":"scene.json",
 	"i18n": true,
-	"skin": "realmax"
+	"skin": "default"
 }
