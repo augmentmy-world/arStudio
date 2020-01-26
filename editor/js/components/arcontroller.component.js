@@ -96,7 +96,8 @@ ArControllerComponent.prototype.startAR = function() {
                 this.arController = new ARController(w, h, this.cameraPara);
                 this.arController.image = stream;
 
-                this.arController.setDefaultMarkerWidth(this.defaultMarkerWidth);
+                // we are excluding this at the moment - will be fixed
+                //this.arController.setDefaultMarkerWidth(this.defaultMarkerWidth);
 
                 // FIXME: In Player-Mode the detection Mode is undefined
                 this.arController.setPatternDetectionMode( (this.trackableDetectionMode || 3) );
