@@ -82,7 +82,7 @@ ArControllerComponent.prototype.startAR = function() {
         onSuccess: function(stream) {
             console.log('got video', stream);
             this.cameraPara = new ARCameraParam(this.cameraCalibrationFile);
-            this.cameraPara.onload = function(param) {
+            this.cameraPara.onload = async function(param) {
                 var maxSize = maxARVideoSize || Math.max(stream.videoWidth, stream.videoHeight);
 				var f = maxSize / Math.max(stream.videoWidth, stream.videoHeight);
 				var w = f * stream.videoWidth;
