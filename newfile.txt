@@ -1,1 +1,2 @@
 a new file
+http-server -S -C ~/Desktop/zaphod\ cert/zaphod-cert.pem -K ~/Desktop/zaphod\ cert/zaphod-key-noenc.pem -p 8080

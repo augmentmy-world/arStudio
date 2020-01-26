@@ -2,7 +2,7 @@ var moveTool = {
 	name: "move",
 	description: "Translate selection",
 	section: "manipulate",
-	icon: "skins/" + CORE.config.skin + "/imgs/mid-icon-move.png",
+	icon: "imgs/mini-icon-gizmo.png",
 	keyShortcut: 87, //W
 
 	_action: true,

@@ -1,11 +1,11 @@
 {
 	"version":"0.6",
-	"server":"http://localhost:8080/src/",
-	"resources":"http://localhost:8080/src/files/",
+	"server":"https://liteserver.tripod-digital.co.nz/",
+	"resources":"https://liteserver.tripod-digital.co.nz/files/",
 	"proxy":"",
 	"plugins":"js/plugins",
 	"nocache": false,
 	"scene_url":"scene.json",
 	"i18n": true,
-	"skin": "realmax"
+	"skin": "default"
 }

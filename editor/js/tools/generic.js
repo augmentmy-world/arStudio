@@ -69,7 +69,7 @@ var lightsEnabledButton = {
 	name: "lights",
 	description: "Show lights in editor",
 	section: "visibility",
-	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-light.png",
+	icon: "imgs/mini-icon-light.png",
 	enabled: true,
 	callback: function()
 	{
@@ -161,7 +161,7 @@ var viewSceneCameraButton = {
 	name: "view_scene_camera",
 	description: "View from Scene Camera",
 	section: "view-modes",
-	icon: "skins/" + CORE.config.skin + "/imgs/mini-icon-camera.png",
+	icon: "imgs/mini-icon-camera.png",
 	enabled: false,
 	callback: function(e)
 	{
