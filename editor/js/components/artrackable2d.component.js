@@ -1,8 +1,8 @@
 function ArTrackable2D( o )
-{   
+{
     this.arControllerComponent = LS.GlobalScene.findNodeComponents('ArControllerComponent')[0];
     // FIXME: make that static
-    this.trackableTypes = ["Barcode", "Pictorial"];
+    this.trackableTypes = ["Barcode", "Pictorial", "NFT"];
     this._initSubScene = true;
     // FIXME: make that static
     this._defaultTrackableType = 0;
@@ -18,6 +18,9 @@ function ArTrackable2D( o )
         '智慧职教' : 'data/icon-09.patt',
         'Hiro' : 'data/hiro.patt',
         'Kanji' : 'data/kanji.patt'
+    }
+    this.nftTrackableList = {
+      'Pinball': 'data/pinball/pinball'
     }
 
     for(i = 0; i <= 63; i++){
@@ -47,7 +50,7 @@ ArTrackable2D.prototype.configure = function(o)
 	if(o.trackableId !== undefined) {//we can control if the parameter exist
         this.trackableId = o.trackableId;
     }
-        
+
     if(o.trackablePath !== undefined) {
         this._trackablePath = o.trackablePath;
     }
@@ -55,7 +58,7 @@ ArTrackable2D.prototype.configure = function(o)
 
 Object.defineProperty(ArTrackable2D.prototype, "trackablePath", {
     set: function (v) {
-        this._trackablePath = v; 
+        this._trackablePath = v;
         this._trackableType = this.trackableTypes[1];
         //this.updateMaterial();
     },
@@ -71,8 +74,8 @@ ArTrackable2D.markerSceneName = 'Marker Scene';
 // ArTrackable2D.prototype.updateMaterial = function(){
 //     if (!this.root.material)
 //         this.root.material = new LS.StandardMaterial();
-//     var material = this.root.getMaterial();    
-//     material.setTexture('color', this.trackablePath); 
+//     var material = this.root.getMaterial();
+//     material.setTexture('color', this.trackablePath);
 // }
 
 LS.registerComponent(ArTrackable2D);
@@ -85,24 +88,32 @@ ArTrackable2D["@inspector"] = function( arTrackable, inspector )
     }});
 
     if(arTrackable._trackableType === arTrackable.trackableTypes[1]) {
-        inspector.addCombo("Pictorial marker", arTrackable._trackablePath, { 
-            values: arTrackable.pictorialTrackableList, 
-            callback: selection => { 
+        inspector.addCombo("Pictorial marker", arTrackable._trackablePath, {
+            values: arTrackable.pictorialTrackableList,
+            callback: selection => {
                 arTrackable._trackablePath = selection;
             }
         });
-        
+
         // TODO: For a first demo we add a dropdown with static paths. After that we will add this again to have an upload function
         // inspector.addMarker2D("Image", arTrackable.trackablePath,
         // {
         //     // pretitle: AnimationModule.getKeyframeCode(arTrackable, "marker_pattern"),
-        //     // callback: function (v,e) { 
+        //     // callback: function (v,e) {
         //     //     arTrackable.trackablePath =v;
         //     //     var pattern = e.target.dataset["pattern"];
         //     //     console.log("---------------pattern file:"+pattern);
         //     // }
         // });
+    } else if(arTrackable._trackableType === arTrackable.trackableTypes[2]) {
+      inspector.addCombo("NFT marker", arTrackable._trackablePath, {
+          values: arTrackable.nftTrackableList,
+          callback: selection => {
+              arTrackable._trackablePath = selection;
+          }
+      });
     }
+
     else {
         inspector.addCombo("Barcode Id", arTrackable.selectedBarcodeId, {values: arTrackable._barcodeIds, callback: v => {
             arTrackable.selectedBarcodeId = v;
@@ -158,11 +169,11 @@ Object.defineProperty(ArTrackable2D.prototype,'visible', {
             this._currentState = 'visible';
             // Only send the event when the trackable wasn't visible inside the previous frame.
             if(this._previousState === undefined){
-                LEvent.trigger(LS.GlobalScene, "onTrackableFound", this);    
+                LEvent.trigger(LS.GlobalScene, "onTrackableFound", this);
             }
             // This means the trackable was visible inside the previous frame and is still visible. In that case we send a onTrackableTracking event
             else {
-                LEvent.trigger(LS.GlobalScene, "onTrackableTracking", this);                    
+                LEvent.trigger(LS.GlobalScene, "onTrackableTracking", this);
             }
             this._root.getDescendants().forEach( (child) => {
                 child.visible = true;
@@ -171,7 +182,7 @@ Object.defineProperty(ArTrackable2D.prototype,'visible', {
         else{
             // Sanity: Make sure to only send the trackable lost event if trackable was visible inside the previous frame
             if( this._previousState !== undefined ) {
-                LEvent.trigger(LS.GlobalScene, "onTrackableLost", this);  
+                LEvent.trigger(LS.GlobalScene, "onTrackableLost", this);
             }
             this._root.getDescendants().forEach( (child) => {
                 child.visible = false;
