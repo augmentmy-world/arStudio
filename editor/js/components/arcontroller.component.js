@@ -304,11 +304,20 @@ ArControllerComponent.prototype.resize = function(cw, ch, vw, vh) {
 ArControllerComponent.prototype.stopAR = function(){
     console.log("Stop AR");
     this.running = false;
-    if(this.arController)
-        this.arController.dispose();
     if(this._video !== undefined){
-        this._video.srcObject.getTracks()[0].stop();
-        this._video.remove();
+      console.log(this._video);
+      var videoElem = this._video;
+      var stream = videoElem.srcObject;
+      var tracks = stream.getVideoTracks();
+      tracks.forEach(function(track) {
+        track.stop();
+      });
+
+      videoElem.srcObject = null;
+      videoElem.src = null;
+      videoElem.remove();
+      if(this.arController)
+          this.arController.dispose();
     }
 
     if(this.arCamera)
