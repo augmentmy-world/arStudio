@@ -14,8 +14,6 @@ function ArTrackable2D( o )
     this._currentState = undefined;
     this._previousState = this._currentState;
     this.pictorialTrackableList = {
-        'ICVE' : 'data/icon-08.patt',
-        '智慧职教' : 'data/icon-09.patt',
         'Hiro' : 'data/hiro.patt',
         'Kanji' : 'data/kanji.patt'
     }

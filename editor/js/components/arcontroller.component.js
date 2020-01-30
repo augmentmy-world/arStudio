@@ -111,17 +111,21 @@ ArControllerComponent.prototype.startAR = function() {
                 this._arTrackable2DList.forEach(trackable2D => {
                     if(trackable2D._trackableType === trackable2D.trackableTypes[1])
                     {
-                        this.arController.loadMarker(trackable2D.trackablePath, function(markerId) {
-                            console.log("Register trackable - Pattern");
-                            trackable2D.trackableId = markerId;
+                      this.arController.loadMarker(trackable2D.trackablePath, function(markerId) {
+                          console.log("Register trackable - Pattern");
+                          trackable2D.trackableId = markerId;
+                      });
+                    } else if (trackable2D._trackableType === trackable2D.trackableTypes[0]) {
+                      arController.trackBarcodeMarkerId(trackable2D.selectedBarcodeId)
+                        .then(trackableId => {
+                          console.log("Register trackable - Barcode with id: "+ trackableId);
+                          trackable2D.trackableId = trackableId;
                         });
-                    }
-                    else if(trackable2D._trackableType === trackable2D.trackableTypes[2])
-                    {
-                        this.arController.loadNFTMarker(trackable2D.trackablePath, function(markerId) {
-                            console.log("Register trackable - NFT");
-                            trackable2D.trackableId = markerId;
-                        });
+                    } else if(trackable2D._trackableType === trackable2D.trackableTypes[2]) {
+                      this.arController.loadNFTMarker(trackable2D.trackablePath, function(markerId) {
+                          console.log("Register trackable - NFT");
+                          trackable2D.trackableId = markerId;
+                      });
                     }
                 });
 
