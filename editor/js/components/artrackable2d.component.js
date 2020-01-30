@@ -1,4 +1,4 @@
-LS.Formats.addSupportedFormat( "patt", { dataType: "arraybuffer" } );
+LS.Formats.addSupportedFormat( "patt", { dataType: "string", format: "text" } );
 
 function ArTrackable2D( o )
 {
