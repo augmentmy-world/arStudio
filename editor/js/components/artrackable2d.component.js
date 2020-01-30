@@ -1,3 +1,5 @@
+LS.Formats.addSupportedFormat( "patt", { dataType: "arraybuffer" } );
+
 function ArTrackable2D( o )
 {
     this.arControllerComponent = LS.GlobalScene.findNodeComponents('ArControllerComponent')[0];
@@ -94,15 +96,15 @@ ArTrackable2D["@inspector"] = function( arTrackable, inspector )
         });
 
         // TODO: For a first demo we add a dropdown with static paths. After that we will add this again to have an upload function
-        // inspector.addMarker2D("Image", arTrackable.trackablePath,
-        // {
-        //     // pretitle: AnimationModule.getKeyframeCode(arTrackable, "marker_pattern"),
-        //     // callback: function (v,e) {
-        //     //     arTrackable.trackablePath =v;
-        //     //     var pattern = e.target.dataset["pattern"];
-        //     //     console.log("---------------pattern file:"+pattern);
-        //     // }
-        // });
+        inspector.addMarker2D("Barcode", arTrackable.trackablePath,
+        {
+            pretitle: "",
+            callback: function (v,e) {
+                arTrackable.trackablePath =v;
+                var pattern = e.target.dataset["pattern"];
+                console.log("---------------pattern file:"+pattern);
+            }
+        });
     } else if(arTrackable._trackableType === arTrackable.trackableTypes[2]) {
       inspector.addCombo("NFT marker", arTrackable._trackablePath, {
           values: arTrackable.nftTrackableList,
