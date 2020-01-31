@@ -11,6 +11,7 @@ function ArControllerComponent( o )
     this.initVideo = true;
     this.running = false;
     this.arController = null;
+    this.canvas = $('canvas');
     //Square tracking options
     this.trackableDetectionModeList = {
         'Trackable square pattern (color)' : artoolkit.AR_TEMPLATE_MATCHING_COLOR,
@@ -149,12 +150,10 @@ ArControllerComponent.prototype.startAR = function() {
                     style.transform = 'translate(-50%, -50%)';
                     style.zIndex = '1';
 
-                    var canvas = $('canvas');
-
                     vw = stream.videoWidth;
                     vh = stream.videoHeight;
 
-                    if(canvas.length==1)
+                    if(this.canvas.length==1)
                     {
                         //View page is the player
                         var selectedCanvas = $(canvas[0]);
@@ -164,13 +163,13 @@ ArControllerComponent.prototype.startAR = function() {
                         selectedCanvas.css("z-index",99);
                         selectedCanvas.css("position","absolute");
                     }
-                    else if(canvas.length>1)
+                    else if(this.canvas.length>1)
                     {
                         //View page is the editor.
                         var gameTab = $("#ingametab");
                         gameTab.append(stream);
 
-                        var selectedCanvas = $(canvas[0]);
+                        var selectedCanvas = $(this.canvas[0]);
                         if(selectedCanvas)
                         {
                             cw = selectedCanvas.width();
@@ -319,6 +318,15 @@ ArControllerComponent.prototype.stopAR = function(){
       if(this.arController)
           this.arController.dispose();
     }
+    var selectedCanvas = $(this.canvas[0]);
+    if(selectedCanvas)
+    {
+        cw = selectedCanvas.width();
+        ch = selectedCanvas.height();
+        selectedCanvas.css("z-index",0);
+        selectedCanvas.css("position","absolute");
+    }
+
 
     if(this.arCamera)
         LS.GlobalScene.root.removeChild(this.arCamera);
