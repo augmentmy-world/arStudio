@@ -9,6 +9,7 @@ function ArTrackable2D( o )
     this._defaultMarkerWidth = 80;
     this._trackableType = this.trackableTypes[this._defaultTrackableType];
     this._trackablePath = '';
+    this._trackablePathNft = '';
     this._trackableId = 1;
     this._barcodeIds = [];
     this._currentState = undefined;
@@ -37,7 +38,8 @@ ArTrackable2D.prototype.serialize = function()
 	return {
         trackableId: this._trackableId,
         trackableType: this._trackableType,
-        trackablePath: this._trackablePath
+        trackablePath: this._trackablePath,
+        trackablePathNft: this._trackablePathNft
 	};
 }
 
@@ -54,6 +56,10 @@ ArTrackable2D.prototype.configure = function(o)
     if(o.trackablePath !== undefined) {
         this._trackablePath = o.trackablePath;
     }
+
+    if(o.trackablePath !== undefined) {
+      this._trackablePathNft = o.trackablePathNft;
+  }
 }
 
 Object.defineProperty(ArTrackable2D.prototype, "trackablePath", {
@@ -65,6 +71,17 @@ Object.defineProperty(ArTrackable2D.prototype, "trackablePath", {
     get: function () {
         return this._trackablePath;
     }
+});
+
+Object.defineProperty(ArTrackable2D.prototype, "trackablePathNft", {
+  set: function (v) {
+      this._trackablePathNft = v;
+      this._trackableType = this.trackableTypes[2];
+      //this.updateMaterial();
+  },
+  get: function () {
+      return this._trackablePathNft;
+  }
 });
 
 ArTrackable2D.trackableName = '2D Trackable';
@@ -106,10 +123,13 @@ ArTrackable2D["@inspector"] = function( arTrackable, inspector )
         //     // }
         // });
     } else if(arTrackable._trackableType === arTrackable.trackableTypes[2]) {
-      inspector.addCombo("NFT marker", arTrackable._trackablePath, {
+      if (!arTrackable._trackablePathNft) {
+        arTrackable._trackablePathNft = arTrackable.nftTrackableList['Pinball']
+      }
+      inspector.addCombo("NFT marker", arTrackable._trackablePathNft, {
           values: arTrackable.nftTrackableList,
           callback: selection => {
-              arTrackable._trackablePath = selection;
+              arTrackable._trackablePathNft = selection;
           }
       });
     }
