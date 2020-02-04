@@ -349,8 +349,6 @@ ArControllerComponent.prototype.stopAR = function(){
         LS.GlobalScene.root.removeChild(arBackground);
     this.initVideo = true;
 
-    if(this.arController)
-        this.arController.dispose;
 };
 
 ArControllerComponent.prototype.registerTrackable = function(arTrackable2D){
