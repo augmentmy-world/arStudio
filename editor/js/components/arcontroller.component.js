@@ -153,32 +153,37 @@ ArControllerComponent.prototype.startAR = function() {
                     vw = stream.videoWidth;
                     vh = stream.videoHeight;
 
-                    if(this.canvas.length==1)
-                    {
-                        //View page is the player
-                        var selectedCanvas = $(canvas[0]);
-                        selectedCanvas.before(stream);
-                        cw = selectedCanvas.width();
-                        ch = selectedCanvas.height();
-                        selectedCanvas.css("z-index",99);
-                        selectedCanvas.css("position","absolute");
-                    }
-                    else if(this.canvas.length>1)
-                    {
-                        //View page is the editor.
-                        var gameTab = $("#ingametab");
-                        gameTab.append(stream);
+                    if(this.canvas==null){
+                      console.log('canvas does not exist!\n');
+                    } else {
 
-                        var selectedCanvas = $(this.canvas[0]);
-                        if(selectedCanvas)
+                        if(this.canvas.length==1)
                         {
+                            //View page is the player
+                            var selectedCanvas = $(this.canvas[0]);
+                            selectedCanvas.before(stream);
                             cw = selectedCanvas.width();
                             ch = selectedCanvas.height();
                             selectedCanvas.css("z-index",99);
                             selectedCanvas.css("position","absolute");
                         }
-                        //style.zIndex = '9';
-                    }
+                        else if(this.canvas.length>1)
+                        {
+                            //View page is the editor.
+                            var gameTab = $("#ingametab");
+                            gameTab.append(stream);
+
+                            var selectedCanvas = $(this.canvas[0]);
+                            if(selectedCanvas)
+                            {
+                                cw = selectedCanvas.width();
+                                ch = selectedCanvas.height();
+                                selectedCanvas.css("z-index",99);
+                                selectedCanvas.css("position","absolute");
+                            }
+                            //style.zIndex = '9';
+                        }
+                      }
 
                 }
 
@@ -194,23 +199,27 @@ ArControllerComponent.prototype.startAR = function() {
 
                 self = this;
                 window.addEventListener('resize', function() {
-                    var selectedCanvas = $(canvas[0]);
-                    var selectedVideo = $('video');
-                    if((selectedCanvas) && (selectedVideo))
-                    {
-                        //todo: handle window/canvas resize
-                        self.arCamera.clear_color = true;
+                  if(this.canvas==null){
+                    console.log('canvas does not exist!\n');
+                  } else {
 
-                        cw = selectedCanvas.width();
-                        ch = selectedCanvas.height();
-                        vw = selectedVideo[0].clientWidth;
-                        vh = selectedVideo[0].clientHeight;
+                      var selectedCanvas = $(this.canvas[0]);
+                      var selectedVideo = $('video');
+                      if((selectedCanvas) && (selectedVideo))
+                      {
+                          //todo: handle window/canvas resize
+                          self.arCamera.clear_color = true;
 
-                        self.recalculateViewPort(cw, ch, vw, vh);
-                        //this.resize(cw, ch, vw, vh);
+                          cw = selectedCanvas.width();
+                          ch = selectedCanvas.height();
+                          vw = selectedVideo[0].clientWidth;
+                          vh = selectedVideo[0].clientHeight;
 
-                    }
+                          self.recalculateViewPort(cw, ch, vw, vh);
+                          //this.resize(cw, ch, vw, vh);
 
+                      }
+                  }
                 }, false);
 
                 sceneRoot.addChild(this.arCameraNode, 0);
