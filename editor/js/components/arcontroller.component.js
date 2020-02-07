@@ -154,7 +154,7 @@ ArControllerComponent.prototype.startAR = function() {
                     vh = stream.videoHeight;
 
                     if(this.canvas==null){
-                      console.log('canvas does not exist!\n');
+                      return;
                     } else {
 
                         if(this.canvas.length==1)
@@ -200,7 +200,7 @@ ArControllerComponent.prototype.startAR = function() {
                 self = this;
                 window.addEventListener('resize', function() {
                   if(this.canvas==null){
-                    console.log('canvas does not exist!\n');
+                    return;
                   } else {
 
                       var selectedCanvas = $(this.canvas[0]);
