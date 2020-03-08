@@ -75,7 +75,6 @@
 		"js/modules/undo.js",
 		"js/modules/about.js",
 		"js/modules/jsartoolkit.module.js",
-		"js/modules/PMMmodule.js",
 		"js/modules/actions.js",
     "js/components/arcontroller.component.js",
     "js/components/artrackable2d.component.js"
