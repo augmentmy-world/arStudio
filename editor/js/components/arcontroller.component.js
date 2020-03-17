@@ -113,8 +113,8 @@ ArControllerComponent.prototype.startAR = function() {
         uniform sampler2D u_texture;\
         void main() {\
           vec3 N = normalize(v_normal);\
-          vec4 color = u_color * texture2D( u_texture, v_coord);\
-          gl_FragColor = color * max(0.5, dot(u_lightvector,N));\
+          vec4 color =  texture2D( u_texture, v_coord);\
+          gl_FragColor = color ;\
         }\
       ');
 
@@ -142,7 +142,7 @@ ArControllerComponent.prototype.startAR = function() {
 					h = tmp;
 				}
 
-      gl.enable( gl.DEPTH_TEST );
+
 
         //rendering loop
 
@@ -199,6 +199,9 @@ ArControllerComponent.prototype.startAR = function() {
 
                     requestAnimationFrame(tick);
                 //    gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+                  gl.clearColor(0.1,0.1,0.1,1);
+		              gl.enable( gl.DEPTH_TEST );
+
                     texture = Texture.fromVideo(stream,{minFilter: gl.NEAREST});
                     //create modelview and projection matrices
 
