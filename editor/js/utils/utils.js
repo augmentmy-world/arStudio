@@ -149,7 +149,7 @@ function decode64(input)
 	 var chr1, chr2, chr3 = "";
 	 var enc1, enc2, enc3, enc4 = "";
 	 var i = 0;
- 
+
 	 // remove all characters that are not A-Z, a-z, 0-9, +, /, or =
 	 var base64test = /[^A-Za-z0-9\+\/\=]/g;
 	 if (base64test.exec(input)) {
@@ -158,31 +158,31 @@ function decode64(input)
 			  "Expect errors in decoding.");
 	 }
 	 input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
- 
+
 	 do {
 		enc1 = keyStr.indexOf(input.charAt(i++));
 		enc2 = keyStr.indexOf(input.charAt(i++));
 		enc3 = keyStr.indexOf(input.charAt(i++));
 		enc4 = keyStr.indexOf(input.charAt(i++));
- 
+
 		chr1 = (enc1 << 2) | (enc2 >> 4);
 		chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
 		chr3 = ((enc3 & 3) << 6) | enc4;
- 
+
 		output = output + String.fromCharCode(chr1);
- 
+
 		if (enc3 != 64) {
 		   output = output + String.fromCharCode(chr2);
 		}
 		if (enc4 != 64) {
 		   output = output + String.fromCharCode(chr3);
 		}
- 
+
 		chr1 = chr2 = chr3 = "";
 		enc1 = enc2 = enc3 = enc4 = "";
- 
+
 	 } while (i < input.length);
- 
+
 	 return unescape(output);
 }
 
@@ -193,7 +193,7 @@ function decode64ToArray(input)
 	 var chr1, chr2, chr3 = "";
 	 var enc1, enc2, enc3, enc4 = "";
 	 var i = 0;
- 
+
 	 // remove all characters that are not A-Z, a-z, 0-9, +, /, or =
 	 var base64test = /[^A-Za-z0-9\+\/\=]/g;
 	 if (base64test.exec(input)) {
@@ -203,29 +203,29 @@ function decode64ToArray(input)
 	 }
 	 input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
 	 var pos = 0;
- 
+
 	 do {
 		enc1 = keyStr.indexOf(input.charAt(i++));
 		enc2 = keyStr.indexOf(input.charAt(i++));
 		enc3 = keyStr.indexOf(input.charAt(i++));
 		enc4 = keyStr.indexOf(input.charAt(i++));
- 
+
 		chr1 = (enc1 << 2) | (enc2 >> 4);
 		chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
 		chr3 = ((enc3 & 3) << 6) | enc4;
- 
+
 		output[pos++] = chr1;
- 
+
 		if (enc3 != 64) {
 		   output[pos++] = chr2;
 		}
 		if (enc4 != 64) {
 		   output[pos++] = chr3;
 		}
- 
+
 		chr1 = chr2 = chr3 = "";
 		enc1 = enc2 = enc3 = enc4 = "";
- 
+
 	 } while (i < input.length);
 
 	 return output.subarray(0, pos);
@@ -240,12 +240,12 @@ function hexEncode(data){
 	for (var i=0; i<256; i++) {
 		b16_map[i] = b16_digits.charAt(i >> 4) + b16_digits.charAt(i & 15);
 	}
-	
+
 	var result = new Array();
 	for (var i=0; i<data.length; i++) {
 		result[i] = b16_map[data.charCodeAt(i)];
 	}
-	
+
 	return result.join('');
 }
 
@@ -256,13 +256,17 @@ function hexEncodeArray(data){
 	for (var i=0; i<256; i++) {
 		b16_map[i] = b16_digits.charAt(i >> 4) + b16_digits.charAt(i & 15);
 	}
-	
+
 	var result = new Array();
 	for (var i=0; i<data.byteLength; i++) {
 		result[i] = b16_map[data[i]];
 	}
-	
+
 	return result.join('');
 }
-
-
+function drawToMemory(ctx_tmp,w,h){
+  ctx_tmp.fillStyle = "black";
+  ctx_tmp.fillRect(0, 0, pw, ph);
+  ctx_tmp.drawImage(video, 0, 0, w, h);
+  imageData = ctx_tmp.getImageData(0, 0, w, h);
+}

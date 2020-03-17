@@ -71,6 +71,55 @@ ArControllerComponent.prototype.onRemovedFromScene = function( scene ) {
 ArControllerComponent.prototype.startAR = function() {
     console.log("Start AR");
     var self = null;
+    var scale = 0.05;
+    var mesh = GL.Mesh.plane({xz: true,width: parseInt(gl.canvas.width*scale),height:parseInt(gl.canvas.height*scale),detail:0});
+    var type = gl.HIGH_PRECISION_FORMAT;
+
+    var texture = undefined;
+    //basic shader
+    //create basic matrices for cameras and transformation
+    var proj = mat4.create();
+    var view = mat4.create();
+    var model = mat4.create();
+    var mvp = mat4.create();
+    var temp = mat4.create();
+
+    //get mouse actions
+                  //set the camera position
+    mat4.perspective(proj, 45* DEG2RAD, gl.canvas.width / gl.canvas.height, this.nearPlane, this.farPlane);
+    mat4.lookAt(view, [0,30,30],[0,0,0], [0,1,0]);
+
+    //basic phong shader
+    var shader = new Shader('\
+        precision highp float;\
+        attribute vec3 a_vertex;\
+        attribute vec3 a_normal;\
+        attribute vec2 a_coord;\
+        varying vec3 v_normal;\
+        varying vec2 v_coord;\
+        uniform mat4 u_mvp;\
+        uniform mat4 u_model;\
+        void main() {\
+          v_coord = a_coord;\
+          v_normal = (u_model * vec4(a_normal,1.0)).xyz;\
+          gl_Position = u_mvp * vec4(a_vertex,1.0);\
+        }\
+        ', '\
+        precision highp float;\
+        varying vec3 v_normal;\
+        varying vec2 v_coord;\
+        uniform vec3 u_lightvector;\
+        uniform vec4 u_color;\
+        uniform sampler2D u_texture;\
+        void main() {\
+          vec3 N = normalize(v_normal);\
+          vec4 color = u_color * texture2D( u_texture, v_coord);\
+          gl_FragColor = color * max(0.5, dot(u_lightvector,N));\
+        }\
+      ');
+
+
+    //generic gl flags and settings
 
     this.running = true;
     let scene = LS.GlobalScene;
@@ -93,9 +142,13 @@ ArControllerComponent.prototype.startAR = function() {
 					h = tmp;
 				}
 
+      gl.enable( gl.DEPTH_TEST );
+
+        //rendering loop
+
                 this.arController = new ARController(w, h, this.cameraPara);
                 this.arController.image = stream;
-
+                Texture.fromVideo(stream,{minFilter: gl.NEAREST});
                 // we are excluding this at the moment - will be fixed
                 //this.arController.setDefaultMarkerWidth(this.defaultMarkerWidth);
 
@@ -125,73 +178,6 @@ ArControllerComponent.prototype.startAR = function() {
                     }
                 });
 
-                var left = 0;
-                var bottom = 0;
-                var w = 1;
-                var h = 1;
-                var cw = 0;
-                var ch = 0;
-                var vw = 0;
-                var vh = 0;
-
-                if(this.initVideo)
-                {
-                    var style = stream.style;
-                    style.position = 'absolute';
-                    style.top = '50%';
-                    style.left = '50%';
-                    style.width = 'auto';
-                    style.height = 'auto';
-                    style.minWidth = '100%';
-                    style.minHeight = '100%';
-                    style.backgroundSize = 'cover';
-                    style.overflow = 'hidden';
-                    style.transform = 'translate(-50%, -50%)';
-                    style.zIndex = '1';
-
-                    var canvas = $('canvas');
-
-                    vw = stream.videoWidth;
-                    vh = stream.videoHeight;
-
-                    if(canvas==null){
-                      return;
-                    } else {
-
-                        if(canvas.length==1)
-                        {
-                            //View page is the player
-                            var selectedCanvas = $(this.canvas[0]);
-                            selectedCanvas.before(stream);
-                            cw = selectedCanvas.width();
-                            ch = selectedCanvas.height();
-                            selectedCanvas.css("z-index",99);
-                            selectedCanvas.css("position","absolute");
-                        }
-                        else if(canvas.length>1)
-                        {
-                            //View page is the editor.
-                            var gameTab = $("#ingametab");
-                            gameTab.append(stream);
-                            if(!canvas[0]){
-                              return;
-                            } else {
-                              //console.log(this.canvas);
-                              var selectedCanvas = $(canvas[0]);
-                              if(selectedCanvas)
-                              {
-                                  cw = selectedCanvas.width();
-                                  ch = selectedCanvas.height();
-                                  selectedCanvas.css("z-index",99);
-                                  selectedCanvas.css("position","absolute");
-                              }
-                              //style.zIndex = '9';
-                            }
-                        }
-                      }
-
-                }
-
                 const sceneRoot = LS.GlobalScene.root;
 
                 //Add the AR-Camera to the scene
@@ -200,33 +186,7 @@ ArControllerComponent.prototype.startAR = function() {
                 this.arCamera.background_color=[0, 0, 0, 0];
                 this.arCamera.clear_color = true; //We must clear buffer from first camera.
                 this.arCameraNode.addComponent(this.arCamera);
-                this.recalculateViewPort(cw, ch, vw, vh);
-
                 self = this;
-                window.addEventListener('resize', function() {
-                  if(self.canvas==null){
-                    return;
-                  } else {
-
-                      var selectedCanvas = $(canvas[0]);
-                      var selectedVideo = $('video');
-                      if((selectedCanvas) && (selectedVideo))
-                      {
-                          //todo: handle window/canvas resize
-                          self.arCamera.clear_color = true;
-
-                          cw = selectedCanvas.width();
-                          ch = selectedCanvas.height();
-                          vw = selectedVideo[0].clientWidth;
-                          vh = selectedVideo[0].clientHeight;
-
-                          self.recalculateViewPort(cw, ch, vw, vh);
-                          //this.resize(cw, ch, vw, vh);
-
-                      }
-                  }
-                }, false);
-
                 sceneRoot.addChild(this.arCameraNode, 0);
                 LS.GlobalScene.root.getComponent(LS.Camera).background_color=[0, 0, 0, 0];
                 this._setupCameraForScreenOrientation(screen.orientation.type);
@@ -238,7 +198,25 @@ ArControllerComponent.prototype.startAR = function() {
                         return;
 
                     requestAnimationFrame(tick);
+                //    gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+                    texture = Texture.fromVideo(stream,{minFilter: gl.NEAREST});
+                    //create modelview and projection matrices
 
+                    mat4.multiply(temp,view,model);
+                    mat4.multiply(mvp,proj,temp);
+                    mat4.rotateX(mvp,mvp,45* DEG2RAD);
+                    //compute rotation matrix for normals
+                    texture.bind(0);
+
+                    //render mesh using the shader
+
+                    shader.uniforms({
+                      u_color: [1,1,1,1],
+                      u_lightvector: vec3.normalize(vec3.create(),[1,1,1]),
+                      u_model: model,
+                      u_texture: 0,
+                      u_mvp: mvp
+                    }).draw(mesh);
                     // Hide the marker, as we don't know if it's visible in this frame.
                     for (var trackable2D of this._arTrackable2DList){
                         trackable2D._previousState = trackable2D._currentState;
@@ -268,51 +246,8 @@ ArControllerComponent.prototype.startAR = function() {
 
 };
 
-ArControllerComponent.prototype.recalculateViewPort = function(cw,ch,vw,vh)
-{
-    if (!this.arController) return;
-    this.arController.orientation = (vw < vh) ? 'portrait' : 'landscape';
-
-    var ratioW = cw/vw;
-    var ratioH = ch/vh;
-    var ratioMax = Math.max(ratioW, ratioH);
-
-    var vwScaled = ratioMax * vw;
-    var vhScaled = ratioMax * vh;
-
-    // Viewport, expressed in normalised canvas coordinates.
-    var left = ((cw - vwScaled) / 2.0);
-    var bottom = ((ch - vhScaled) / 2.0);
-    var w = vwScaled;
-    var h = vhScaled;
-    this.arCamera.setViewportInPixels(left, bottom, w, h);
-    LS.Renderer.enableCamera(this.arCamera);
-}
-
-ArControllerComponent.prototype.resize = function(cw, ch, vw, vh) {
-    console.log('window resized: cw:' + cw + ', ch:' + ch + ', vw:' + vw + ', vh:' + vh);
-
-    if (!this.arController) return;
-
-    this.arController.orientation = (vw < vh) ? 'portrait' : 'landscape';
-
-    // Resize the 3D camera frustum (via the fov)
-    var camMatrix = this.arController.getCameraMatrix();
-    var fovy = 2 * Math.atan(1 / camMatrix[5]) * 180 / Math.PI;
 
 
-    if (vw < vh) {
-        this.arCamera.fov = Math.abs(fovy) * (vh / vw);
-    } else {
-        if (cw / ch > vw / vh) {
-            // Video Y FOV is limited so we must limit 3D camera FOV to match
-            this.arCamera.fov = Math.abs(fovy) * (vw / vh) / (cw / ch);
-        } else {
-            // Video Y FOV is limited so we must limit 3D camera FOV to match
-            this.arCamera.fov = Math.abs(fovy);
-        }
-    }
-}
 
 ArControllerComponent.prototype.stopAR = function(){
     console.log("Stop AR");
@@ -332,15 +267,7 @@ ArControllerComponent.prototype.stopAR = function(){
       if(this.arController)
           this.arController.dispose();
     }
-    var canvas = $('canvas');
-    var selectedCanvas = $(canvas[0]);
-    if(selectedCanvas)
-    {
-        cw = selectedCanvas.width();
-        ch = selectedCanvas.height();
-        selectedCanvas.css("z-index",0);
-        selectedCanvas.css("position","absolute");
-    }
+
 
 
     if(this.arCamera)
@@ -392,7 +319,7 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
             if(trackableId === arTrackable.trackableId) {
                 let markerRoot = arTrackable.attachedGameObject;
                 arTrackable.visible = true;
-
+                console.log("visible")
                 // Note that you need to copy the values of the transformation matrix,
                 // as the event transformation matrix is reused for each marker event
                 // sent by an ARController.
