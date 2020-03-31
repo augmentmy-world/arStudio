@@ -188,16 +188,17 @@ ArControllerComponent.prototype.startAR = function() {
 
                 // On each frame, detect markers, update their positions and
                 // render the frame on the renderer.
+                texture = Texture.fromVideo(stream,{minFilter: gl.NEAREST});
                 var tick = function() {
                     if(!this.running)
                         return;
 
                    requestAnimationFrame(tick);
-
+                 if (texture){
                   gl.clearColor(0.1,0.1,0.1,1);
 		              gl.enable( gl.DEPTH_TEST );
+                  texture.uploadImage(stream );
 
-                    texture = Texture.fromVideo(stream,{minFilter: gl.NEAREST});
                     mat4.multiply(mvp,this.arCamera.getViewProjectionMatrix(),model);
                     var translation = vec3.create();
                     vec3.set (translation, 0, 0 ,-580);
@@ -214,6 +215,8 @@ ArControllerComponent.prototype.startAR = function() {
                       u_texture: 0,
                       u_mvp: mvp
                     }).draw(mesh);
+
+                  }
                     // Hide the marker, as we don't know if it's visible in this frame.
                     for (var trackable2D of this._arTrackable2DList){
                         trackable2D._previousState = trackable2D._currentState;
@@ -320,7 +323,7 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
         console.log("saw a trackable with id", trackableId);
 
         this._arTrackable2DList.forEach(arTrackable => {
-            if(trackableId === arTrackable.trackableId) {
+        //    if(trackableId === arTrackable.trackableId) {
                 let markerRoot = arTrackable.attachedGameObject;
                 arTrackable.visible = true;
                 console.log("visible")
@@ -340,7 +343,7 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
                 outQuat[0]*=-1;
                 markerRoot.transform.setPosition(vec3.fromValues(markerRootMatrix[12],markerRootMatrix[13]*-1,markerRootMatrix[14]*-1));
                 markerRoot.transform.setRotation(outQuat);
-            } // end if(trackableId === arTrackable.trackableId)
+          //  } // end if(trackableId === arTrackable.trackableId)
         });
     }
 };
