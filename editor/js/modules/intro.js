@@ -19,7 +19,7 @@ var IntroModule = {
     "<p class='header center'>Welcome to AR studio!</p>" +
     "<p class='msg left'>The editor for webAR</p>" +
     "<p class='msg left'>Design and develop your own AR scenes and share them with your audience.</p><br><br>" + 
-    "<p class='msg center'>The only system that supports pictures as targets!</p>";
+    "<p class='msg center'>The only open-source system that supports pictures as targets</p>";
 
 
 		dialog.on_close = function()

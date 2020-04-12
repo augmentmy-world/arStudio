@@ -19,13 +19,13 @@ var SceneStorageModule = {
 		menubar.add("Project/New", {callback: this.onNewScene.bind(this) });
 
 		menubar.add("Project/Load/From Server", { callback: this.showLoadSceneFromServerDialog.bind(this) });
-		menubar.add("Project/Load/Local", { callback: this.showLoadLocalSceneDialog.bind(this) });
+		// menubar.add("Project/Load/Local", { callback: this.showLoadLocalSceneDialog.bind(this) });
 		menubar.add("Project/Load/From URL", { callback: this.showLoadFromURLDialog.bind(this) });
-		menubar.add("Project/Load/From File", { callback: this.showLoadFromFileDialog.bind(this) });
+		// menubar.add("Project/Load/From File", { callback: this.showLoadFromFileDialog.bind(this) });
 		menubar.add("Project/Load/From autobackup", { callback: this.recoverBackup.bind(this) });
-		menubar.add("Project/Load/From JSON text", { callback: this.showLoadFromJSONDialog.bind(this) });
+		// menubar.add("Project/Load/From JSON text", { callback: this.showLoadFromJSONDialog.bind(this) });
 		menubar.add("Project/Save/In Server", { callback: this.showSaveSceneInServerDialog.bind(this,null) });
-		menubar.add("Project/Save/Local", { callback: this.showSaveSceneInLocalDialog.bind(this) });
+		// menubar.add("Project/Save/Local", { callback: this.showSaveSceneInLocalDialog.bind(this) });
 		//menubar.add("Project/Download", { callback: this.showDownloadSceneDialog.bind(this) });
 		menubar.add("Project/Test", { callback: this.testScene.bind(this) });
 		menubar.add("Project/Publish", { callback: this.showPublishDialog.bind(this) });

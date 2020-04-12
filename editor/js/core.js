@@ -413,7 +413,7 @@ var CORE = {
 			num++;
 		var element = document.createElement("div");
 		element.id = "loader-dialog";
-		element.innerHTML = "<div class='title'><img src='imgs/webglstudio-icon.png' /></div><div class='loader'></div><div class='log'></div>";
+		element.innerHTML = "<div class='title'><img src='imgs/icon200.png' width='96px'/></div><div class='loader'></div><div class='log'></div>";
 		this.log_container = element.querySelector(".log");
 		this.root.appendChild(element);
 		element.info = {

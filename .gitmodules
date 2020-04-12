@@ -1,3 +1,0 @@
-[submodule "liteserver"]
-	path = editor/liteserver
-	url = git@gitlab.com:thorstenbux1/litefilesystem-js.git

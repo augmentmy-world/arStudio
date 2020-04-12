@@ -194,8 +194,9 @@ var EditorModule = {
 		mainmenu.add("View/Render Mode/Texture", { value: "texture", isChecked: inner_is_renderMode, callback: inner_change_renderMode });
 		mainmenu.add("View/Render Mode/Full", { value: "full", isChecked: inner_is_renderMode, callback: inner_change_renderMode });
 		//mainmenu.add("View/Render Mode/Stencil", { value: "stencil", isChecked: inner_is_renderMode, callback: inner_change_renderMode });
-		
-	        mainmenu.add("Game Object/AR Trackable 2D", { callback: function() { EditorModule.create2DMarker(); }}); 
+    
+    mainmenu.add("AR Object/AR Controller", { callback: function() { EditorModule.createARController(); }}); 
+	  mainmenu.add("AR Object/AR Trackable 2D", { callback: function() { EditorModule.create2DMarker(); }}); 
 
 		/*
 		mainmenu.add("Edit/Coordinates/Object", { value: "object", isChecked: inner_is_systemMode, callback: function() { EditorModule.coordinates_system = 'object'; RenderModule.requestFrame(); }});
@@ -1288,6 +1289,11 @@ var EditorModule = {
 		return node;
 	},
 
+  createARController: function() {
+    const component = new ArControllerComponent();
+    const parent = EditorModule.getAddRootNode();
+    parent.addComponent(component);
+  },
 
 	create2DMarker: function( parent )
 	{
