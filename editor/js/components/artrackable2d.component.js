@@ -5,7 +5,7 @@ function ArTrackable2D( o )
     this.trackableTypes = ["Barcode", "Pictorial", "NFT"];
     this._initSubScene = true;
     // FIXME: make that static
-    this._defaultTrackableType = 0;
+    this._defaultTrackableType = 2;
     this._defaultMarkerWidth = 80;
     this._trackableType = this.trackableTypes[this._defaultTrackableType];
     this._trackablePath = '';
@@ -85,14 +85,6 @@ Object.defineProperty(ArTrackable2D.prototype, "trackablePathNft", {
 ArTrackable2D.trackableName = '2D Trackable';
 ArTrackable2D.markerSceneName = 'Marker Scene';
 
-
-// ArTrackable2D.prototype.updateMaterial = function(){
-//     if (!this.root.material)
-//         this.root.material = new LS.StandardMaterial();
-//     var material = this.root.getMaterial();
-//     material.setTexture('color', this.trackablePath);
-// }
-
 LS.registerComponent(ArTrackable2D);
 
 ArTrackable2D["@inspector"] = function( arTrackable, inspector )
@@ -109,27 +101,19 @@ ArTrackable2D["@inspector"] = function( arTrackable, inspector )
                 arTrackable._trackablePath = selection;
             }
         });
-
-        // TODO: For a first demo we add a dropdown with static paths. After that we will add this again to have an upload function
-        // inspector.addMarker2D("Image", arTrackable.trackablePath,
-        // {
-        //     // pretitle: AnimationModule.getKeyframeCode(arTrackable, "marker_pattern"),
-        //     // callback: function (v,e) {
-        //     //     arTrackable.trackablePath =v;
-        //     //     var pattern = e.target.dataset["pattern"];
-        //     //     console.log("---------------pattern file:"+pattern);
-        //     // }
-        // });
     } else if(arTrackable._trackableType === arTrackable.trackableTypes[2]) {
       if (!arTrackable._trackablePathNft) {
         arTrackable._trackablePathNft = arTrackable.nftTrackableList['Pinball']
       }
-      inspector.addCombo("NFT marker", arTrackable._trackablePathNft, {
-          values: arTrackable.nftTrackableList,
-          callback: selection => {
-              arTrackable._trackablePathNft = selection;
-          }
-      });
+      // inspector.addCombo("NFT marker", arTrackable._trackablePathNft, {
+      //     values: arTrackable.nftTrackableList,
+      //     callback: selection => {
+      //         arTrackable._trackablePathNft = selection;
+      //     }
+      // });
+      inspector.addString('NFT url', arTrackable._trackablePathNft, { callback: (value)=> {
+        arTrackable._trackablePathNft = value;
+      }})
     }
 
     else {
