@@ -165,10 +165,7 @@ ArControllerComponent.prototype.startAR = function() {
                     }
                     else if(trackable2D._trackableType === trackable2D.trackableTypes[2])
                     {
-                        this.arController.loadNFTMarker(trackable2D.trackablePathNft, function(markerId) {
-                            console.log("Register trackable - NFT with id", markerId);
-                            trackable2D.trackableId = markerId;
-                        });
+                      startWorker(trackable2D.trackablePathNft, stream, 640, 480)
                     }
                 });
 
