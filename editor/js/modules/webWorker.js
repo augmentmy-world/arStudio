@@ -36,7 +36,7 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
     canvas_process.width = pw;
     canvas_process.height = ph;
 
-    worker = new Worker("../editor/js/modules/artoolkit.worker.js");
+    worker = new Worker("./../editor/js/modules/artoolkit.worker.js");
 
     worker.postMessage({
       type: "load",
