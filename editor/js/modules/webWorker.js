@@ -3,7 +3,6 @@ function isMobile() {
 }
 
 function startWorker( marker, video, input_width, input_height, canvas_draw){
-  console.log(marker);
   var vw, vh;
   var sw, sh;
   var pscale, sscale;
@@ -41,7 +40,7 @@ function startWorker( marker, video, input_width, input_height, canvas_draw){
 
       worker = new Worker('../editor/js/modules/artoolkit.worker.js');
 
-      worker.postMessage({ type: "load", pw: pw, ph: ph, camera_para: camera_para, marker: './' + marker.url });
+      worker.postMessage({ type: "load", pw: pw, ph: ph, camera_para: camera_para, marker: marker });
 
       worker.onmessage = function(ev) {
           var msg = ev.data;
