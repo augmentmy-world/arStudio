@@ -35,9 +35,8 @@ function load(msg) {
         var markerUrl = '/editor/' + msg.marker;
 
         ar.loadNFTMarker(markerUrl, function (markerId) {
-            ar.trackNFTMarkerId(markerId, 2);
+            ar.trackNFTMarkerId(markerId);
             console.log("loadNFTMarker -> ", markerId);
-            postMessage({type: "endLoading", end: true})
         });
 
         postMessage({type: "loaded", proj: JSON.stringify(cameraMatrix)});

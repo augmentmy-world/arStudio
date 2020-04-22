@@ -165,7 +165,7 @@ ArControllerComponent.prototype.startAR = function() {
                     }
                     else if(trackable2D._trackableType === trackable2D.trackableTypes[2])
                     {
-                      startWorker(trackable2D.trackablePathNft, stream, 640, 480)
+                      startWorker(trackable2D.trackablePathNft, stream, w, h);
                     }
                 });
 
