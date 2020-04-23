@@ -10,7 +10,7 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
   var pw, ph;
   var ox, oy;
   var worker;
-  var camera_para = "editor/data/camera_para.dat";
+  var camera_para = "data/camera_para.dat";
 
   var canvas_process = document.createElement("canvas");
   var context_process = canvas_process.getContext("2d");
@@ -143,7 +143,11 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
         if (reM == true) {
           nftMarkerUrl = msg.marker;
         } else if (reM == false) {
-          nftMarkerUrl = basePath + '/editor/' + msg.marker;
+          if (basePath == 'http://127.0.0.1:3000') {
+            nftMarkerUrl = basePath + '/editor/' + msg.marker;
+          } else {
+            nftMarkerUrl = basePath + '/' + msg.marker;
+          }
         };
 
         console.debug('Loading NFT marker at: ', nftMarkerUrl);
@@ -163,9 +167,12 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
       if (reC == true) {
         cameraParamUrl = msg.camera_para;
       } else if (reC == false) {
-        cameraParamUrl = basePath + '/' + msg.camera_para;
+        if (basePath == 'http://127.0.0.1:3000') {
+          cameraParamUrl = basePath + '/editor/' + msg.camera_para;
+        } else {
+          cameraParamUrl = basePath + '/' + msg.camera_para;
+        }
       }
-      cameraParamUrl = basePath + '/' + msg.camera_para;
       console.debug('Loading camera at:', cameraParamUrl);
       // we cannot pass the entire ARController, so we re-create one inside the Worker, starting from camera_param
       const param = new ARCameraParam(cameraParamUrl, onLoad, onError);
