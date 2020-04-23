@@ -107,9 +107,10 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
     var markerResult = null;
 
     function load (msg) {
-      const basePath = self.origin
+      const basePath = self.origin;
+      console.log(basePath);
       let artoolkitUrl, cameraParamUrl, nftMarkerUrl
-      let artoolkitPath = "editor/js/modules/artoolkit.min.js"
+      let artoolkitPath = "js/modules/artoolkit.min.js"
       console.debug('Base path:', basePath)
       // test if the msg.param (the incoming url) is an http or https path
       const regexA = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#()?&//=]*)/igm
@@ -117,7 +118,11 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
       if (reA == true) {
         artoolkitUrl = artoolkitPath
       } else if (reA == false) {
-        artoolkitUrl = basePath + '/' + artoolkitPath
+        if (basePath == 'http://127.0.0.1:3000') {
+          artoolkitUrl = basePath + '/editor/' + artoolkitPath
+        } else {
+          artoolkitUrl = basePath + '/' + artoolkitPath
+        }
       };
       console.debug('Importing WASM lib from: ', artoolkitUrl)
 
