@@ -153,7 +153,9 @@ ArControllerComponent.prototype.startAR = function() {
                 // Whenever ARController#process detects a marker, it fires a getMarker event
                 // with the marker details.
                 this.arController.addEventListener('getMarker',this.onTrackableFound.bind(this));
-                this.arController.addEventListener('getNFTMarker',this.onTrackableFound.bind(this));
+                document.addEventListener('sendMatrix', function (ev) {
+                  console.log(ev);
+                })
 
                 this._arTrackable2DList.forEach(trackable2D => {
                     if(trackable2D._trackableType === trackable2D.trackableTypes[1])

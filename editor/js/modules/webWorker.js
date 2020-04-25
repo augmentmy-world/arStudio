@@ -128,7 +128,7 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
 
       importScripts(artoolkitUrl)
 
-      var onLoad = function () {
+      const onLoad = function () {
 
         ar = new ARController(msg.pw, msg.ph, param);
         var cameraMatrix = ar.getCameraMatrix();
@@ -178,7 +178,6 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
       const param = new ARCameraParam(cameraParamUrl, onLoad, onError);
     };
 
-  }
 
   function process () {
     markerResult = null;
@@ -195,16 +194,30 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
 
     next = null;
   }
+} // end of embeddedWorker() function
 
   var world;
 
-  var found = function(msg) {
+  var found = function (msg) {
     if (!msg) {
       world = null;
     } else {
       world = JSON.parse(msg.matrixGL_RH);
+      var senderM = new CustomEvent('sendMatrix', { detail: { world: world } });
+      document.dispatchEvent(senderM);
     }
   };
+
+  function process () {
+    context_process.fillStyle = 'black'
+    context_process.fillRect(0, 0, pw, ph)
+    context_process.drawImage(video, 0, 0, vw, vh, ox, oy, w, h)
+
+    const imageData = context_process.getImageData(0, 0, pw, ph)
+    worker.postMessage({ type: 'process', imagedata: imageData }, [
+      imageData.data.buffer
+    ])
+  }
 
   load();
   process();
