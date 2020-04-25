@@ -153,7 +153,7 @@ ArControllerComponent.prototype.startAR = function() {
                 // Whenever ARController#process detects a marker, it fires a getMarker event
                 // with the marker details.
                 this.arController.addEventListener('getMarker',this.onTrackableFound.bind(this));
-                document.addEventListener('sendMatrix', function (ev) {
+                document.addEventListener('getDataFromWorker', function (ev) {
                   console.log(ev);
                 })
 

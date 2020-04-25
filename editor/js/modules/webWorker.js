@@ -131,10 +131,9 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
       const onLoad = function () {
 
         ar = new ARController(msg.pw, msg.ph, param);
-        var cameraMatrix = ar.getCameraMatrix();
 
         ar.addEventListener('getNFTMarker', function (ev) {
-          markerResult = {type: "found", matrixGL_RH: JSON.stringify(ev.data.matrixGL_RH), proj: JSON.stringify(cameraMatrix)};
+          markerResult = {type: "found", data: JSON.stringify(ev.data)};
         });
 
         // after the ARController is set up, we load the NFT Marker
@@ -156,8 +155,6 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
           ar.trackNFTMarkerId(markerId);
           console.log("loadNFTMarker -> ", markerId);
         });
-
-        postMessage({type: "loaded", proj: JSON.stringify(cameraMatrix)});
       };
       const onError = function (error) {
           console.error(error)
@@ -196,14 +193,14 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
   }
 } // end of embeddedWorker() function
 
-  var world;
+  var data;
 
   var found = function (msg) {
     if (!msg) {
-      world = null;
+      data = null;
     } else {
-      world = JSON.parse(msg.matrixGL_RH);
-      var senderM = new CustomEvent('sendMatrix', { detail: { world: world } });
+      data = JSON.parse(msg.data);
+      var senderM = new CustomEvent('getDataFromWorker', { detail: { data: data } });
       document.dispatchEvent(senderM);
     }
   };
