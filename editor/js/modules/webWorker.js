@@ -56,21 +56,6 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
     worker.onmessage = function(ev) {
       var msg = ev.data;
       switch (msg.type) {
-        case "loaded": {
-          var proj = JSON.parse(msg.proj);
-          var ratioW = pw / w;
-          var ratioH = ph / h;
-          proj[0] *= ratioW;
-          proj[4] *= ratioW;
-          proj[8] *= ratioW;
-          proj[12] *= ratioW;
-          proj[1] *= ratioH;
-          proj[5] *= ratioH;
-          proj[9] *= ratioH;
-          proj[13] *= ratioH;
-          //setMatrix(camera.projectionMatrix, proj);
-          break;
-        }
         case "found": {
           found(msg);
           break;
@@ -200,8 +185,8 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
       data = null;
     } else {
       data = JSON.parse(msg.data);
-      var senderM = new CustomEvent('getDataFromWorker', { detail: { data: data } });
-      document.dispatchEvent(senderM);
+      var senderData = new CustomEvent('getDataFromWorker', { detail: { data: data } });
+      document.dispatchEvent(senderData);
     }
   };
 
