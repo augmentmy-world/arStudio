@@ -152,10 +152,8 @@ ArControllerComponent.prototype.startAR = function() {
                 // Add an event listener to listen to getMarker events on the ARController.
                 // Whenever ARController#process detects a marker, it fires a getMarker event
                 // with the marker details.
-                this.arController.addEventListener('getMarker',this.onTrackableFound.bind(this));
-                document.addEventListener('getDataFromWorker', function (ev) {
-                  console.log(ev);
-                })
+                this.arController.addEventListener('getMarker', this.onTrackableFound.bind(this));
+                window.addEventListener('getDataFromWorker', this.onTrackableNFTFound.bind(this));
 
                 this._arTrackable2DList.forEach(trackable2D => {
                     if(trackable2D._trackableType === trackable2D.trackableTypes[1])
@@ -346,6 +344,39 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
         });
     }
 };
+
+ArControllerComponent.prototype.onTrackableNFTFound = function (ev){
+  const markerIndex = ev.detail.data.index;
+  const markerType = ev.detail.data.type;
+  const marker = ev.detail.data.marker;
+
+  if (ev.detail.data.type === 2) {
+    trackableId = ev.detail.data.marker.id;
+  }
+  if (trackableId !== -1) {
+      console.log("saw a trackable with id", trackableId);
+
+      let markerRoot = arTrackable.attachedGameObject;
+      arTrackable.visible = true;
+      console.log("visible")
+      // Note that you need to copy the values of the transformation matrix,
+      // as the event transformation matrix is reused for each marker event
+      // sent by an ARController.
+      var transform = ev.detail.data.matrix;
+      // console.log(transform);
+
+      // Apply transform to marker root
+
+      let cameraGlobalMatrix = this.arCameraNode.transform.getGlobalMatrix();
+      let markerRootMatrix = mat4.create();
+      mat4.multiply(markerRootMatrix, cameraGlobalMatrix, transform);
+      let outQuat = quat.create();
+      quat.fromMat4(outQuat,markerRootMatrix);
+      outQuat[0]*=-1;
+      markerRoot.transform.setPosition(vec3.fromValues(markerRootMatrix[12],markerRootMatrix[13]*-1,markerRootMatrix[14]*-1));
+      markerRoot.transform.setRotation(outQuat);
+    }
+}
 
 ArControllerComponent.prototype._setupCameraForScreenOrientation = function (orientation) {
 

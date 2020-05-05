@@ -185,8 +185,8 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
       data = null;
     } else {
       data = JSON.parse(msg.data);
-      var senderData = new CustomEvent('getDataFromWorker', { detail: { data: data } });
-      document.dispatchEvent(senderData);
+      var senderData = new CustomEvent('getDataFromWorker', {detail: { data: data }});
+      window.dispatchEvent(senderData);
     }
   };
 
