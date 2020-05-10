@@ -114,6 +114,9 @@ ArTrackable2D["@inspector"] = function( arTrackable, inspector )
       inspector.addString('NFT url', arTrackable._trackablePathNft, { callback: (value)=> {
         arTrackable._trackablePathNft = value;
       }})
+      inspector.addButton(null, 'Create NFT', { callback: function(v) {
+        window.open('http://nftcreator.tripod-digital.co.nz','_blank');
+      }})
     }
 
     else {

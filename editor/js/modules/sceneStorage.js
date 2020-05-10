@@ -920,7 +920,7 @@ var SceneStorageModule = {
 		function inner_publish(){
 			dialog.close();
 			RenderModule.requestFrame();
-			var fullpath = LS.RM.cleanFullpath( folder + "/" + filename );
+      var fullpath = LS.RM.cleanFullpath( folder + "/" + filename );
 			SceneStorageModule.publishScene( fullpath, as_pack, all_assets );
 		}
 

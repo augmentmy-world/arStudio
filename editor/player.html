@@ -31,14 +31,13 @@
 <script type="text/javascript" src="js/components/arcontroller.component.js"></script>
 <script type="text/javascript" src="js/components/artrackable2d.component.js"></script>
 <script src="js/modules/artoolkit.min.js"></script>
-<script src="js/modules/artoolkit.api.js"></script>
 
 <script type="text/javascript">
 
 	//LiteSCENE CODE *************************
 	var player = new LS.Player( {
-        alpha: true, //enables to have alpha in the canvas to blend with background
-        premultipliedAlpha: false,
+    alpha: true, //enables to have alpha in the canvas to blend with background
+    premultipliedAlpha: false,
 		stencil: true,
 		redraw: true, //force to redraw
 		autoplay: false,
@@ -68,11 +67,12 @@
 	if( LS.queryString["debug"] )
 		player.enableDebug();
 
-	//this code defines which scene to load, in case you are loading an specific scene replce it by player.loadScene( scene_url )
+  //this code defines which scene to load, in case you are loading an specific scene replce it by player.loadScene( scene_url )
 	if( LS.queryString["session"] )
 		player.setScene( JSON.parse( localStorage.getItem( LS.queryString["session"] ) ) );
-	else if( allow_remote_scenes || (LS.queryString["url"] && LS.queryString["url"].indexOf("://") == -1) ) //for safety measures
-		player.loadScene( LS.queryString["url"] ); //the url must be something like: fileserver/files/guest/projects/Lee_FX.json
+  else if( allow_remote_scenes || (LS.queryString["url"] && LS.queryString["url"].indexOf("://") == -1) ) { //for safety measures
+    player.loadScene( LS.queryString["url"] ); //the url must be something like: fileserver/files/guest/projects/Lee_FX.json
+  }
 	else if( LS.queryString["preview"] === undefined )
 		player.loadConfig("config.json");
 
