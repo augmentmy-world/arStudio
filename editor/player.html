@@ -70,7 +70,11 @@
   //this code defines which scene to load, in case you are loading an specific scene replce it by player.loadScene( scene_url )
 	if( LS.queryString["session"] )
 		player.setScene( JSON.parse( localStorage.getItem( LS.queryString["session"] ) ) );
-  else if( allow_remote_scenes || (LS.queryString["url"] && LS.queryString["url"].indexOf("://") == -1) ) { //for safety measures
+  else if( allow_remote_scenes || 
+            ( LS.queryString["url"] && 
+              (LS.queryString["url"].indexOf("liteserver.tripod-digital.co.nz") >= 1)
+            )
+          ) { //for safety measures
     player.loadScene( LS.queryString["url"] ); //the url must be something like: fileserver/files/guest/projects/Lee_FX.json
   }
 	else if( LS.queryString["preview"] === undefined )
