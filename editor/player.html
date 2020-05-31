@@ -40,7 +40,7 @@
     premultipliedAlpha: false,
 		stencil: true,
 		redraw: true, //force to redraw
-		autoplay: false,
+		autoplay: Boolean(LS.queryString["autoplay"]),
 		resources: "fileserver/files/",
 		autoresize: true, //resize the 3D window if the browser window is resized
 		loadingbar: true, //shows loading bar progress

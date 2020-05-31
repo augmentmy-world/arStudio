@@ -49,6 +49,7 @@ var PluginsModule = {
 		//assign preferences?
 	},
 
+	//called on startup
 	loadPlugins: function()
 	{
 		var plugins = this.preferences.plugins.list;
@@ -73,6 +74,7 @@ var PluginsModule = {
 		return null;
 	},
 
+	//loads one single plugin
 	loadPlugin: function( url, on_complete, on_error )
 	{
 		//fetch plugin code
@@ -514,6 +516,8 @@ var PluginsModule = {
 			{
 				var script = v.scripts[i];
 				script.repository_url = url;
+				if( script.repository_url.indexOf("://") != -1 ) //absolute path
+					script.repository_url = "";
 				script.full_url = script.repository_url + script.script_url;
 			}
 			on_complete(v);

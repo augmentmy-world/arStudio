@@ -528,8 +528,12 @@ var DriveModule = {
 
 		if( server_resource )
 		{
+			inspector.widgets_per_row = 2;
 			var link = LS.ResourcesManager.getFullURL( resource.remotepath || resource.fullpath || resource.filename );
 			inspector.addInfo("Link", "<a target='_blank' href='"+link+"'>link to the file</a>" );
+			var local_link = resource.remotepath || resource.fullpath || resource.filename;
+			inspector.addString("Local Link", local_link, { name_width: 100, disabled: true } );
+			inspector.widgets_per_row = 1;
 		}
 
 		if(local_resource)
@@ -669,7 +673,7 @@ var DriveModule = {
 		}});
 		
 		var widget = inspector.addButton(null,"Download", {callback: function(){
-			if(local_resource)
+			if(local_resource || resource.constructor === GL.Texture) //hack to allow to download textures generaeted by the engine (they do not have a local resource associated  because they are not stored in RM)
 			{
 				var file = DriveModule.getResourceAsBlob( resource );
 				if(!file)
@@ -1527,6 +1531,9 @@ var DriveModule = {
 		//add to nocache
 		LS.RM.nocache_files[ resource.fullpath ] = getTime();
 
+		if(!ProfileModule.session)
+			return;
+
 		this.serverUploadResource( resource, resource.fullpath,
 			function(v, msg) {  //after resource saved
 				if(v)
@@ -2115,6 +2122,12 @@ var DriveModule = {
 	serverUploadResource: function( resource, fullpath, on_complete, on_error, on_progress )
 	{
 		var filename = resource.filename;
+
+		if(!ProfileModule.session)
+		{
+			LiteGUI.alert("you are not logged in, file cannot be saved on server");
+			return;
+		}
 
 		if( resource.in_server && LS.ResourcesManager.resources[ fullpath ] )
 			resource = LS.ResourcesManager.resources[ fullpath ];

@@ -31,7 +31,9 @@ function Timeline( options )
 	this.scroll_curves_y = 0;
 	this.curves_scale_y = 1;
 	this._selection_rectangle = null;
+	this._prev_mouse = [0,0];
 
+	this.background = null; //used to render stuff in the background of the timeline
 }
 
 Timeline.widget_name = "Timeline";
@@ -103,7 +105,7 @@ Timeline.prototype.createInterface = function( options )
 	//this.play_widget = widgets.addCheckbox("Play", !!this.playing, { callback: function(v){ that.playing = !that.playing ; } } );
 	widgets.addButton(null, "Edit", { width: 60, callback: function(){ that.mode = that.mode == "keyframes" ? "curves" : "keyframes"; that.redrawCanvas(); } } );
 	this.preview_widget = widgets.addIcon(null, !!this.preview, { image: "imgs/icons-timeline.png", index: 6, title:"preview",  callback: function(v){ that.preview = !that.preview ; } } );
-	this.play_widget = widgets.addIcon(null, !!this.playing, { title:"play", image: "imgs/icons-timeline.png",  callback: function(v){ that.playing = !that.playing ; } } );
+	this.play_widget = widgets.addIcon(null, !!this.playing, { title:"play", image: "imgs/icons-timeline.png",  callback: function(v){ that.playPreview(v); } });
 	widgets.addIcon(null, false, { title:"zoom in", image: "imgs/icons-timeline.png", index: 8, toggle: false, callback: function(v){ that.zoom(1.05); 	that.redrawCanvas(); } } );
 	widgets.addIcon(null, false, { title:"zoom out", image: "imgs/icons-timeline.png", index: 7, toggle: false, callback: function(v){ that.zoom(0.95); that.redrawCanvas(); } } );
 	widgets.addIcon(null, false, { title:"previous keyframe", image: "imgs/icons-timeline.png", index: 2, toggle: false, callback: function(v){ that.prevKeyframe(); } } );
@@ -183,6 +185,25 @@ Timeline.prototype.resetView = function()
 	this.redrawCanvas();
 }
 
+Timeline.prototype.playPreview = function(v){ 
+
+	if(v === undefined)
+		v = !this.playing;
+	this.playing = v;
+	if( this.background && this.background.audio && this.background.audio.duration)
+	{
+		if(this.playing)
+		{
+			this.background.audio.currentTime = this._timeline_data.current_time;
+			this.background.audio.play();
+		}
+		else
+		{
+			this.background.audio.pause();
+		}
+	}
+}
+
 Timeline.prototype.onNewAnimation = function( name, duration, folder )
 {
 	name = name || "test";
@@ -198,6 +219,8 @@ Timeline.prototype.onNewAnimation = function( name, duration, folder )
 
 	LS.ResourcesManager.registerResource( animation.name, animation );
 	this.redrawCanvas();
+
+	return animation;
 }
 
 //called when an animation has been modified
@@ -260,6 +283,8 @@ Timeline.prototype.setAnimation = function( animation, take_name )
 				takes.push(i);
 			this.take_widget.setOptionValues( takes, take_name );
 		}
+		
+		this.current_take = animation.takes[ take_name ];
 		return;
 	}
 
@@ -424,13 +449,27 @@ Timeline.prototype.redrawCanvas = function()
 	var take = this.current_take;
 	var margin = this.session ? this.session.left_margin : 200;
 	var timeline_height = this.canvas_info.timeline_height;
+	var data = this._timeline_data;
 
 	if(!this.current_take)
 	{
 		ctx.font = "50px Arial";
 		ctx.textAlign = "center";
 		ctx.fillStyle = "#111";
-		ctx.fillText("No animation clip", canvas.width * 0.5, canvas.height * 0.5);
+		var centerx = canvas.width * 0.5;
+		var centery = canvas.height * 0.5;
+		ctx.save();
+		ctx.translate(centerx,centery);
+		ctx.fillText("No animation clip", 0, -20);
+		ctx.font = "24px Arial";
+		var hover = Timeline.isInsideRect(this._prev_mouse,centerx-140,centery+10,280,46);
+		ctx.fillStyle = hover ? "#999" : "#444";
+		ctx.beginPath();
+		ctx.roundRect(-140,10,280,46,5);
+		ctx.fill();
+		ctx.fillStyle = hover ? "white" : "#888";
+		ctx.fillText("Open Scene Anim", 0, 40);
+		ctx.restore();
 		return;
 	}
 
@@ -441,6 +480,16 @@ Timeline.prototype.redrawCanvas = function()
 
 	//draw tracks info in the left side
 	this.drawTracksSidebar( canvas, ctx );
+
+	//render audio wave (useful sometimes)
+	if(this.background && this.background.img )
+	{
+		var x = this.canvasTimeToX(0);
+		var img = this.background.img;
+		ctx.imageSmoothingEnabled = false;
+		ctx.drawImage( img, x, this.canvas.height - img.height, data.seconds_to_pixels * img.width / 120, img.height * 2);
+		ctx.imageSmoothingEnabled = true;
+	}
 
 	//main content ***********************************
 	if(this.show_keyframes)
@@ -768,7 +817,7 @@ Timeline.prototype.drawKeyframesView = function( canvas, ctx )
 				ctx.fillStyle = "#9AF";
 			ctx.strokeStyle = ctx.fillStyle;
 
-			if( track.type != "events" ) //diamonds
+			if( track.type != "event" ) //diamonds
 			{
 				if( (posx + 5) < margin)
 					continue;
@@ -933,7 +982,6 @@ Timeline.prototype.drawTracksSidebar = function( canvas, ctx )
 	ctx.fillRect( margin, timeline_height, canvas.width - margin, canvas.height - timeline_height );
 	ctx.globalAlpha = 1;
 
-
 	//bg lines
 	ctx.strokeStyle = "#444";
 	ctx.beginPath();
@@ -1085,6 +1133,9 @@ Timeline.prototype.setCurrentTime = function( time, skip_redraw )
 		this.session.last_time = this.session.current_time;
 		LS.GlobalScene.refresh();
 	}
+
+	if( this.background && this.background.audio && this.background.audio.duration && this.playing && Math.abs( this.background.audio.currentTime - time) > 0.1 )
+		this.background.audio.currentTime = time;
 }
 
 Timeline.prototype.applyPreview = function()
@@ -1214,6 +1265,10 @@ Timeline.prototype.onMouse = function(e)
 	e.mousey = e.pageY - b.top;
 	e.canvasx = e.mousex;
 	e.canvasy = b.height - e.mousey;
+	e.deltax = e.mousex - this._prev_mouse[0];
+	e.deltay = e.mousey - this._prev_mouse[1];
+	this._prev_mouse[0] = e.mousex;
+	this._prev_mouse[1] = e.mousey;
 
 	var item = this.getMouseItem(e);
 	this.canvas.style.cursor = item ? item.cursor : "default";
@@ -1226,12 +1281,19 @@ Timeline.prototype.onMouse = function(e)
 
 	if( e.type == "mousedown" )
 	{
+		if(!this.current_take)
+		{
+			var anim = LS.GlobalScene.animation || this.onNewAnimation();
+			this.setAnimation(anim, LS.Animation.DEFAULT_SCENE_NAME);
+			this._must_redraw = true;
+			return;
+		}
 		LiteGUI.focus_widget = this;
 		this.mouse_dragging = true;
 
 		if(item) //something below the mouse (could be keyframe or track or background)
 		{
-			console.log(item);
+			//console.log(item);
 
 			if (e.ctrlKey && item.type == "background")
 			{
@@ -1246,7 +1308,7 @@ Timeline.prototype.onMouse = function(e)
 					var track = take.tracks[ item.track ];
 					if( item.type == "keyframe" && track )
 					{	
-						if( track.type == "events")
+						if( track.type == "event")
 							this.showAddEventKeyframeDialog( track, time, track.getKeyframe( item.keyframe ) );
 						else
 							this.showEditKeyframeDialog( track, time, track.getKeyframe( item.keyframe ), item.keyframe );
@@ -1257,18 +1319,25 @@ Timeline.prototype.onMouse = function(e)
 				}
 				else //first click
 				{
-					if( this.session.selection && this.session.selection.type == "keyframes" && this.session.selection.hashed[ item.track * 10000 + item.keyframe ] )
+					if(e.mousex > this.session.left_margin )
 					{
-						//start dragging multiple keyframes
-						console.log("saving undo of take");
-						this.addUndoTakeEdited(take.serialize());
-					}
-					else
-						this.session.selection = item;
-					if(this.mode == "keyframes") //changes time on keyframe selection
-					{
-						var time = this.canvasXToTime( e.mousex );
-						this.setCurrentTime( time );
+						if( this.session.selection && this.session.selection.type == "keyframes" && this.session.selection.hashed[ item.track * 10000 + item.keyframe ] )
+						{
+							//start dragging multiple keyframes
+							console.log("saving undo of take");
+							this.addUndoTakeEdited(take.serialize());
+						}
+						else if(item.type == "background" ) //special case
+						{
+							this.dragging_background = true;
+						}
+						else
+							this.session.selection = item;
+						if(this.mode == "keyframes" && item && item.type =="keyframe") //changes time on keyframe selection
+						{
+							var time = this.canvasXToTime( e.mousex );
+							this.setCurrentTime( time );
+						}
 					}
 				}
 
@@ -1306,6 +1375,8 @@ Timeline.prototype.onMouse = function(e)
 	}
 	else if( e.type == "mousemove" )
 	{
+		if(!this.current_take)
+			this._must_redraw = true;
 		if( this.mouse_dragging )
 		{
 			if( this._selection_rectangle )
@@ -1329,11 +1400,27 @@ Timeline.prototype.onMouse = function(e)
 				}
 				else if( this._item_dragged.type == "keyframe" )
 				{
-					var newt = this.canvasXToTime( e.mousex );
-					newt = Math.round( newt * this.framerate ) / this.framerate; //round
 					var track = take.tracks[ this._item_dragged.track ];
 					if(track.packed_data)
 						track.unpackData();
+
+					if(e.ctrlKey)
+					{
+						var keyframe = track.data[this._item_dragged.keyframe];
+						if(track.value_size == 1)
+							keyframe[1] += e.deltay * 0.02;
+						else for(var k = 0; k < track.value_size; ++k)
+							keyframe[1][k] *= 1 + e.deltay * 0.02;
+						this.animationModified();
+						if(this.preview)
+							this.applyPreview();
+						e.preventDefault();
+						e.stopPropagation();
+						return;
+					}
+
+					var newt = this.canvasXToTime( e.mousex );
+					newt = Math.round( newt * this.framerate ) / this.framerate; //round
 					//set new time
 					var keyframe = track.data[this._item_dragged.keyframe];
 					var diff = newt - keyframe[0];
@@ -1388,20 +1475,38 @@ Timeline.prototype.onMouse = function(e)
 					else //single keyframe
 					{
 						keyframe[0] = newt;
-						if( this.mode =="curves" && this._item_dragged.value_index >= 0 )
+						if( this.mode =="curves" && this._item_dragged.value_index >= 0 ) //dragging values
 						{
 							var v = this.convertCanvasToValue( e.mousey );
 							if(track.value_size == 1)
 								keyframe[1] = v;
-							else if(track.value_size > 1 && this._item_dragged.value_index < track.value_size)
-								keyframe[1][this._item_dragged.value_index] = v;
-							if(track._type_index == LS.TYPES_INDEX.TRANS10 )
+							else if(track.value_size > 1)
 							{
-								var q = keyframe[1].subarray(3,7);
-								quat.normalize( q,q );
+								if(!track.packed_data)
+								{
+									if(this._item_dragged.value_index < track.value_size)
+										keyframe[1][this._item_dragged.value_index] = v;
+									if(track._type_index == LS.TYPES_INDEX.TRANS10 )
+									{
+										var q = keyframe[1].subarray(3,7);
+										quat.normalize( q,q );
+									}
+									else if(track._type_index == LS.TYPES_INDEX.QUAT )
+										quat.normalize( keyframe[1], keyframe[1] );
+								}
+								else
+								{
+									if(this._item_dragged.value_index < track.value_size)
+										keyframe[1+this._item_dragged.value_index] = v;
+									var q = null;
+									if(track._type_index == LS.TYPES_INDEX.TRANS10 )
+										q = keyframe.subarray(4,8);
+									else if(track._type_index == LS.TYPES_INDEX.QUAT )
+										q = keyframe.subarray(1,5);
+									if(q) //quaternions must be normalized
+										quat.normalize( q, q );
+								}
 							}
-							else if(track._type_index == LS.TYPES_INDEX.QUAT )
-								quat.normalize( keyframe[1], keyframe[1] );
 						}
 
 						track.sortKeyframes();
@@ -1430,7 +1535,7 @@ Timeline.prototype.onMouse = function(e)
 					*/
 
 				}
-				else if( this._item_dragged.type == "background" )
+				else if( this._item_dragged.type == "background" || this.dragging_background)
 				{
 					//*
 					var old = this.canvasXToTime( this.prev_mouse[0] );
@@ -1455,6 +1560,7 @@ Timeline.prototype.onMouse = function(e)
 		var ref_window = LiteGUI.getElementWindow(this.canvas);
 		ref_window.document.body.removeEventListener("mousemove", this._binded_mouseup );
 		ref_window.document.body.removeEventListener("mouseup", this._binded_mouseup );
+		this.dragging_background = false;
 
 		if( this._selection_rectangle )
 		{
@@ -1474,7 +1580,9 @@ Timeline.prototype.onMouse = function(e)
 			this.selectRegion( r );
 			this._selection_rectangle = null;
 		}
-
+		if( ( now - this._last_click_time ) < 200 ) { //fast click
+			this.session.selection = item;
+		}
 
 		if(this.preview && this._item_dragged && this._item_dragged.type == "timeline")
 			EditorModule.refreshAttributes();
@@ -1500,6 +1608,9 @@ Timeline.prototype.onKeyDown = function(e)
 {
 	switch( e.keyCode )
 	{
+		case 32:
+			this.playPreview();
+			break;
 		case 8:
 		case 46: //delete key 
 			this.removeSelection();
@@ -1609,9 +1720,9 @@ Timeline.prototype.onMouseWheel = function(e)
 		if( this.mode == "curves" && e.mousey > this.canvas_info.timeline_height )
 		{
 			if(e.deltaY > 0)
-				this.curves_scale_y *= 0.95;
+				this.curves_scale_y *= e.shiftKey ? 0.5 : 0.95;
 			else
-				this.curves_scale_y *= 1.05;
+				this.curves_scale_y *= e.shiftKey ? 2 : 1.05;
 		}
 		else //keyframes
 		{
@@ -1635,6 +1746,10 @@ Timeline.prototype.showOptionsContextMenu = function( e )
 {
 	var that = this;
 	var options = ["New Animation","Load Animation","Scene Animation",null,"Prettify Names","Baking Tools"];
+
+	if(this.background)
+		options.push("Remove Background");
+
 	var animation_options = { title: "Animation Options", disabled: !this.current_take };
 	options.push( animation_options );
 
@@ -1652,6 +1767,13 @@ Timeline.prototype.showOptionsContextMenu = function( e )
 			that.onPrettifyNames();
 		else if(v == "Baking Tools")
 			that.onShowBakingDialog();
+		else if(v == "Remove Background")
+		{
+			if(that.background && that.background.audio)
+				that.background.audio.pause();
+			that.background = null;
+			that.redrawCanvas();
+		}
 		else if(v == animation_options)
 			that.onShowAnimationOptionsDialog();
 		else if(v.callback)
@@ -1689,17 +1811,17 @@ Timeline.prototype.onContextMenu = function( e )
 
 	values.push( { title: "Add New Track", callback: this.showNewTrack.bind(this) } );
 	values.push( { title: "Mark tracks of selected node", callback: this.selectTracksOfNode.bind(this) } );
-	values.push( { title: "Assign Node Names", callback: this.assignNodeNames.bind(this) } );
+	values.push( { title: "Beautify Names", callback: this.beautifyNames.bind(this) } );
 	values.push( null );
 
-	if(item.type == "keyframe" && track.type == "events")
+	if(item.type == "keyframe" && track.type == "event")
 		values.push( { title: "Edit Event", callback: inner_edit_event_keyframe } );
 
 	if(track)
 	{
 		values.push( { title:"Actions", has_submenu: true, callback: inner_actions } );
 		values.push( { title: "Select Node", callback: inner_select } );
-		if(track.type == "events")
+		if(track.type == "event")
 			values.push( { title: "Add Event", callback: inner_add_event_keyframe } );
 		else
 			values.push( { title: "Add Keyframe", callback: inner_add_keyframe } );
@@ -2147,7 +2269,7 @@ Timeline.prototype.processInsertLocator = function( locator, options )
 		{
 			var type = info.type;
 			if(type == "object" || type == "function" || type == LS.TYPES.SCENENODE || type == LS.TYPES.COMPONENT )
-				type = "events";
+				type = "event";
 
 			track = take.createTrack( { name: name, property: track_locator, type: type, value_size: size, interpolation: interpolation, duration: this.session.end_time, data: [] } );
 			track._original_locator = original_locator;
@@ -2190,8 +2312,14 @@ Timeline.prototype.insertKeyframe = function( track, only_different, time )
 	if(!info)
 		return false;
 
+	var value = info.value;
+
 	//only store if the value is different
-	if( only_different && track._last_sample !== undefined )
+	if(info.type == "component")
+	{
+		value = [];
+	}
+	else if( only_different && track._last_sample !== undefined )
 	{
 		//sample
 		if( track.value_size == 1)
@@ -2213,8 +2341,11 @@ Timeline.prototype.insertKeyframe = function( track, only_different, time )
 	}
 
 	//add
-	track.addKeyframe( time , info.value );
+	var keyframe_index = track.addKeyframe( time , value );
 	this.animationModified();
+
+	if(info.type == "component")
+		this.showAddEventKeyframeDialog(track, time, track.data[keyframe_index] );
 
 	this._must_redraw = true;
 	RenderModule.requestFrame();
@@ -2586,7 +2717,7 @@ Timeline.prototype.onShowAnimationOptionsDialog = function()
 	//interpolation
 	widgets.widgets_per_row = 2;
 	var interpolation = Timeline.interpolation_values["linear"];
-	widgets.addCombo("Set Interpolation to all tracks", interpolation, { values: Timeline.interpolation_values, width: "80%", callback: function(v){
+	widgets.addCombo("Set Interpolation to all tracks", interpolation, { name_width: 200, values: Timeline.interpolation_values, width: "80%", callback: function(v){
 		interpolation = v;	
 	}});
 
@@ -2598,6 +2729,9 @@ Timeline.prototype.onShowAnimationOptionsDialog = function()
 	}});
 	widgets.widgets_per_row = 1;
 
+	widgets.addButton(null,"Download JSON",{ callback: function(){
+		LiteGUI.downloadFile( "animation.json", JSON.stringify( that.current_animation.serialize() ) );
+	}});
 	
 	widgets.addSeparator();
 	widgets.addButton(null,"Close", function(){
@@ -2708,7 +2842,7 @@ Timeline.prototype.showNewAnimationDialog = function()
 	dialog.show( null, this.root );
 }
 
-Timeline.prototype.assignNodeNames = function()
+Timeline.prototype.beautifyNames = function()
 {
 	if(!this.current_take)
 		return;
@@ -2723,7 +2857,11 @@ Timeline.prototype.assignNodeNames = function()
 		var node = info.node;
 		if(!node)
 			continue;
-		track.name = track.getIDasName() || track.property;
+		track.name = "";
+		if(info.component && info.component.getPrettyName)
+			track.name = info.component.getPrettyName( info, track._property, track._property_path );
+		if(!track.name)
+			track.name = track.getIDasName() || track.property;
 	}
 	this.redrawCanvas();
 }
@@ -2796,7 +2934,7 @@ Timeline.prototype.showNewTrack = function()
 						value_size = info.value.length;
 				}
 				else if(info.type == "component" || info.type == "object")
-					info.type = "events";
+					info.type = "event";
 			}
 
 			that.createTrack({ name: widgets.values["Name"], locator: locator, type: (info ? info.type : null), value_size: value_size, interpolation: widgets.values["Interpolation"] });
@@ -2871,7 +3009,34 @@ Timeline.prototype.showTrackOptionsDialog = function( track )
 			that.redrawCanvas();
 		}});
 
-		if( track.property[0] == "@" )
+		var start = track.property.substr(0,5);
+
+		if( start == "@RES-" )
+		{
+			widgets.addButton(null,"Nothing", { width: "30%", callback: function(){
+			}});
+			widgets.widgets_per_row = 1;
+
+			var path = track.property.split("/");
+			var filename = LS.RM.convertLocatorToFilename(path[0]);
+			widgets.addResource("Res Filename",filename, { callback: function(v){
+				if(!v)
+					return;
+				var path = track.property.split("/");
+				path[0] = LS.RM.convertFilenameToLocator(v);
+				track.property = path.join("/");
+				that.animationModified();
+				widgets.refresh();
+			}});
+			widgets.widgets_per_row = 2;
+		}
+		else if( start == "@MAT-" )
+		{
+			//nothing to do but I need a button
+			widgets.addButton(null,"", { width: "30%", callback: function(){
+			}});
+		}
+		else if( start == "@COMP" )
 			widgets.addButton(null,"Convert to Names", { width: "30%", callback: function(){
 				track.convertIDtoName();
 				widgets.refresh();
@@ -2990,8 +3155,7 @@ Timeline.prototype.showEditKeyframeDialog = function( track, time, keyframe, key
 	if( LiteGUI.Inspector.widget_constructors[ type ] )
 		widgets.add( type, "Value", value, { callback: function(v){
 			that.addUndoTrackEdited( track );
-			for(var i = 0; i < track.value_size; ++i)
-				keyframe[1][i] = v[i];
+			Timeline.assignKeyframeValue( track, keyframe, v );
 			if(preview)
 				that.applyPreview();
 			that.redrawCanvas();
@@ -3012,6 +3176,29 @@ Timeline.prototype.showEditKeyframeDialog = function( track, time, keyframe, key
 	dialog.show( null, this.root );
 }
 
+Timeline.assignKeyframeValue = function(track,keyframe,v)
+{
+	if( track.value_size == 1 )
+		v = isNaN( Number(v) ) ? 0 : Number(v);
+	if(!track.packed_data)
+	{
+		if( track.value_size == 0 ) //strings,booleans,...
+			keyframe[1] = v;
+		else if( track.value_size == 1 ) //single values 
+			keyframe[1] = v; //NaN controlled
+		else if( track.value_size > 1 )
+			for(var i = 0; i < track.value_size; ++i)
+				keyframe[1][i] = v[i];
+	}
+	else //packed
+	{
+		if( track.value_size == 1 ) //single values
+			keyframe[1] = v; //NaN controlled
+		else if( track.value_size > 1 )
+			for(var i = 0; i < track.value_size; ++i)
+				keyframe[1+i] = v[i];
+	}
+}
 
 Timeline.prototype.toggleRecording = function(v)
 {
@@ -3111,7 +3298,7 @@ Timeline.prototype.onItemDrop = function(e)
 {
 	if(!this.current_animation)
 		this.onSceneAnimation(); //create scene animation
-
+	var that = this;
 
 	var type = e.dataTransfer.getData("type");
 	var locator = e.dataTransfer.getData("locator");
@@ -3121,30 +3308,63 @@ Timeline.prototype.onItemDrop = function(e)
 	if( locator )
 	{
 		this.processInsertLocator( locator, { add_keyframe: false } );
-		/*
-		var info = LS.GlobalScene.getPropertyInfo( locator );
-		if(!info)
-			return;
-
-		var name = info.name;
-		if(!name && info.node)
-			name = info.node.name;
-
-		if( info.type == "component" || info.type == "node" || info.type == "object" )
-		{
-			this.createTrack({ name: name, locator: locator, type: "events" });
-		}
-		else
-		{
-			var type = info.type;
-			if(type == "object")
-				type = "events";
-			this.createTrack({ name: name, locator: locator, type: type });
-		}
-
-		this.animationModified();
-		*/
+		return;
 	}
+
+	if( type == "resource" )
+	{
+		var fullpath = e.dataTransfer.getData("res-fullpath");
+		var ext = LS.RM.getExtension(fullpath);
+		if(ext == "mp3" || ext == "wav" || ext == "ogg")
+		{
+			var url = LS.RM.getFullURL(fullpath);
+			this.setAudioBackground(url);
+		}
+		return;
+	}
+
+	if(e.dataTransfer.files.length)
+	{
+		var files = e.dataTransfer.files;
+		for(var i = 0; i < files.length; ++i)
+		{
+			var file = files[0];
+			var ext = LS.RM.getExtension(file.name);
+			if(ext == "mp3" || ext == "wav" || ext == "ogg")
+			{
+				var url = URL.createObjectURL(file);
+				this.setAudioBackground(url);
+			}
+			else if(ext == "json")
+			{
+				var reader = new FileReader();			
+				reader = new FileReader();
+				reader.onload = function(e){
+					console.log("configuring current animation from JSON");
+					var data = e.target.result;
+					data = JSON.parse(data);
+					that.addUndoAnimationEdited();
+					that.current_animation.configure(data);
+					that.setAnimation( that.current_animation );
+					that.animationModified();
+				};
+				reader.readAsText(file);
+			}
+		}
+	}
+}
+
+Timeline.prototype.setAudioBackground = function(url)
+{
+	var background = this.background = {};
+	var that = this;
+	Timeline.getAudioWaveImage(url, function(img){
+		background.img = img;
+		background.audio = new Audio();
+		background.audio.src = url;
+		background.audio.autoplay = false;
+		that.redrawCanvas();
+	});
 }
 
 //used for special actions
@@ -3209,6 +3429,16 @@ Timeline.actions.take["Remove scaling"] = function( animation, take )
 	return take.removeScaling();
 }
 
+Timeline.actions.take["Clear Keyframes"] = function( animation, take )
+{
+	for(var i = 0; i < take.tracks.length; ++i)
+	{
+		var track = take.tracks[i];
+		track.clear();
+	}
+	return 1;
+}
+
 Timeline.actions.take["Mask tracks with selected nodes"] = function( animation, take )
 {
 	var nodes = SelectionModule.getSelectedNodes();
@@ -3256,6 +3486,40 @@ Timeline.actions.take["Set prefix in tracks nodename"] = function( animation, ta
 	}
 }
 
+//in case some pesky NaN enters the animation values...
+Timeline.actions.take["Clear errors"] = function( animation, take )
+{
+	for(var i = 0; i < take.tracks.length; ++i)
+	{
+		var track = take.tracks[i];
+		if(track.packed_data)
+			track.unpackData();
+
+		for(var j = 0; j < track.data.length; ++j)
+		{
+			var keyframe = track.data[j];
+			if( isNaN( keyframe[0] ) ) //remove
+			{
+				track.data.splice(j,1);
+				j--;
+				continue;
+			}
+			if( track.value_size == 1 )
+			{
+				if( isNaN(keyframe[1] ) )
+					keyframe[1] = 0;
+			}
+			else if( track.value_size > 1 )
+			{
+				for(var k = 0; k < track.value_size; ++k)
+					if( isNaN(keyframe[1][k] ) )
+						keyframe[1][k] = 0;
+			}
+		}
+	}
+	return take.tracks.length;
+}
+
 //*****************
 
 Timeline.actions.track["Only rotations"] = function( track, take, animation )
@@ -3273,3 +3537,71 @@ Timeline.actions.track["Remove scaling"] = function( track, take, animation )
 	track.removeScaling();
 }
 
+//used to previsualize audio
+Timeline.wave_cache = {};
+Timeline.getAudioWaveImage = function( url, callback, onError )
+{
+	if(Timeline.wave_cache[url])
+		return Timeline.wave_cache[url];
+
+	window.AudioContext = window.AudioContext || window.webkitAudioContext;
+	var context = Timeline.audio_context;
+	if(!context)
+		context = Timeline.audio_context = new AudioContext();
+
+	Timeline.wave_cache[url] = 1;
+
+	var request = new XMLHttpRequest();
+	  request.open('GET', url, true);
+	  request.responseType = 'arraybuffer';
+
+	  // Decode asynchronously
+	  request.onload = function() {
+		context.decodeAudioData( request.response, function(buffer) {
+			var start_time = performance.now();
+			var canvas = document.createElement("canvas");
+			canvas.width = Math.round(buffer.duration * 120); //120 samples per second
+			canvas.height = 128;
+			var h2 = canvas.height / 2;
+			//document.body.appendChild(canvas);
+			var delta = (buffer.length / canvas.width);// * buffer.numberOfChannels;
+			var ctx = canvas.getContext("2d");
+			ctx.clearRect(0,0,canvas.width,canvas.height);
+			ctx.fillStyle = ctx.strokeStyle = "white";
+			var data = buffer.getChannelData(0);
+			var pos = 0;
+			var delta_ceil = Math.ceil(delta);
+			ctx.beginPath();
+			for(var i = 0; i < buffer.length; i += delta)
+			{
+				var min = 0;
+				var max = 0;
+				var start = Math.floor(i);
+				for(var j = 0; j < delta_ceil; ++j)
+				{
+					var v = data[j + start];
+					if(min > v) min = v;
+					if(max < v) max = v;
+				}
+				var y = (1 + min) * h2;
+				ctx.moveTo( pos, y );
+				ctx.lineTo( pos, y + h2 * (max - min) );
+				++pos;
+			}
+			ctx.stroke();
+			canvas.buffer = buffer;
+			Timeline.wave_cache[url] = canvas;
+			console.log( "wave image generation time: " + ((performance.now() - start_time)*0.001).toFixed(3) + "s");
+			if(callback)
+				callback(canvas,url);
+		}, onError);
+	  }
+	  request.send();
+}
+
+Timeline.isInsideRect = function(mouse,x,y,w,h)
+{
+	if( mouse[0] < x || mouse[0] > (x + w) || mouse[1] < y || mouse[1] > (y+h))
+		return false;
+	return true;
+}

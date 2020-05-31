@@ -380,15 +380,23 @@ InspectorWidget.prototype.inspectScene = function( scene )
 		inspector.addStringButton(null, "", { callback: function(v){
 			}, callback_button: function(v){
 				if(!v)
-					return;
-				//add script
-				scene.external_scripts.push(v);
-				LS.GlobalScene.loadScripts( null, null, function(){
-					LiteGUI.alert("Error loading script");
-					//scene.external_scripts.pop(); //why remove it? 
+					LiteGUI.prompt("Enter URL",inner_set_url);
+				else
+					inner_set_url(v);
+
+				function inner_set_url(url)
+				{
+					if(!url)
+						return;
+					//add script
+					scene.external_scripts.push(url);
+					LS.GlobalScene.loadScripts( null, null, function(){
+						LiteGUI.alert("Error loading script");
+						//scene.external_scripts.pop(); //why remove it? 
+						inspector.refresh();
+					});
 					inspector.refresh();
-				});
-				inspector.refresh();
+				}
 			},
 			button: "+"
 		});
@@ -464,8 +472,8 @@ InspectorWidget.prototype.inspectScene = function( scene )
 		container.style.backgroundColor = "#252525";
 		for(var i in scene.preloaded_resources)
 		{			
-			inspector.addStringButton(null, i, { callback: function(v){
-					var old = this.getValue();
+			inspector.addStringButton(null, i, { resname: i, callback: function(v){
+					var old = this.options.resname;
 					if(old == v)
 						return;
 					delete scene.preloaded_resources[old];

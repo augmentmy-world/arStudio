@@ -648,9 +648,11 @@ LS.MaterialClasses.ShaderMaterial["@inspector"] = function( material, inspector,
 	inspector.addTitle("Properties");
 
 	inspector.addShader("shader", material.shader, { pretitle: AnimationModule.getKeyframeCode( material, "shader" ), 
-		callback: function(v) { 
+		callback: function(v) {
+			UndoModule.saveMaterialChangeUndo(material);
 			material.shader = v; 
 			inspector.refresh();
+			LS.GlobalScene.requestFrame();
 		}, callback_refresh: function(){
 			material.processShaderCode();
 		}
@@ -665,6 +667,7 @@ LS.MaterialClasses.ShaderMaterial["@inspector"] = function( material, inspector,
 		inspector.addInfo(null,"Shader not loaded");
 	else
 	{
+		inspector.addRenderState("Render State", material.render_state, {} );
 		if(!is_fx)
 		{
 			//inspector.addCombo("Blend mode", material.blend_mode, { pretitle: AnimationModule.getKeyframeCode( material, "blend_mode" ), values: LS.Blend, callback: function (value) { material.blend_mode = value }});
@@ -678,7 +681,11 @@ LS.MaterialClasses.ShaderMaterial["@inspector"] = function( material, inspector,
 			var widget_type = p.widget || p.type;
 			if(widget_type == "Sampler2D")
 				widget_type = "sampler";
-			inspector.add( widget_type, p.label || p.name, p.value, { pretitle: AnimationModule.getKeyframeCode( material, p.name ), title: p.name, step: p.step, precision: p.precision, values: p.values, property: p, callback: inner_on_property_change });
+			var options = { pretitle: AnimationModule.getKeyframeCode( material, p.name ), title: p.name, step: p.step, precision: p.precision, values: p.values, property: p, callback: inner_on_property_change };
+			for(var i in p)
+				if(options[i] == null)
+					options[i] = p[i];
+			inspector.add( widget_type, p.label || p.name, p.value, options);
 		}
 	}
 

@@ -1,6 +1,5 @@
 //Inspector Editors for the most common Components plus Materials and Scene.
 //Editors are not included in LiteScene because they do not depend on them
-var TRASH_ICON_CODE = "<img src='imgs/mini-icon-trash.png'/>";
 
 LS.Components.GlobalInfo["@inspector"] = function( component, inspector )
 {
@@ -44,7 +43,7 @@ LS.Components.GlobalInfo["@inspector"] = function( component, inspector )
 	{
 		inspector.widgets_per_row = 2;
 		inspector.addButton( "Render Settings", "Edit", { width: "calc(100% - 30px)", callback: function(){ EditorModule.showRenderSettingsDialog( component.render_settings ); } } );
-		inspector.addButton( null, TRASH_ICON_CODE, { width: "30px", callback: function(){ component.render_settings = null; EditorModule.refreshAttributes(); } } );
+		inspector.addButton( null, InterfaceModule.icons.trash, { width: "30px", callback: function(){ component.render_settings = null; EditorModule.refreshAttributes(); } } );
 		inspector.widgets_per_row = 1;
 	}
 	else
@@ -74,6 +73,7 @@ LS.Components.Transform["@inspector"] = function(transform, inspector)
 
 	var euler = quat.toEuler( vec3.create(), transform._rotation );
 	vec3.scale(euler,euler, RAD2DEG );
+	//sort by axis, not by yaw,pitch,roll
 	var rot = [euler[2],euler[0],euler[1]];
 
 	inspector.addVector3("Rotation", rot, { 
@@ -81,6 +81,7 @@ LS.Components.Transform["@inspector"] = function(transform, inspector)
 		pretitle: AnimationModule.getKeyframeCode( transform, "rotation"),
 		callback: function(r) {
 			vec3.scale(r,r, DEG2RAD );
+			//back to axis
 			var euler = [r[1],r[2],r[0]];
 			transform.setRotationFromEuler(euler);
 		}, callback_before: function() {
@@ -272,29 +273,40 @@ LS.Components.Light["@inspector"] = function(light, inspector)
 	inspector.addCheckbox("Const Diff.", !!light.constant_diffuse, { callback: function(v) { light.constant_diffuse = v; }});
 	inspector.addCheckbox("Specular", light.use_specular != false, { callback: function(v) { light.use_specular = v; }});
 	inspector.widgets_per_row = 1;
+
 	inspector.addTitle("Shadow");
 	inspector.addCheckbox("Cast. shadows", light.cast_shadows, { pretitle: AnimationModule.getKeyframeCode( light, "cast_shadows"), callback: function(v) { light.cast_shadows = v; inspector.refresh(); }});
 
-	if(light.cast_shadows)
+	if(light.cast_shadows && light._shadowmap )
 	{
-		inspector.widgets_per_row = 2;
+		inspector.widgets_per_row = 1;
 		//inspector.addCheckbox("Reverse faces", light.hard_shadows, { pretitle: AnimationModule.getKeyframeCode( light, "hard_shadows"), callback: function(v) { light.hard_shadows = v; }});
-		inspector.addCheckbox("Hard shadows", light.hard_shadows, { pretitle: AnimationModule.getKeyframeCode( light, "hard_shadows"), callback: function(v) { light.hard_shadows = v; }});
-		inspector.addLayers("Shadows Layers", light.shadows_layers, { pretitle: AnimationModule.getKeyframeCode( light, "shadows_layers"), callback: function (value) { 
-			light.shadows_layers = value;
+		//inspector.addCheckbox("Hard shadows", light.hard_shadows, { pretitle: AnimationModule.getKeyframeCode( light, "hard_shadows"), callback: function(v) { light.hard_shadows = v; }});
+		inspector.addLayers("Shadows Layers", light._shadowmap.layers, { pretitle: AnimationModule.getKeyframeCode( light, "layers"), callback: function (value) { 
+			light._shadowmap.layers = value;
 			inspector.refresh();
 		}});
 		inspector.widgets_per_row = 2;
 		inspector.addNumber("Near", light.near, { pretitle: AnimationModule.getKeyframeCode( light, "near"), callback: function (value) { light.near = value;}});
 		inspector.addNumber("Far", light.far, { pretitle: AnimationModule.getKeyframeCode( light, "far"), callback: function (value) { light.far = value; }});
 		inspector.widgets_per_row = 1;
-		inspector.addNumber("Shadow bias", light.shadow_bias, { pretitle: AnimationModule.getKeyframeCode( light, "shadow_bias"), step: 0.001, precision: 3, min:-0.5, callback: function (value) { light.shadow_bias = value; }});
-		inspector.addCombo("Shadowmap size", !light.shadowmap_resolution ? "Default" : light.shadowmap_resolution, { pretitle: AnimationModule.getKeyframeCode( light, "shadowmap_resolution"), values: ["Default",256,512,1024,2048,4096], callback: function(v) { 
+		inspector.addNumber("Bias", light._shadowmap.bias, { pretitle: AnimationModule.getKeyframeCode( light._shadowmap, "bias"), step: 0.001, precision: 3, min:-0.5, callback: function (value) { light._shadowmap.bias = value; }});
+		inspector.addCombo("Resolution", !light._shadowmap.resolution ? "Default" : light._shadowmap.resolution, { pretitle: AnimationModule.getKeyframeCode( light, "resolution"), values: ["Default",256,512,1024,2048,4096], callback: function(v) { 
 			if(v == "Default")
-				light.shadowmap_resolution = 0; 
+				light._shadowmap.resolution = 0; 
 			else
-				light.shadowmap_resolution = parseFloat(v); 
+				light._shadowmap.resolution = parseFloat(v); 
 		}});
+		inspector.widgets_per_row = 2;
+		inspector.addCheckbox("Hard Shadows", light._shadowmap.shadow_mode == 0, { pretitle: AnimationModule.getKeyframeCode( light, "reverse_faces"), callback: function(v) { light._shadowmap.shadow_mode = !v ? 1 : 0; }});
+		inspector.addCheckbox("Reverse Faces", light._shadowmap.reverse_faces, { pretitle: AnimationModule.getKeyframeCode( light, "reverse_faces"), callback: function(v) { light._shadowmap.reverse_faces = v; }});
+		inspector.addCheckbox("Linear Filter", light._shadowmap.linear_filter, { pretitle: AnimationModule.getKeyframeCode( light, "reverse_faces"), callback: function(v) { light._shadowmap.linear_filter = v; }});
+		inspector.addButton(null, "Show Shadowmap", { callback: function(v) { 
+			var preview = new TexturePreviewWidget();
+			preview._texture = light._shadowmap._texture;
+			RenderModule.canvas_manager.root.addChild( preview );
+		}});
+		inspector.widgets_per_row = 1;
 	}
 
 	inspector.addTitle("Textures");
@@ -636,19 +648,6 @@ function computeSharedInitialString(array)
 	return first.length;
 }
 
-function removeSharedString(array)
-{
-	var n = computeSharedInitialString(array);
-	array = array.map(function(a){ 
-		a = a.substr(n);
-		var last = a.lastIndexOf(".");
-		if(last != -1)
-			return a.substr(0,last);
-		return a;
-	});
-	return array;
-}
-
 LS.Components.MorphDeformer["@inspector"] = function(component, inspector)
 {
 	inspector.widgets_per_row = 2;
@@ -662,13 +661,22 @@ LS.Components.MorphDeformer["@inspector"] = function(component, inspector)
 	{
 		if(LS.Components.MorphDeformer.use_sliders)
 		{
+			inspector.addString("Filter", LS.Components.MorphDeformer.filter || "", { callback: function(v) { 
+				LS.Components.MorphDeformer.filter = v;
+				inspector.refresh();
+			}});
+
 			var names = component.morph_targets.map(function(a){return a.mesh;});
-			names = removeSharedString(names);
+			names = LS.Components.MorphDeformer.removeSharedString(names);
 			inspector.widgets_per_row = 2;
 			for(var i = 0; i < component.morph_targets.length; i++)
 			{
+				var pretty_name = names[i].replace(/_/g," ");
+				if(LS.Components.MorphDeformer.filter && pretty_name.toLowerCase().indexOf( LS.Components.MorphDeformer.filter.toLowerCase() ) == -1 )
+					continue;
+
 				var morph = component.morph_targets[i];
-				inspector.addSlider(names[i].replace(/_/g," "), morph.weight, { min: -1, max: 1, width: "calc(100% - 40px)", pretitle: AnimationModule.getKeyframeCode( component, "morphs/"+i+"/weight" ), morph_index: i, callback: function(v) { 
+				inspector.addSlider(pretty_name, morph.weight, { min: -1, max: 1, width: "calc(100% - 40px)", pretitle: AnimationModule.getKeyframeCode( component, "morphs/"+i+"/weight" ), morph_index: i, callback: function(v) { 
 					component.setMorphWeight( this.options.morph_index, v );
 					LS.GlobalScene.refresh();
 				}});
@@ -697,7 +705,7 @@ LS.Components.MorphDeformer["@inspector"] = function(component, inspector)
 					LS.GlobalScene.refresh();
 				}});
 
-				inspector.addButton(null, TRASH_ICON_CODE, { width: "15%", morph_index: i, callback: function() { 
+				inspector.addButton(null, InterfaceModule.icons.trash, { width: "15%", morph_index: i, callback: function() { 
 					component.morph_targets.splice( this.options.morph_index, 1);
 					inspector.refresh();
 					LS.GlobalScene.refresh();
@@ -1173,6 +1181,13 @@ LS.Components.IrradianceCache.onShowProperties = function( component, inspector 
 	inspector.widgets_per_row = 1;
 
 }
+
+if(LS.Components.MediaPlayer)
+	LS.Components.MediaPlayer.onShowProperties = function( component, inspector )
+	{
+		inspector.addButtons( null, ["Play","Stop"], function(v){ if(v == "Play") component.play(); else component.stop(); });
+	}
+
 
 if(LS.Components.Spline)
 LS.Components.Spline.onShowProperties = function( component, inspector )

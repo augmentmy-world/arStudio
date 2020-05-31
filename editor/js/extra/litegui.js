@@ -1814,7 +1814,7 @@ function ContextMenu( values, options )
 		}
 	}
 
-	if( options.event && options.event.constructor.name !== "MouseEvent" && options.event.constructor.name !== "CustomEvent" )
+	if( options.event && options.event.constructor.name !== "MouseEvent" && options.event.constructor.name !== "PointerEvent" && options.event.constructor.name !== "CustomEvent" )
 	{
 		console.error("Event passed to ContextMenu is not of type MouseEvent or CustomEvent. Ignoring it.");
 		options.event = null;
@@ -1911,7 +1911,7 @@ function ContextMenu( values, options )
 	var top = options.top || 0;
 	if(options.event)
 	{
-		if( options.event.constructor.name !== "MouseEvent" && options.event.constructor.name !== "CustomEvent" )
+		if( options.event.constructor.name !== "MouseEvent" && options.event.constructor.name !== "PointerEvent" && options.event.constructor.name !== "CustomEvent" )
 		{
 			console.warn("Event passed to ContextMenu is not of type MouseEvent");
 			options.event = null;
@@ -7447,7 +7447,7 @@ Inspector.prototype.inspectInstance = function( instance, properties, properties
 					case String: properties_info[i] = { type: "string" }; break;
 					case Boolean: properties_info[i] = { type: "boolean" }; break;
 					default:
-						if( v && v.length )
+						if( v && (v.constructor === Array || v.constructor.BYTES_PER_ELEMENT) ) //Array or typed_array
 						{
 							var is_number = v[0] != null && v[0].constructor === Number;
 							switch(v.length)
@@ -9564,7 +9564,10 @@ Inspector.prototype.addButtons = function(name, value, options)
 	{
 		for(var i in value)
 		{
-			code += "<button class='litebutton' tabIndex='"+this.tab_index+"' style='"+style+"'>"+value[i]+"</button>";
+			var title = "";
+			if( options.title && options.title.constructor === Array)
+				title = options.title[i] || "";
+			code += "<button class='litebutton' title='"+title+"' tabIndex='"+this.tab_index+"' style='"+style+"'>"+value[i]+"</button>";
 			this.tab_index++;
 		}
 	}
